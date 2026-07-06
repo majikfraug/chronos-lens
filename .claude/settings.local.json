@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(unzip -l files.zip)",
+      "Bash(npm -v)",
+      "Bash(git --version)",
+      "Bash(npx --version)",
+      "PowerShell(node -v)",
+      "PowerShell(npm -v)",
+      "PowerShell(Get-Command winget -ErrorAction SilentlyContinue)",
+      "PowerShell(Get-Command choco -ErrorAction SilentlyContinue)",
+      "PowerShell(Get-Command scoop -ErrorAction SilentlyContinue)",
+      "PowerShell(winget install -e --id OpenJS.NodeJS.LTS --accept-source-agreements --accept-package-agreements)",
+      "PowerShell($env:Path = [System.Environment]::GetEnvironmentVariable\\(\"Path\",\"Machine\"\\) + \";\" + [System.Environment]::GetEnvironmentVariable\\(\"Path\",\"User\"\\); node -v; npm -v)",
+      "PowerShell($env:Path = \"C:\\\\Program Files\\\\nodejs;\" + $env:Path; node -v; npm -v)",
+      "Bash(git init *)",
+      "Bash(git config *)",
+      "Bash(xargs grep -ln \"readPixels\")",
+      "Bash(xargs grep -ln \"ImageProps\\\\|interface.*Image\")",
+      "Bash(git add *)",
+      "Bash(ls -la .claude)",
+      "Bash(cat .claude/settings.json)"
+    ]
+  }
+}
