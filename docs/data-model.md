@@ -34,13 +34,19 @@ Table `fog_reveal` (or a single PNG on disk, see below):
   disk via `expo-file-system`, not as rows in SQLite — it's an image, and SQLite
   blob-per-frame would be wasteful. SQLite stores only the file path/region key.
 
-## (planned) M3 — Reliquary / classification
+## M3 — Reliquary / classification
 
-- `scans`: id, timestamp, lat/lon, scale (ARTIFACT|FEATURE), type, corrected
-  (bool), thumbnail path.
-- `ai_model`: type -> taught count (identifications + confirmations +
-  corrections), drives proposal confidence.
-- `reliquary_slots`: type -> {count, thumbnailPath, taughtFirst}.
+- `scans(id, ts, scale, type, taught, corrected, thumb_path)` — every
+  confirmed filing; `corrected` count is derived from here on load.
+- `ai_model(type PRIMARY KEY, taught_count)` — the companion's entire
+  classification model: player-taught example counts per type
+  (identifications + confirmations + corrections). Drives proposal weighting
+  and confidence; see `taxonomy.ts` `proposeType()`.
+- `reliquary(type PRIMARY KEY, count, thumb_path, taught_first)` — slot state;
+  `thumb_path` keeps the FIRST capture's dithered PNG (stored as files under
+  `Paths.document/thumbs/`, only the URI lives in SQLite).
+- "Recorded by others" counts are simulated authored constants
+  (`taxonomy.ts` `SIMULATED_PUBLIC_COUNTS`) — no backend in v1, brief §2.4.
 
 ## (planned) M4 — Companion
 

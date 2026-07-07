@@ -21,7 +21,19 @@ const PAL: [number, number, number][] = [
 ];
 const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
 
-export function ditherCapturedStill(base64Jpeg: string): SkImage {
+/**
+ * When the on-screen view (cover-filled camera) and the centered capture
+ * window are given, the photo is cropped to exactly the region the window
+ * framed; otherwise falls back to a plain center-crop.
+ */
+export type CaptureWindow = {
+  viewW: number;
+  viewH: number;
+  windowW: number;
+  windowH: number;
+};
+
+export function ditherCapturedStill(base64Jpeg: string, window?: CaptureWindow): SkImage {
   const data = Skia.Data.fromBase64(base64Jpeg);
   const source = Skia.Image.MakeImageFromEncoded(data);
   if (!source) throw new Error('Failed to decode captured still');
@@ -38,6 +50,14 @@ export function ditherCapturedStill(base64Jpeg: string): SkImage {
   if (cropH > srcH) {
     cropH = srcH;
     cropW = srcH * targetAspect;
+  }
+  if (window) {
+    // The view shows the photo cover-fitted: scale = max ratio, centered.
+    // The capture window is centered in the view, so its photo-space crop is
+    // simply the window size divided by that scale, centered in the photo.
+    const scale = Math.max(window.viewW / srcW, window.viewH / srcH);
+    cropW = Math.min(srcW, window.windowW / scale);
+    cropH = Math.min(srcH, window.windowH / scale);
   }
   const cropX = (srcW - cropW) / 2;
   const cropY = (srcH - cropH) / 2;

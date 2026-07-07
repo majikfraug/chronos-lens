@@ -36,6 +36,13 @@ export function registerFor(level: number, attunement: number): Register {
   return 'CURIOUS';
 }
 
+/** Scan/classification rewards, brief §4 (prototype confirmScan values). */
+export const SCAN = {
+  xpArtifact: 13,
+  xpFeature: 15,
+  xpTeachBonus: 3,
+} as const;
+
 /** Field map / discovery, brief §2.1 and §4. */
 export const FIELD = {
   /** Coarse discovery-accounting cell size, meters. Brief §4 "heat economy: ~100m cells". */

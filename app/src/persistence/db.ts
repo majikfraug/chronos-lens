@@ -31,6 +31,28 @@ export function getDb(): Promise<SQLiteDatabase> {
           key TEXT PRIMARY KEY,
           value TEXT NOT NULL
         );
+
+        CREATE TABLE IF NOT EXISTS scans (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          ts INTEGER NOT NULL,
+          scale TEXT NOT NULL,
+          type TEXT NOT NULL,
+          taught INTEGER NOT NULL DEFAULT 0,
+          corrected INTEGER NOT NULL DEFAULT 0,
+          thumb_path TEXT
+        );
+
+        CREATE TABLE IF NOT EXISTS ai_model (
+          type TEXT PRIMARY KEY,
+          taught_count INTEGER NOT NULL DEFAULT 0
+        );
+
+        CREATE TABLE IF NOT EXISTS reliquary (
+          type TEXT PRIMARY KEY,
+          count INTEGER NOT NULL DEFAULT 0,
+          thumb_path TEXT,
+          taught_first INTEGER NOT NULL DEFAULT 0
+        );
       `);
       return db;
     });

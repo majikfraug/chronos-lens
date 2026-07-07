@@ -4,10 +4,10 @@ import { audio } from '../audio/engine';
 import { ScanlineOverlay } from '../components/ScanlineOverlay';
 import { HudBar } from '../components/HudBar';
 import { LogStrip } from '../components/LogStrip';
-import { ComingSoonScreen } from '../screens/ComingSoonScreen';
 import { FieldScreen } from '../screens/FieldScreen';
 import { IntroOverlay } from '../screens/IntroOverlay';
 import { LensScreen } from '../screens/LensScreen';
+import { ReliquaryScreen } from '../screens/ReliquaryScreen';
 import { useGameStore } from '../state/gameStore';
 import { colors } from '../theme/colors';
 import { fonts } from '../theme/typography';
@@ -29,6 +29,7 @@ export function AppShell(): React.JSX.Element {
   const attunement = useGameStore((s) => s.attunement);
   const introSeen = useGameStore((s) => s.introSeen);
   const markIntroSeen = useGameStore((s) => s.markIntroSeen);
+  const appendLog = useGameStore((s) => s.appendLog);
   const register = registerFor(level, attunement);
   const prevThreshold = level === 1 ? 0 : XP_THRESHOLDS[level - 2];
   const nextThreshold = level >= MAX_LEVEL ? null : XP_THRESHOLDS[level - 1];
@@ -54,7 +55,15 @@ export function AppShell(): React.JSX.Element {
               hitSlop={8}
               onPress={() => {
                 audio.kick();
-                setMutedUi(audio.toggleMute());
+                const nowMuted = audio.toggleMute();
+                setMutedUi(nowMuted);
+                if (!nowMuted) audio.play('file'); // audible confirmation the channel works
+                appendLog(
+                  'sys',
+                  nowMuted
+                    ? 'AUDIO CHANNEL MUTED'
+                    : 'AUDIO CHANNEL OPEN · HARDWARE SILENT SWITCH IS RESPECTED'
+                );
               }}
             >
               <Text style={[styles.hudText, mutedUi && styles.muteOff]}>{mutedUi ? '♪ OFF' : '♪'}</Text>
@@ -90,13 +99,7 @@ export function AppShell(): React.JSX.Element {
       <View style={styles.body}>
         {tab === 'field' && <FieldScreen />}
         {tab === 'lens' && <LensScreen />}
-        {tab === 'reliquary' && (
-          <ComingSoonScreen
-            title="RELIQUARY · TYPE ARCHIVE"
-            body="No forms attested. Artifacts and features identified through the Lens will be filed here, your captures serving as the record."
-            note="MODULE ARRIVES IN MILESTONE 3 · CLASSIFICATION"
-          />
-        )}
+        {tab === 'reliquary' && <ReliquaryScreen />}
       </View>
 
       <LogStrip />

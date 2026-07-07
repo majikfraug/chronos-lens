@@ -19,7 +19,10 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const SR = 22050;
-const MASTER = 0.5; // prototype master gain baked into the stems
+// Prototype used master 0.5 tuned for desktop browsers; phone speakers need
+// far more level. 3.0 keeps every stem's true peak under full scale (loudest
+// is the stacked level-up swell ~0.85) while preserving the spec's relative mix.
+const MASTER = 3.0;
 const OUT_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'app', 'assets', 'audio');
 
 /* ---------- primitives ---------- */

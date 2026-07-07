@@ -6,7 +6,7 @@ import {
   FIELD,
   MAX_LEVEL,
   XP_THRESHOLDS,
-} from '../config/economy';
+ SCAN } from '../config/economy';
 import {
   getFlag,
   loadDiscoveredCells,
@@ -19,7 +19,21 @@ import {
   setFlag,
 } from '../persistence/gameRepository';
 import { cellKeyFor, toLocalMeters, type LatLon } from '../location/projection';
+import {
+  loadClassifierState,
+  recordScan,
+  saveThumbnail,
+  type ReliquarySlot,
+} from '../persistence/scanRepository';
 import { discoveryXpFor, neighborCoarseCells } from '../terrain/discovery';
+import {
+  ACK_CONFIRM,
+  ACK_CORRECT,
+  ACK_TEACH,
+  TYPE_FIRST,
+  type Scale,
+  type TypeName,
+} from '../config/taxonomy';
 
 export type LogEntry = {
   id: number;
@@ -43,8 +57,21 @@ type GameStore = {
   introSeen: boolean;
   /** Session-only companion/system feed shown in the log strip. Not persisted in M1/M2. */
   log: LogEntry[];
+  /** The companion's classification model: per-type player-taught example counts. Brief §2.3. */
+  taughtCounts: Partial<Record<TypeName, number>>;
+  taughtTotal: number;
+  corrections: number;
+  reliquary: Partial<Record<TypeName, ReliquarySlot>>;
 
   appendLog: (kind: LogEntry['kind'], text: string) => void;
+  /** Files a resolved capture: persists scan + thumbnail, grows the model, rewards, companion ack. */
+  confirmScan: (args: {
+    scale: Scale;
+    type: TypeName;
+    taught: boolean;
+    corrected: boolean;
+    thumbPng: Uint8Array;
+  }) => Promise<void>;
   markIntroSeen: () => void;
   hydrate: () => Promise<void>;
   /** The one entry point for a new GPS fix: sets origin (first fix), position, fog reveal, and discovery XP. */
@@ -65,6 +92,58 @@ export const useGameStore = create<GameStore>((set, get) => ({
   playerPosition: null,
   introSeen: true, // assume seen until hydration says otherwise, so it never flashes
   log: [],
+  taughtCounts: {},
+  taughtTotal: 0,
+  corrections: 0,
+  reliquary: {},
+
+  confirmScan: async ({ scale, type, taught, corrected, thumbPng }) => {
+    const thumbUri = saveThumbnail(thumbPng);
+    const firstOfType = !get().reliquary[type];
+
+    set((state) => {
+      const taughtCounts = { ...state.taughtCounts, [type]: (state.taughtCounts[type] ?? 0) + 1 };
+      const prev = state.reliquary[type];
+      const reliquary = {
+        ...state.reliquary,
+        [type]: prev
+          ? { ...prev, count: prev.count + 1 }
+          : { count: 1, thumbUri, taughtFirst: taught || corrected },
+      };
+      return {
+        taughtCounts,
+        taughtTotal: state.taughtTotal + 1,
+        corrections: state.corrections + (corrected ? 1 : 0),
+        reliquary,
+      };
+    });
+    void recordScan({ scale, type, taught, corrected, thumbUri });
+
+    get().appendLog(
+      'sys',
+      (scale === 'FEATURE' ? 'LOCAL SCAN FILED · ' : 'ARTIFACT FILED · ') +
+        type +
+        (corrected ? ' · CORRECTED' : taught ? ' · TAUGHT' : '')
+    );
+    audio.play('file');
+
+    const ackPool = taught ? ACK_TEACH : corrected ? ACK_CORRECT : ACK_CONFIRM;
+    const ack = ackPool[Math.floor(Math.random() * ackPool.length)];
+    get().appendLog('ai', ack.text.replace('{T}', type.toLowerCase()));
+    audio.voice(ack.mood);
+
+    const firstLine = firstOfType ? TYPE_FIRST[type] : undefined;
+    if (firstLine) {
+      setTimeout(() => {
+        get().appendLog('ai', firstLine.text);
+        audio.voice(firstLine.mood);
+      }, 1400);
+    }
+
+    get().gainXp(scale === 'FEATURE' ? SCAN.xpFeature : SCAN.xpArtifact);
+    if (taught) get().gainXp(SCAN.xpTeachBonus);
+    get().gainAttunement(ATTUNEMENT_GAIN.scan);
+  },
 
   appendLog: (kind, text) => {
     set((state) => ({
@@ -79,13 +158,18 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   hydrate: async () => {
-    const [persisted, discovered, revealed, introFlag] = await Promise.all([
+    const [persisted, discovered, revealed, introFlag, classifier] = await Promise.all([
       loadGameState(),
       loadDiscoveredCells(),
       loadRevealCells(),
       getFlag('intro_seen'),
+      loadClassifierState(),
     ]);
     set({
+      taughtCounts: classifier.taughtCounts,
+      taughtTotal: classifier.taughtTotal,
+      corrections: classifier.corrections,
+      reliquary: classifier.reliquary,
       hydrated: true,
       level: persisted.level,
       xp: persisted.xp,
