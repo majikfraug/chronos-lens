@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { audio } from '../audio/engine';
 import {
   ATTUNEMENT_GAIN,
   ATTUNEMENT_MAX,
@@ -138,6 +139,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       void markCellDiscovered(cell.key);
 
       const earned = discoveryXpFor(cell.key, resolvedHomeCellKey);
+      audio.play('discover');
       get().appendLog('disc', `+${earned} XP · DISCOVERY`);
       get().gainXp(earned);
       get().gainAttunement(ATTUNEMENT_GAIN.discovery);
@@ -151,6 +153,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       let log = state.log;
       while (level < MAX_LEVEL && xp >= XP_THRESHOLDS[level - 1]) {
         level += 1;
+        audio.play('levelup');
         // Rendered as in-world telemetry, never as game mechanics — brief §5.
         log = [
           ...log,

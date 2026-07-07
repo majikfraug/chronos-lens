@@ -49,7 +49,9 @@
           "cameraPermission": "The Lens renders the camera feed as a dithered scan to classify artifacts and features you point it at. No images leave this device."
         }
       ],
-      "expo-splash-screen"
+      "expo-splash-screen",
+      "expo-audio",
+      "expo-asset"
     ]
   }
 }

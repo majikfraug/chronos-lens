@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { audio } from '../audio/engine';
 import { ScanlineOverlay } from '../components/ScanlineOverlay';
 import { HudBar } from '../components/HudBar';
 import { LogStrip } from '../components/LogStrip';
@@ -22,6 +23,7 @@ const TABS: { key: Tab; label: string }[] = [
 
 export function AppShell(): React.JSX.Element {
   const [tab, setTab] = useState<Tab>('field');
+  const [mutedUi, setMutedUi] = useState(audio.isMuted());
   const level = useGameStore((s) => s.level);
   const xp = useGameStore((s) => s.xp);
   const attunement = useGameStore((s) => s.attunement);
@@ -47,6 +49,16 @@ export function AppShell(): React.JSX.Element {
             <Text style={styles.hudText}>
               XP <Text style={styles.hudValue}>{xp}</Text>
             </Text>
+            <Pressable
+              style={styles.muteBtn}
+              hitSlop={8}
+              onPress={() => {
+                audio.kick();
+                setMutedUi(audio.toggleMute());
+              }}
+            >
+              <Text style={[styles.hudText, mutedUi && styles.muteOff]}>{mutedUi ? '♪ OFF' : '♪'}</Text>
+            </Pressable>
           </View>
         </View>
         <View style={styles.bars}>
@@ -65,7 +77,10 @@ export function AppShell(): React.JSX.Element {
           <Pressable
             key={t.key}
             style={[styles.tab, tab === t.key && styles.tabActive]}
-            onPress={() => setTab(t.key)}
+            onPress={() => {
+              audio.kick(); // bed fades in after first interaction, brief §7
+              setTab(t.key);
+            }}
           >
             <Text style={[styles.tabText, tab === t.key && styles.tabTextActive]}>{t.label}</Text>
           </Pressable>
@@ -86,7 +101,14 @@ export function AppShell(): React.JSX.Element {
 
       <LogStrip />
 
-      {!introSeen && <IntroOverlay onDone={markIntroSeen} />}
+      {!introSeen && (
+        <IntroOverlay
+          onDone={() => {
+            audio.kick();
+            markIntroSeen();
+          }}
+        />
+      )}
       <ScanlineOverlay />
     </View>
   );
@@ -127,6 +149,15 @@ const styles = StyleSheet.create({
   hudValue: {
     color: colors.phosphor,
     fontFamily: fonts.bodyMedium,
+  },
+  muteBtn: {
+    borderWidth: 1,
+    borderColor: colors.line,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+  },
+  muteOff: {
+    color: colors.phosphorFaint,
   },
   bars: {
     flexDirection: 'row',

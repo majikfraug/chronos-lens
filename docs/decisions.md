@@ -4,6 +4,22 @@ Deviations from `docs/brief.md`, and why. Newest first.
 
 ---
 
+## 2026-07-07 — Audio ships as rendered stems of the §7 spec (Expo Go limit)
+
+Brief §3 names react-native-audio-api for live synthesis, but it contains
+custom native code and cannot run in Expo Go (confirmed against its docs) —
+and Expo Go is currently the only device path (see the SDK 54 entry). Brief §3
+pre-authorizes the fallback: "ship rendered stems of the same spec and file an
+issue to return." Implementation: `tools/render-audio-stems.mjs` is the §7
+synth spec in executable form (a direct port of the prototype's Snd module —
+same oscillators, envelopes, RBJ biquad filters, frequencies, mix levels); it
+renders 13 WAV stems (22.05 kHz mono; everything in the spec is lowpassed
+≤ ~1.1 kHz) into app/assets/audio, played via expo-audio behind the
+`src/audio/engine.ts` facade. Game code only talks to the facade, so live
+react-native-audio-api synthesis swaps in behind it at dev-build time (same
+philosophy as CompanionBrain). Return condition: dev-client build (Apple
+account or M5). This is the "filed issue" until a GitHub remote exists.
+
 ## 2026-07-07 — Camera dither applies at capture time, not per-frame (Expo Go limit)
 
 Brief §2.2 calls for the live camera feed through the dither shader at 30fps.

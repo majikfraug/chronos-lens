@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { audio } from '../audio/engine';
 import { colors } from '../theme/colors';
 import { fonts } from '../theme/typography';
 
@@ -35,6 +36,11 @@ export function IntroOverlay({ onDone }: Props): React.JSX.Element {
     const t = setTimeout(() => setShown((n) => n + 1), LINE_INTERVAL_MS);
     return () => clearTimeout(t);
   }, [shown, bootDone]);
+
+  useEffect(() => {
+    // The companion's first transmission gets its voice tone (§7).
+    if (bootDone) audio.voice('neutral');
+  }, [bootDone]);
 
   return (
     // Tap anywhere to fast-forward the boot lines (mirrors prototype tap-to-complete)

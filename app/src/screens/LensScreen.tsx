@@ -2,6 +2,7 @@ import { Canvas, Circle, Image as SkiaImage, Path, Skia, type SkImage } from '@s
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { audio } from '../audio/engine';
 import { ATTUNEMENT_GAIN, FIELD } from '../config/economy';
 import { ditherCapturedStill } from '../lens/ditherStill';
 import { cellKeyFor, toLocalMeters } from '../location/projection';
@@ -70,6 +71,7 @@ export function LensScreen(): React.JSX.Element {
       clearInterval(holdTimer.current);
       holdTimer.current = null;
     }
+    audio.scanStop();
     setScanning(false);
     setProgress(0);
     if (!completed) {
@@ -79,13 +81,16 @@ export function LensScreen(): React.JSX.Element {
   };
 
   const onScanPressIn = () => {
+    audio.kick();
     if (still || scanning) return;
     if (!scaleRead) {
+      audio.play('deplete');
       setMessage('NO SUBJECT ACQUIRED · AWAIT DENSITY');
       setTimeout(() => setMessage(''), 1000);
       return;
     }
     setScanning(true);
+    audio.scanStart();
     setMessage('STABILIZING');
     holdStart.current = Date.now();
     holdTimer.current = setInterval(() => {
@@ -110,9 +115,11 @@ export function LensScreen(): React.JSX.Element {
       const dithered = ditherCapturedStill(photo.base64);
       setStill(dithered);
       setMessage('');
+      audio.play('resolve');
       appendLog('sys', 'CAPTURE RESOLVED · HELD FOR CLASSIFICATION');
       gainAttunement(ATTUNEMENT_GAIN.scan);
     } catch {
+      audio.play('discard');
       setMessage('RESOLUTION FAILED · RETRY');
       setTimeout(() => setMessage(''), 1200);
     }
@@ -195,7 +202,13 @@ export function LensScreen(): React.JSX.Element {
             arrives with a later calibration.
           </Text>
           <Text style={styles.resolveNote}>CLASSIFICATION MODULE ARRIVES IN MILESTONE 3</Text>
-          <Pressable style={styles.discardBtn} onPress={() => setStill(null)}>
+          <Pressable
+            style={styles.discardBtn}
+            onPress={() => {
+              audio.play('file');
+              setStill(null);
+            }}
+          >
             <Text style={styles.discardText}>RETURN TO LENS</Text>
           </Pressable>
         </View>
