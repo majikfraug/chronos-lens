@@ -4,6 +4,17 @@ Deviations from `docs/brief.md`, and why. Newest first.
 
 ---
 
+## 2026-07-06 — Pinned to Expo SDK 54 (down from 57) to match the tester's Expo Go
+
+The director's iPhone (iOS 26.5) can only get Expo Go supporting SDK 54 from
+the App Store, and Expo Go is our only no-Mac, no-paid-Apple-account path to
+on-device iOS testing (brief §9.4: optimize for the director's testing loop).
+Downgraded expo ~57 → ~54 via `expo install --fix`; no source changes were
+needed (the new expo-file-system File/Directory API, expo-sqlite async API,
+and the Skia pixel APIs we use all exist in SDK 54). Revert condition: when
+the App Store serves an SDK 55+ Expo Go, or when we move to EAS dev builds /
+TestFlight distribution (M5), upgrade back to the latest SDK.
+
 ## 2026-07-06 — Added react-dom/react-native-web for local dev-loop only
 
 Brief §3 targets iOS + Android from one codebase; web is not a shipping
