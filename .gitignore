@@ -34,5 +34,13 @@ Thumbs.db
 .vscode/
 .idea/
 
+# claude local session files (project settings.json IS tracked)
+.claude/settings.local.json
+.claude/scheduled_tasks.lock
+
+# design-doc source drops (canonical copies live in /docs and /prototypes)
+files/
+files.zip
+
 # eas
 credentials.json
