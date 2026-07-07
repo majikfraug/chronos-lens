@@ -1,9 +1,12 @@
 import {
   Canvas,
   Circle,
+  FilterMode,
   Group,
   Image as SkiaImage,
   Line,
+  MipmapMode,
+  Paint,
   RadialGradient,
   Rect,
   vec,
@@ -89,6 +92,8 @@ export function FieldMapCanvas({
       {terrainImage && heightfield && terrainTransform && (
         <Group layer clip={{ x: 0, y: 0, width, height }}>
           <Group transform={terrainTransform}>
+            {/* Nearest-neighbor: zooming magnifies crisp dither texels instead of
+                bilinear jpeg-blur — "image-rendering pixelated everywhere", brief §6. */}
             <SkiaImage
               image={terrainImage}
               x={0}
@@ -96,9 +101,13 @@ export function FieldMapCanvas({
               width={heightfield.size}
               height={heightfield.size}
               fit="fill"
+              sampling={{ filter: FilterMode.Nearest, mipmap: MipmapMode.None }}
             />
           </Group>
-          <Group blendMode="dstIn">
+          {/* All reveal circles accumulate srcOver in one offscreen layer, then
+              mask the terrain in a single dstIn pass — per-circle dstIn erodes
+              already-revealed areas at each feathered edge (ring artifact). */}
+          <Group layer={<Paint blendMode="dstIn" />}>
             {visibleReveals.map((p, i) => (
               <Circle key={i} cx={p.x} cy={p.y} r={revealRadiusPx}>
                 <RadialGradient
