@@ -4,6 +4,19 @@ Deviations from `docs/brief.md`, and why. Newest first.
 
 ---
 
+## 2026-07-07 — Camera dither applies at capture time, not per-frame (Expo Go limit)
+
+Brief §2.2 calls for the live camera feed through the dither shader at 30fps.
+Expo Go has no camera frame processors (that needs react-native-vision-camera
+or an expo-gl camera texture in a dev-client build, which currently requires a
+paid Apple developer account to install on the tester's iPhone). Honest v1-now
+version per brief §9.5: live feed shows with a phosphor tint + the global
+scanline/grain overlays; the full 128×96 luminance → Bayer 4×4 → 4-tone
+phosphor dither applies to the captured still at scan resolution (the same
+pipeline the reliquary thumbnails need anyway). Revisit when a dev-client
+build becomes possible (Apple account, or M5 TestFlight); the prototype's
+per-frame renderFeed() remains the reference.
+
 ## 2026-07-06 — Pinned to Expo SDK 54 (down from 57) to match the tester's Expo Go
 
 The director's iPhone (iOS 26.5) can only get Expo Go supporting SDK 54 from

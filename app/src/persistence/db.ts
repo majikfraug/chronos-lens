@@ -26,6 +26,11 @@ export function getDb(): Promise<SQLiteDatabase> {
         CREATE TABLE IF NOT EXISTS reveal_cells (
           cell_key TEXT PRIMARY KEY
         );
+
+        CREATE TABLE IF NOT EXISTS flags (
+          key TEXT PRIMARY KEY,
+          value TEXT NOT NULL
+        );
       `);
       return db;
     });

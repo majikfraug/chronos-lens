@@ -2,12 +2,15 @@ import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { ScanlineOverlay } from '../components/ScanlineOverlay';
 import { HudBar } from '../components/HudBar';
+import { LogStrip } from '../components/LogStrip';
 import { ComingSoonScreen } from '../screens/ComingSoonScreen';
 import { FieldScreen } from '../screens/FieldScreen';
+import { IntroOverlay } from '../screens/IntroOverlay';
+import { LensScreen } from '../screens/LensScreen';
 import { useGameStore } from '../state/gameStore';
 import { colors } from '../theme/colors';
 import { fonts } from '../theme/typography';
-import { ATTUNEMENT_MAX } from '../config/economy';
+import { ATTUNEMENT_MAX, MAX_LEVEL, XP_THRESHOLDS, registerFor } from '../config/economy';
 
 type Tab = 'field' | 'lens' | 'reliquary';
 
@@ -22,11 +25,13 @@ export function AppShell(): React.JSX.Element {
   const level = useGameStore((s) => s.level);
   const xp = useGameStore((s) => s.xp);
   const attunement = useGameStore((s) => s.attunement);
-  const xpToNext = useGameStore((s) => s.xpToNext());
-  const register = useGameStore((s) => s.register());
-
-  const xpFraction = xpToNext ? (xp - xpToNext.current) / (xpToNext.next - xpToNext.current) : 1;
-  const xpRightLabel = xpToNext ? `${xp}/${xpToNext.next}` : 'MAX';
+  const introSeen = useGameStore((s) => s.introSeen);
+  const markIntroSeen = useGameStore((s) => s.markIntroSeen);
+  const register = registerFor(level, attunement);
+  const prevThreshold = level === 1 ? 0 : XP_THRESHOLDS[level - 2];
+  const nextThreshold = level >= MAX_LEVEL ? null : XP_THRESHOLDS[level - 1];
+  const xpFraction = nextThreshold ? (xp - prevThreshold) / (nextThreshold - prevThreshold) : 1;
+  const xpRightLabel = nextThreshold ? `${xp}/${nextThreshold}` : 'MAX';
 
   return (
     <View style={styles.app}>
@@ -69,10 +74,19 @@ export function AppShell(): React.JSX.Element {
 
       <View style={styles.body}>
         {tab === 'field' && <FieldScreen />}
-        {tab === 'lens' && <ComingSoonScreen label="LENS" milestone="M2" />}
-        {tab === 'reliquary' && <ComingSoonScreen label="RELIQUARY" milestone="M3" />}
+        {tab === 'lens' && <LensScreen />}
+        {tab === 'reliquary' && (
+          <ComingSoonScreen
+            title="RELIQUARY · TYPE ARCHIVE"
+            body="No forms attested. Artifacts and features identified through the Lens will be filed here, your captures serving as the record."
+            note="MODULE ARRIVES IN MILESTONE 3 · CLASSIFICATION"
+          />
+        )}
       </View>
 
+      <LogStrip />
+
+      {!introSeen && <IntroOverlay onDone={markIntroSeen} />}
       <ScanlineOverlay />
     </View>
   );

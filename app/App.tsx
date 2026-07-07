@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import React, { useEffect } from 'react';
+import { SafeAreaView, StyleSheet, Text } from 'react-native';
 import { AppShell } from './src/navigation/AppShell';
 import { useGameStore } from './src/state/gameStore';
 import { colors } from './src/theme/colors';
@@ -17,24 +17,27 @@ export default function App(): React.JSX.Element {
 
   if (!fontsLoaded || !hydrated) {
     return (
-      <View style={styles.boot}>
+      <SafeAreaView style={styles.boot}>
         <Text style={styles.bootLine}>CHRONOS-LENS · CALIBRATING …</Text>
         <StatusBar style="light" />
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
+    // RN SafeAreaView keeps the header below the iOS status bar / Dynamic Island
+    // and the transmit row above the home indicator.
+    <SafeAreaView style={styles.container}>
       <AppShell />
       <StatusBar style="light" />
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: colors.bg,
   },
   boot: {
     flex: 1,

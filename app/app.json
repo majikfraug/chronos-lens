@@ -43,6 +43,12 @@
           "locationWhenInUsePermission": "The Lens tracks your real-world position to reveal the field map as you walk. Position data never leaves this device."
         }
       ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "The Lens renders the camera feed as a dithered scan to classify artifacts and features you point it at. No images leave this device."
+        }
+      ],
       "expo-splash-screen"
     ]
   }

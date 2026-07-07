@@ -8,9 +8,13 @@ import { colors } from '../theme/colors';
 import { fonts, labelStyle } from '../theme/typography';
 import { FieldMapCanvas } from './FieldMapCanvas';
 
-/** Meters visible across the view width, per zoom step. Ported from prototype ZOOM_VIEW. */
-const ZOOM_VIEW_METRES = [1400, 900, 560, 340, 210];
-const DEFAULT_ZOOM = 2;
+/**
+ * Meters visible across the view width, per zoom step (higher index = closer).
+ * Extends the prototype's ZOOM_VIEW with 120m/70m walking-scale steps; defaults
+ * near street level since this version is walked, not dragged.
+ */
+const ZOOM_VIEW_METRES = [1400, 900, 560, 340, 210, 120, 70];
+const DEFAULT_ZOOM = 4;
 
 const NICE_SCALE_METRES = [10, 25, 50, 100, 200, 250, 500, 1000];
 
@@ -75,24 +79,22 @@ export function FieldScreen(): React.JSX.Element {
       <View style={styles.zoomBtns}>
         <Pressable
           style={styles.zoomBtn}
-          onPress={() => setZoom((z) => Math.max(0, z - 1))}
-          disabled={zoom === 0}
+          onPress={() => setZoom((z) => Math.min(ZOOM_VIEW_METRES.length - 1, z + 1))}
+          disabled={zoom === ZOOM_VIEW_METRES.length - 1}
         >
           <Text style={styles.zoomBtnText}>+</Text>
         </Pressable>
         <Pressable
           style={styles.zoomBtn}
-          onPress={() => setZoom((z) => Math.min(ZOOM_VIEW_METRES.length - 1, z + 1))}
-          disabled={zoom === ZOOM_VIEW_METRES.length - 1}
+          onPress={() => setZoom((z) => Math.max(0, z - 1))}
+          disabled={zoom === 0}
         >
           <Text style={styles.zoomBtnText}>−</Text>
         </Pressable>
       </View>
 
       <View style={styles.legend} pointerEvents="none">
-        <Text style={styles.legendText}>
-          {playerMeters ? `${Math.round(playerMeters.x)} , ${Math.round(playerMeters.y)}` : '0 , 0'}
-        </Text>
+        <Text style={styles.legendText}>{playerPosition ? formatLatLon(playerPosition) : '—'}</Text>
         <View style={styles.scaleGroup}>
           <View style={[styles.scaleLine, { width: scaleBarWidth }]} />
           <Text style={styles.legendText}>{niceScale} m</Text>
@@ -100,6 +102,12 @@ export function FieldScreen(): React.JSX.Element {
       </View>
     </View>
   );
+}
+
+function formatLatLon(p: { lat: number; lon: number }): string {
+  const lat = `${Math.abs(p.lat).toFixed(5)}° ${p.lat >= 0 ? 'N' : 'S'}`;
+  const lon = `${Math.abs(p.lon).toFixed(5)}° ${p.lon >= 0 ? 'E' : 'W'}`;
+  return `${lat} · ${lon}`;
 }
 
 function telemetryFor(status: ReturnType<typeof useLocationTracking>): string {

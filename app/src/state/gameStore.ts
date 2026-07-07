@@ -5,10 +5,9 @@ import {
   FIELD,
   MAX_LEVEL,
   XP_THRESHOLDS,
-  type Register,
-  registerFor,
 } from '../config/economy';
 import {
+  getFlag,
   loadDiscoveredCells,
   loadGameState,
   loadRevealCells,
@@ -16,9 +15,19 @@ import {
   markRevealCell,
   saveOrigin,
   saveProgress,
+  setFlag,
 } from '../persistence/gameRepository';
 import { cellKeyFor, toLocalMeters, type LatLon } from '../location/projection';
 import { discoveryXpFor, neighborCoarseCells } from '../terrain/discovery';
+
+export type LogEntry = {
+  id: number;
+  kind: 'sys' | 'disc' | 'ai' | 'milestone';
+  text: string;
+};
+
+let nextLogId = 1;
+const LOG_CAP = 60;
 
 type GameStore = {
   hydrated: boolean;
@@ -30,10 +39,12 @@ type GameStore = {
   discoveredCells: Set<string>;
   revealedCells: Set<string>;
   playerPosition: LatLon | null;
+  introSeen: boolean;
+  /** Session-only companion/system feed shown in the log strip. Not persisted in M1/M2. */
+  log: LogEntry[];
 
-  register: () => Register;
-  xpToNext: () => { current: number; next: number } | null; // null once MAX_LEVEL
-
+  appendLog: (kind: LogEntry['kind'], text: string) => void;
+  markIntroSeen: () => void;
   hydrate: () => Promise<void>;
   /** The one entry point for a new GPS fix: sets origin (first fix), position, fog reveal, and discovery XP. */
   recordMovement: (point: LatLon) => Promise<void>;
@@ -51,22 +62,27 @@ export const useGameStore = create<GameStore>((set, get) => ({
   discoveredCells: new Set(),
   revealedCells: new Set(),
   playerPosition: null,
+  introSeen: true, // assume seen until hydration says otherwise, so it never flashes
+  log: [],
 
-  register: () => registerFor(get().level, get().attunement),
+  appendLog: (kind, text) => {
+    set((state) => ({
+      log: [...state.log, { id: nextLogId++, kind, text }].slice(-LOG_CAP),
+    }));
+  },
 
-  xpToNext: () => {
-    const { level } = get();
-    if (level >= MAX_LEVEL) return null;
-    const current = level === 1 ? 0 : XP_THRESHOLDS[level - 2];
-    const next = XP_THRESHOLDS[level - 1];
-    return { current, next };
+  markIntroSeen: () => {
+    set({ introSeen: true });
+    void setFlag('intro_seen', '1');
+    get().appendLog('sys', 'COMPANION PROCESS ONLINE · CHANNEL OPEN');
   },
 
   hydrate: async () => {
-    const [persisted, discovered, revealed] = await Promise.all([
+    const [persisted, discovered, revealed, introFlag] = await Promise.all([
       loadGameState(),
       loadDiscoveredCells(),
       loadRevealCells(),
+      getFlag('intro_seen'),
     ]);
     set({
       hydrated: true,
@@ -80,6 +96,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       homeCellKey: persisted.homeCellKey,
       discoveredCells: discovered,
       revealedCells: revealed,
+      introSeen: introFlag === '1',
     });
   },
 
@@ -90,6 +107,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       homeCellKey = cellKeyFor({ x: 0, y: 0 }, FIELD.cellSizeM);
       origin = point;
       set({ origin, homeCellKey, playerPosition: point });
+      get().appendLog('sys', 'POSITION LOCK ACQUIRED · SURVEY ORIGIN SET');
       await saveOrigin(point.lat, point.lon, homeCellKey);
     } else {
       set({ playerPosition: point });
@@ -119,20 +137,28 @@ export const useGameStore = create<GameStore>((set, get) => ({
       set({ discoveredCells: next });
       void markCellDiscovered(cell.key);
 
-      get().gainXp(discoveryXpFor(cell.key, resolvedHomeCellKey));
+      const earned = discoveryXpFor(cell.key, resolvedHomeCellKey);
+      get().appendLog('disc', `+${earned} XP · DISCOVERY`);
+      get().gainXp(earned);
       get().gainAttunement(ATTUNEMENT_GAIN.discovery);
     }
   },
 
   gainXp: (amount) => {
     set((state) => {
-      let xp = state.xp + amount;
+      const xp = state.xp + amount;
       let level = state.level;
+      let log = state.log;
       while (level < MAX_LEVEL && xp >= XP_THRESHOLDS[level - 1]) {
         level += 1;
+        // Rendered as in-world telemetry, never as game mechanics — brief §5.
+        log = [
+          ...log,
+          { id: nextLogId++, kind: 'milestone' as const, text: `THRESHOLD ATTAINED · LEVEL ${level}` },
+        ].slice(-LOG_CAP);
       }
       void saveProgress(level, xp, state.attunement);
-      return { xp, level };
+      return { xp, level, log };
     });
   },
 

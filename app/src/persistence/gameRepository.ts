@@ -63,6 +63,19 @@ export async function markCellDiscovered(cellKey: string): Promise<void> {
   await db.runAsync('INSERT OR IGNORE INTO discovered_cells (cell_key) VALUES (?)', [cellKey]);
 }
 
+export async function getFlag(key: string): Promise<string | null> {
+  const db = await getDb();
+  const row = await db.getFirstAsync<{ value: string }>('SELECT value FROM flags WHERE key = ?', [
+    key,
+  ]);
+  return row?.value ?? null;
+}
+
+export async function setFlag(key: string, value: string): Promise<void> {
+  const db = await getDb();
+  await db.runAsync('INSERT OR REPLACE INTO flags (key, value) VALUES (?, ?)', [key, value]);
+}
+
 /** Finer-grained "has fog been revealed here" cells — see fogReveal.ts. */
 export async function loadRevealCells(): Promise<Set<string>> {
   const db = await getDb();

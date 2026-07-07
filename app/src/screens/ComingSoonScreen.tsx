@@ -3,14 +3,20 @@ import { StyleSheet, Text, View } from 'react-native';
 import { colors } from '../theme/colors';
 import { fonts } from '../theme/typography';
 
-type Props = { label: string; milestone: string };
+type Props = {
+  title: string;
+  body: string;
+  /** Honest dev-status line, e.g. which milestone brings the module. */
+  note: string;
+};
 
 /** Placeholder for a tab not yet built — see docs/brief.md §8 roadmap. */
-export function ComingSoonScreen({ label, milestone }: Props): React.JSX.Element {
+export function ComingSoonScreen({ title, body, note }: Props): React.JSX.Element {
   return (
     <View style={styles.wrap}>
-      <Text style={styles.line}>{label}</Text>
-      <Text style={styles.sub}>NOT YET SURVEYED · {milestone}</Text>
+      <Text style={styles.title}>{title}</Text>
+      <Text style={styles.body}>{body}</Text>
+      <Text style={styles.note}>{note}</Text>
     </View>
   );
 }
@@ -20,19 +26,29 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
+    gap: 14,
+    paddingHorizontal: 32,
     backgroundColor: colors.bg,
   },
-  line: {
+  title: {
     fontFamily: fonts.body,
     fontSize: 11,
-    letterSpacing: 2,
+    letterSpacing: 2.5,
     color: colors.phosphorDim,
+    textAlign: 'center',
   },
-  sub: {
+  body: {
+    fontFamily: fonts.body,
+    fontSize: 12.5,
+    lineHeight: 19,
+    color: colors.phosphor,
+    textAlign: 'center',
+  },
+  note: {
     fontFamily: fonts.body,
     fontSize: 9,
     letterSpacing: 1.5,
     color: colors.phosphorFaint,
+    textAlign: 'center',
   },
 });

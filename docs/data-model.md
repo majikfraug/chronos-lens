@@ -22,6 +22,12 @@ Table `game_state` (single row, key-value blob is fine at this size):
 Table `discovered_cells(cell_key TEXT PRIMARY KEY)`: coarse (~100 m) cells
 already accounted for discovery XP — see `economy.ts` `FIELD.cellSizeM`.
 
+Table `reveal_cells(cell_key TEXT PRIMARY KEY)`: fine (~20 m snap) cells the
+fog-of-war has been revealed at — see `economy.ts` `FIELD.revealSnapM`.
+
+Table `flags(key TEXT PRIMARY KEY, value TEXT)`: one-shot booleans and small
+scalars (currently `intro_seen`).
+
 Table `fog_reveal` (or a single PNG on disk, see below):
 
 - The fog-of-war reveal mask is persisted as a raster (PNG) per world region on
