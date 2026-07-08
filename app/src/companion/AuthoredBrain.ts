@@ -48,13 +48,16 @@ export class AuthoredBrain implements CompanionBrain {
 
   route(text: string, context: CompanionContext): CompanionResponse & { topic: string } {
     const late = context.register === 'CURIOUS';
+    const ctx = { ...context, playerText: text };
     for (const entry of ROUTER) {
       if (entry.match.test(text)) {
-        const line = late ? entry.late : entry.early;
-        return { ...this.finish(line, context), topic: entry.topic };
+        const line = this.pickAvoidingRepeats(late ? entry.late : entry.early);
+        return { ...this.finish(line, ctx), topic: entry.topic };
       }
     }
-    return { ...this.finish(ROUTER_UNKNOWN, context), topic: 'unknown' };
+    const unknownPool = ROUTER_UNKNOWN.filter((l) => registerAtLeast(context.register, l.reg));
+    const line = this.pickAvoidingRepeats(unknownPool.length ? unknownPool : ROUTER_UNKNOWN);
+    return { ...this.finish(line, ctx), topic: 'unknown' };
   }
 
   private pickAvoidingRepeats(pool: CorpusLine[]): CorpusLine {
@@ -72,13 +75,22 @@ export class AuthoredBrain implements CompanionBrain {
       text = text.replace('{T}', context.type.toLowerCase());
     }
     if (context.keptAnswer) {
-      text = text.replace('{A}', context.keptAnswer);
+      text = text.replace('{A}', snippet(context.keptAnswer));
+    }
+    if (context.playerText) {
+      text = text.replace('{P}', snippet(context.playerText));
     }
     if (context.named) {
       text = applyContractions(text);
     }
     return { text, mood: line.mood };
   }
+}
+
+/** Short enough to quote inline; the FULL text stays kept in the answers table. */
+function snippet(text: string): string {
+  const clean = text.trim().replace(/\s+/g, ' ');
+  return clean.length <= 60 ? clean : `${clean.slice(0, 57)}…`;
 }
 
 /** The one brain the game talks to. Swappable for LLMBrain at v1.5. */

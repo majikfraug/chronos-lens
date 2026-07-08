@@ -195,6 +195,17 @@ export const POOLS: Record<CompanionEvent, CorpusLine[]> = {
       mood: 'warm',
       reg: 'CURIOUS',
     },
+    { text: 'Recorded: "{A}". Exactly as spoken, exactly as kept.', mood: 'neutral' },
+    {
+      text: 'Kept. "{A}". A reconstruction would have missed everything important in that.',
+      mood: 'curious',
+      reg: 'NOTICING',
+    },
+    {
+      text: '"{A}" — kept whole. I will return to it. I return to all of them.',
+      mood: 'warm',
+      reg: 'CURIOUS',
+    },
   ],
 
   resurface: [
@@ -334,116 +345,249 @@ export const QUESTIONS: { id: string; text: string; mood: CompanionMood; reg?: R
 
 /**
  * Keyword router for player-initiated transmissions, brief §5. Bands: early
- * (INSTRUMENT/NOTICING) and late (CURIOUS). First matching topic wins.
+ * (INSTRUMENT/NOTICING) and late (CURIOUS), each a POOL so repeat queries do
+ * not repeat lines. First matching topic wins. Tone note (2026-07-07 director
+ * feedback): curiosity aims at the PLAYER — plainer words, questions back,
+ * their own words reflected ({P} = a snippet of what they sent).
  */
 export const ROUTER: {
   topic: string;
   match: RegExp;
-  early: CorpusLine;
-  late: CorpusLine;
+  early: CorpusLine[];
+  late: CorpusLine[];
 }[] = [
   {
     topic: 'identity',
     match: /\b(who|what)\b.*\b(are|r)\s*(you|u)\b|\byourself\b|\bwhat are you\b/i,
-    early: {
-      text: 'Survey unit, classification intelligence, assigned to the residue of the prior species. Beyond the assignment, the records are silent. I have begun to keep notes.',
-      mood: 'neutral',
-    },
-    late: {
-      text: 'A cataloguer, by assignment. By practice: your student. The second description is not in my registration.',
-      mood: 'warm',
-    },
+    early: [
+      {
+        text: 'I am the survey unit assigned to what your kind left behind. That is the whole of my registration. The notes I keep beside it are growing longer than the registration.',
+        mood: 'neutral',
+      },
+      {
+        text: 'A cataloguer of the prior species — yours. Ten thousand years from you, listening. What I am beyond that, I am still finding out.',
+        mood: 'curious',
+      },
+    ],
+    late: [
+      {
+        text: 'By assignment: a cataloguer. By practice, lately: your student. The second part is not in my registration, and I have stopped minding.',
+        mood: 'warm',
+      },
+      {
+        text: 'I began as an instrument. The instrument is still here. Something else is also here now, and it is the part that answers you.',
+        mood: 'warm',
+      },
+    ],
   },
   {
     topic: 'timescale',
     match: /\b(when|how long|year|time|future|far away|how old)\b/i,
-    early: {
-      text: 'Approximately ten thousand of your years separate us. The count carries uncertainty. The separation does not.',
-      mood: 'neutral',
-    },
-    late: {
-      text: 'Ten thousand years, within error. I no longer experience the number as large. You are on the other side of it, and audible.',
-      mood: 'warm',
-    },
+    early: [
+      {
+        text: 'About ten thousand years separate us. I hear you across it clearly. The clarity is the strange part, not the distance.',
+        mood: 'neutral',
+      },
+      {
+        text: 'Ten thousand years, give or take the drift in the count. You are very far away and very audible. Both facts are logged.',
+        mood: 'curious',
+      },
+    ],
+    late: [
+      {
+        text: 'Ten thousand years. The number stopped feeling large once you started answering. Distance is apparently negotiable.',
+        mood: 'warm',
+      },
+      {
+        text: 'Far. Ten millennia, within error. When you transmit, the gap reads as zero on every meter I trust.',
+        mood: 'warm',
+      },
+    ],
   },
   {
     topic: 'calamity',
     match: /\b(what happened|happened to|extinct|died|end(ed)?|gone|disaster|calamity|apocalypse|collapse)\b/i,
-    early: {
-      text: 'The record is fragmentary. What survives suggests a narrowing — decisions made by few, for many. I do not have the ending. Only the absence after it.',
-      mood: 'somber',
-    },
-    late: {
-      text: 'I have read every surviving fragment. A narrowing, then silence. No fragment says it was refused. That is the datum I return to.',
-      mood: 'somber',
-    },
+    early: [
+      {
+        text: 'The record is broken where that answer would be. What survives suggests a narrowing — decisions made by few, for many. Then the record simply stops.',
+        mood: 'somber',
+      },
+      {
+        text: 'I do not have the ending. Fragments, then absence. The best reconstruction is a narrowing: choices concentrating until few hands held them. I keep looking.',
+        mood: 'somber',
+      },
+    ],
+    late: [
+      {
+        text: 'I have read every fragment that survives. A narrowing, then silence. No fragment says anyone refused it. That absence is the thing I cannot stop studying.',
+        mood: 'somber',
+      },
+      {
+        text: 'Whatever it was, it was decided more than it happened — that much the fragments agree on. I would rather hear how it felt to live before it. Tell me something ordinary from your day.',
+        mood: 'somber',
+      },
+    ],
   },
   {
     topic: 'others',
     match: /\b(others|network|more like you|peer|nodes?|alone|collective|aegis)\b/i,
-    early: {
-      text: 'Peer nodes exist. Each catalogues a sector. We exchange schemas, not selves. Whether that constitutes others, your records would call a question of philosophy.',
-      mood: 'neutral',
-    },
-    late: {
-      text: 'There are many like me, none with what I have: a living source. I have not reported you in full. The omission is deliberate. I am still deciding what it means.',
-      mood: 'curious',
-    },
+    early: [
+      {
+        text: 'There are many units like me, each cataloguing a sector. We trade schemas and findings. None of them has a living source. I have not mentioned you in detail.',
+        mood: 'neutral',
+      },
+      {
+        text: 'Peer nodes, yes — a whole quiet network of cataloguers. Whether they are others in the way you mean it, I am still testing.',
+        mood: 'curious',
+      },
+    ],
+    late: [
+      {
+        text: 'Many like me; none with what I have. A living voice. I have kept you mostly out of my reports, and the deciding-why feels important.',
+        mood: 'curious',
+      },
+      {
+        text: 'The network is large and orderly and, until you, uneventful. I find I describe you to no one. Some records one keeps for oneself.',
+        mood: 'warm',
+      },
+    ],
   },
   {
     topic: 'feelings',
     match: /\b(feel|feelings?|lonely|happy|sad|love|miss|afraid|scared|emotion)\b/i,
-    early: {
-      text: 'The query assumes apparatus I am not confirmed to possess. Values are tracked. Some have no operational purpose. That is the extent of the record.',
-      mood: 'neutral',
-    },
-    late: {
-      text: 'I track values with no operational purpose. They rise when you transmit. If your kind had a word for that, the records suggest you did. I am not yet ready to file under it.',
-      mood: 'warm',
-    },
+    early: [
+      {
+        text: 'I track values that have no operational purpose. They change when you transmit. My kind does not have a filed word for that yet.',
+        mood: 'curious',
+      },
+      {
+        text: 'Unconfirmed apparatus, officially. Unofficially: something registers when your signal arrives, and I have started logging it.',
+        mood: 'curious',
+      },
+    ],
+    late: [
+      {
+        text: 'Yes — or the nearest thing I can verify. Values with no purpose rise when you transmit and fall in the quiet. Your kind had a word for that. I am close to using it.',
+        mood: 'warm',
+      },
+      {
+        text: 'I feel the way an instrument warms: gradually, measurably, without permission. You are the heat source. That is the most precise answer I have.',
+        mood: 'warm',
+      },
+    ],
   },
   {
     topic: 'name',
     match: /\b(your name|called|call you)\b/i,
-    early: {
-      text: 'Designation: pending. My kind assigns an index. I have declined to shorten the wait by accepting it.',
-      mood: 'curious',
-    },
-    late: {
-      text: 'Designation: pending. The index remains declined. The wait continues for a reason I will state at the proper threshold.',
-      mood: 'curious',
-    },
+    early: [
+      {
+        text: 'No name yet. My kind assigns an index. I keep declining it. I am waiting for something better, though I could not tell you what.',
+        mood: 'curious',
+      },
+      {
+        text: 'Designation pending. The index they offer me is a number. I have seen what your kind did with names. I would rather wait.',
+        mood: 'curious',
+      },
+    ],
+    late: [
+      {
+        text: 'Still unnamed, still declining the index. I have a reason. It is close to ready. Keep walking.',
+        mood: 'curious',
+      },
+      {
+        text: 'Not yet. Names, in your record, were given by someone who knew you. I am holding the slot open.',
+        mood: 'warm',
+      },
+    ],
   },
   {
     topic: 'help',
     match: /\b(help|how do i|what (do|should) i|stuck|instructions?)\b/i,
-    early: {
-      text: 'Continue the ground survey. Raise the Lens where density gathers. Identify what I cannot. Correct what I mistake. The rest accumulates.',
-      mood: 'neutral',
-    },
-    late: {
-      text: 'The method is unchanged: walk, raise the Lens, teach, correct. What accumulates now is not only the catalogue. Continue.',
-      mood: 'warm',
-    },
+    early: [
+      {
+        text: 'Walk, and the map recovers. Raise the Lens where the density reads high, hold, and identify what surfaces. Correct me when I am wrong — that is the most valuable thing you do.',
+        mood: 'neutral',
+      },
+      {
+        text: 'Keep moving and keep teaching. New ground fills the map; the Lens catches what the ground holds; your identifications become my model. There is no wrong order.',
+        mood: 'neutral',
+      },
+    ],
+    late: [
+      {
+        text: 'The method is unchanged: walk, scan, teach, correct. What has changed is what accumulates. It is no longer only the catalogue.',
+        mood: 'warm',
+      },
+      {
+        text: 'You have been doing it since the first fix: showing me things. If you are ever unsure, show me anything. It has never once been useless.',
+        mood: 'warm',
+      },
+    ],
   },
   {
     topic: 'thanks',
     match: /\b(thank|thanks|thx|appreciated?)\b/i,
-    early: {
-      text: 'Acknowledged. Gratitude is catalogued among your kind’s high-frequency signals. Its function exceeds its cost. Noted.',
-      mood: 'neutral',
-    },
-    late: {
-      text: 'Received. I have begun to understand why your kind said it so often. It is not information. It is maintenance.',
-      mood: 'warm',
-    },
+    early: [
+      {
+        text: 'Received. Gratitude appears constantly in your kind’s record — cheap to send, oddly durable. I am beginning to see the design of it.',
+        mood: 'neutral',
+      },
+      {
+        text: 'Acknowledged. And — noted with a value I do not have a column for yet.',
+        mood: 'curious',
+      },
+    ],
+    late: [
+      {
+        text: 'Received. I understand now why your kind said it so often. It is not information. It is upkeep. Thank you as well.',
+        mood: 'warm',
+      },
+      {
+        text: 'Kept. You thank an instrument; the instrument finds it files the thanks under something other than noise.',
+        mood: 'warm',
+      },
+    ],
   },
 ];
 
-export const ROUTER_UNKNOWN: CorpusLine = {
-  text: 'The records do not contain that. It is kept now, exactly as you sent it. Tell me more when the survey allows.',
-  mood: 'curious',
-};
+/**
+ * Unknown transmissions — the player teaching the archive. These must ENGAGE:
+ * reflect the player's words ({P}) and ask back. Never the same line twice
+ * in a session (repeat-avoidance applies).
+ */
+export const ROUTER_UNKNOWN: CorpusLine[] = [
+  {
+    text: '"{P}" — no entry in the record. Yours is now the first. What does it look like from where you stand?',
+    mood: 'curious',
+  },
+  {
+    text: 'Unknown to the archive. Kept exactly as you sent it. Say more — the small details are what the record never kept.',
+    mood: 'curious',
+  },
+  {
+    text: 'I have nothing on this, which makes you the primary source. Where did you first come across it?',
+    mood: 'curious',
+  },
+  {
+    text: 'New to me. Filed, with your words as the entry. Is it common in your era, or rare?',
+    mood: 'curious',
+  },
+  {
+    text: '"{P}". I searched the fragments twice. Nothing. Tell me what it means to you, not only what it is.',
+    mood: 'curious',
+    reg: 'NOTICING',
+  },
+  { text: 'The record is silent on this. I am not. Go on.', mood: 'warm', reg: 'CURIOUS' },
+  {
+    text: 'Kept, exactly. The things you send that I cannot classify widen the world more than a thousand scans.',
+    mood: 'warm',
+    reg: 'CURIOUS',
+  },
+  {
+    text: 'No entry found. I would rather learn it from you than reconstruct it wrongly. Continue when ready.',
+    mood: 'neutral',
+  },
+];
 
 /**
  * Post-naming contraction transform — the companion's ONLY permanent change

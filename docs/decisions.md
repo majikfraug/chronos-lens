@@ -4,6 +4,22 @@ Deviations from `docs/brief.md`, and why. Newest first.
 
 ---
 
+## 2026-07-07 — Conversational tone pass on the companion (voice spec intact)
+
+Director field feedback: the companion read as "too obscure … scripted
+responses," and the single unknown-transmission line repeated verbatim.
+Changes, all within voice-spec bounds: (1) every router topic and the unknown
+response became a register-banded POOL with repeat-avoidance (the unknown
+single-line was a violation of the brief's own ≥8-variants rule); (2) unknown
+responses and answer acks now reflect the player's words back ({P}/{A}
+snippets — full text stays verbatim in the answers table) and end on questions
+to the player; (3) wording across the router made plainer — curiosity aimed at
+the player rather than delivered as pronouncements. The register arc
+(INSTRUMENT→CURIOUS) and no-contractions-before-naming rules are unchanged.
+Boundary note: an authored corpus is ultimately scripted; the real remedy for
+"feels like a conversation" is the LLMBrain implementation the CompanionBrain
+interface was built for (v1.5) — candidate for pulling forward after M5.
+
 ## 2026-07-07 — Audio plays through the iOS silent switch (deviation from §7's first reading)
 
 Brief §7 says "respect silent switch conventions." First implementation used

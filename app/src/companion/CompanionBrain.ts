@@ -36,6 +36,8 @@ export type CompanionContext = {
   patternKey?: string;
   /** A kept verbatim answer, quoted into lines via {A}. */
   keptAnswer?: string;
+  /** The player's transmission text, reflected into lines via {P}. */
+  playerText?: string;
 };
 
 export interface CompanionBrain {

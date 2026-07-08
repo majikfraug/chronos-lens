@@ -227,7 +227,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (s.pendingQuestion) {
       const kept = await keepAnswer(s.pendingQuestion.text, trimmed);
       set({ pendingQuestion: null, keptAnswers: [...s.keptAnswers, kept] });
-      s.speak('answer_ack');
+      s.speak('answer_ack', { keptAnswer: trimmed });
       s.gainAttunement(ATTUNEMENT_GAIN.answer);
       return;
     }
