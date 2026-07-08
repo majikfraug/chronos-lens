@@ -58,6 +58,8 @@ Table `fog_reveal` (or a single PNG on disk, see below):
   milestones, revisit-home, far-out).
 - `flags.companion_name` — set at the L10 naming; its presence flips the
   contraction tell in every subsequent line (corpus `applyContractions`).
+- `flags.brain_mode` — 'authored' | 'llm'; which CompanionBrain implementation
+  answers (LLM falls back to authored per-call when the model is unavailable).
 
 ## (planned) M4 — Companion
 

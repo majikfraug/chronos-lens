@@ -8,10 +8,12 @@ instead.
 
 ## v1.5
 
-- **LLMBrain** — an on-device SLM or API-backed implementation of
-  `CompanionBrain`, receiving `docs/voice-spec.md` (§5 of the brief) as its
-  system prompt. Game code does not change; only the brain implementation
-  swaps in behind the existing interface.
+- **LLMBrain** — IN PROGRESS, pulled forward 2026-07-08 (see decisions.md).
+  Shipped: async CompanionBrain, LLMBrain via react-native-executorch
+  (Llama 3.2 1B on-device), systemPrompt.ts, CORE toggle, desktop harness.
+  Remaining: Apple dev-client build to run it on the phone; model download
+  UX (progress in the log strip); possibly Apple Foundation Models
+  (iOS 26 built-in ~3B) as an alternative backend worth evaluating.
 - Expanded POI storytelling (deeper per-category "what was this" content).
 - **Live reactive ambient engine** (needs the dev-client build and
   react-native-audio-api): replace the looped ambient stem with real-time

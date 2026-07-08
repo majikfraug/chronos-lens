@@ -42,5 +42,9 @@ Thumbs.db
 files/
 files.zip
 
+# tools workspace artifacts (companion harness)
+tools/node_modules/
+tools/models/
+
 # eas
 credentials.json

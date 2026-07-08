@@ -32,6 +32,8 @@ export function AppShell(): React.JSX.Element {
   const markIntroSeen = useGameStore((s) => s.markIntroSeen);
   const appendLog = useGameStore((s) => s.appendLog);
   const awakeningPending = useGameStore((s) => s.awakeningPending);
+  const brainMode = useGameStore((s) => s.brainMode);
+  const switchBrain = useGameStore((s) => s.switchBrain);
   const register = registerFor(level, attunement);
   const prevThreshold = level === 1 ? 0 : XP_THRESHOLDS[level - 2];
   const nextThreshold = level >= MAX_LEVEL ? null : XP_THRESHOLDS[level - 1];
@@ -52,6 +54,13 @@ export function AppShell(): React.JSX.Element {
             <Text style={styles.hudText}>
               XP <Text style={styles.hudValue}>{xp}</Text>
             </Text>
+            <Pressable
+              style={styles.muteBtn}
+              hitSlop={8}
+              onPress={() => void switchBrain(brainMode === 'authored' ? 'llm' : 'authored')}
+            >
+              <Text style={styles.hudText}>{brainMode === 'llm' ? 'CORE·L' : 'CORE·A'}</Text>
+            </Pressable>
             <Pressable
               style={styles.muteBtn}
               hitSlop={8}

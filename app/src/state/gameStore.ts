@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { audio } from '../audio/engine';
-import { brain } from '../companion/AuthoredBrain';
+import { brain, getLLMStatus, setBrainMode, type BrainMode } from '../companion/brainProvider';
 import type { CompanionContext, CompanionEvent } from '../companion/CompanionBrain';
 import {
   ATTUNEMENT_GAIN,
@@ -67,6 +67,8 @@ let actionsSinceAsk = 0;
 let resurfacedThisSession = false;
 let wasAwayFromHome = false;
 let sessionEchoDone = false;
+let askInFlight = false;
+const patternsInFlight = new Set<string>();
 
 type GameStore = {
   hydrated: boolean;
@@ -95,6 +97,7 @@ type GameStore = {
   askedQuestionIds: string[];
   firedPatterns: string[];
   awakeningPending: boolean;
+  brainMode: BrainMode;
 
   appendLog: (kind: LogEntry['kind'], text: string) => void;
   /** Speak a brain response into the log with its voice tone. No-op on null. */
@@ -107,6 +110,8 @@ type GameStore = {
   submitTransmission: (text: string) => Promise<void>;
   /** Completes the L10 awakening: keeps the name, flips the contraction tell. */
   completeAwakening: (name: string) => Promise<void>;
+  /** Switches the companion core (authored corpus vs on-device LLM). Persisted. */
+  switchBrain: (mode: BrainMode) => Promise<void>;
   /** Persist a player-defined category (local-first emergent type, docs/future.md). */
   defineCustomType: (name: string, scale: Scale) => Promise<void>;
   /** Fix a category's name; scans and model weight move with it (merges if the name exists). */
@@ -134,6 +139,37 @@ type GameStore = {
   gainAttunement: (amount: number) => void;
 };
 
+/** Full live context for the brain — LLMBrain consumes it all, AuthoredBrain the basics. */
+function brainContext(
+  s: Pick<
+    GameStore,
+    'level' | 'attunement' | 'companionName' | 'taughtCounts' | 'corrections' | 'taughtTotal' | 'keptAnswers' | 'log'
+  >,
+  extra?: Partial<CompanionContext>
+): CompanionContext {
+  const favoredType =
+    Object.entries(s.taughtCounts).sort((a, b) => (b[1] ?? 0) - (a[1] ?? 0))[0]?.[0] ?? null;
+  const recentTranscript = s.log
+    .filter(
+      (e) =>
+        e.kind === 'ai' || e.kind === 'query' || (e.kind === 'sys' && e.text.startsWith('TRANSMIT ▸'))
+    )
+    .slice(-8)
+    .map((e) =>
+      e.kind === 'sys' ? `SURVEYOR: ${e.text.replace('TRANSMIT ▸ ', '')}` : `UNIT: ${e.text}`
+    );
+  return {
+    register: registerFor(s.level, s.attunement),
+    named: s.companionName,
+    taughtTotal: s.taughtTotal,
+    corrections: s.corrections,
+    favoredType,
+    keptAnswers: s.keptAnswers.slice(-10).map((a) => a.answer),
+    recentTranscript,
+    ...extra,
+  };
+}
+
 export const useGameStore = create<GameStore>((set, get) => ({
   hydrated: false,
   level: 1,
@@ -158,23 +194,41 @@ export const useGameStore = create<GameStore>((set, get) => ({
   askedQuestionIds: [],
   firedPatterns: [],
   awakeningPending: false,
+  brainMode: 'authored',
+
+  switchBrain: async (nextMode) => {
+    set({ brainMode: nextMode });
+    void setFlag('brain_mode', nextMode);
+    if (nextMode === 'authored') {
+      await setBrainMode('authored');
+      get().appendLog('sys', 'RESPONSE CORE · AUTHORED ARCHIVE');
+      return;
+    }
+    get().appendLog('sys', 'RESPONSE CORE · LANGUAGE MODEL · INITIALIZING');
+    const status = await setBrainMode('llm');
+    if (status === 'ready') {
+      get().appendLog('sys', 'LANGUAGE CORE ONLINE · ALL PROCESSING ON-DEVICE');
+    } else {
+      get().appendLog(
+        'sys',
+        'LANGUAGE CORE UNAVAILABLE IN THIS CLIENT · REQUIRES DEV BUILD · AUTHORED ARCHIVE ANSWERS FOR NOW'
+      );
+    }
+  },
 
   speak: (event, extra) => {
     const s = get();
-    const response = brain.respond(event, {
-      register: registerFor(s.level, s.attunement),
-      named: s.companionName,
-      ...extra,
+    void brain.respond(event, brainContext(s, extra)).then((response) => {
+      if (!response) return;
+      get().appendLog(response.isQuery ? 'query' : 'ai', response.text);
+      audio.voice(response.mood);
     });
-    if (!response) return;
-    s.appendLog(response.isQuery ? 'query' : 'ai', response.text);
-    audio.voice(response.mood);
   },
 
   companionTick: () => {
     const s = get();
     actionsSinceAsk += 1;
-    if (s.pendingQuestion || actionsSinceAsk < COMPANION.questionGapActions) return;
+    if (s.pendingQuestion || askInFlight || actionsSinceAsk < COMPANION.questionGapActions) return;
     const register = registerFor(s.level, s.attunement);
 
     // A kept answer occasionally resurfaces instead of a new question.
@@ -191,31 +245,41 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return;
     }
 
-    const next = brain.nextQuestion(register, s.askedQuestionIds);
-    if (!next) return;
-    actionsSinceAsk = 0;
-    set({
-      pendingQuestion: { id: next.id, text: next.response.text },
-      askedQuestionIds: [...s.askedQuestionIds, next.id],
-    });
-    void markQuestionAsked(next.id);
-    get().appendLog('query', next.response.text);
-    audio.voice(next.response.mood);
+    askInFlight = true;
+    void brain
+      .nextQuestion(register, s.askedQuestionIds, brainContext(s))
+      .then((next) => {
+        if (!next) return;
+        actionsSinceAsk = 0;
+        set({
+          pendingQuestion: { id: next.id, text: next.response.text },
+          askedQuestionIds: [...get().askedQuestionIds, next.id],
+        });
+        void markQuestionAsked(next.id);
+        get().appendLog('query', next.response.text);
+        audio.voice(next.response.mood);
+      })
+      .finally(() => {
+        askInFlight = false;
+      });
   },
 
   firePattern: (key) => {
     const s = get();
-    if (s.firedPatterns.includes(key)) return;
-    const response = brain.respond('pattern', {
-      register: registerFor(s.level, s.attunement),
-      named: s.companionName,
-      patternKey: key,
-    });
-    if (!response) return; // register too low: leave unfired so it can land later
-    set({ firedPatterns: [...s.firedPatterns, key] });
-    void markPatternFired(key);
-    s.appendLog('ai', response.text);
-    audio.voice(response.mood);
+    if (s.firedPatterns.includes(key) || patternsInFlight.has(key)) return;
+    patternsInFlight.add(key);
+    void brain
+      .respond('pattern', brainContext(s, { patternKey: key }))
+      .then((response) => {
+        if (!response) return; // register too low: leave unfired so it can land later
+        set({ firedPatterns: [...get().firedPatterns, key] });
+        void markPatternFired(key);
+        get().appendLog('ai', response.text);
+        audio.voice(response.mood);
+      })
+      .finally(() => {
+        patternsInFlight.delete(key);
+      });
   },
 
   submitTransmission: async (text) => {
@@ -232,10 +296,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return;
     }
 
-    const response = brain.route(trimmed, {
-      register: registerFor(s.level, s.attunement),
-      named: s.companionName,
-    });
+    const response = await brain.route(trimmed, brainContext(s));
     if (response.topic === 'unknown') {
       // Unknown transmissions are the player teaching the archive — kept verbatim.
       const kept = await keepAnswer('(unprompted transmission)', trimmed);
@@ -392,7 +453,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   hydrate: async () => {
-    const [persisted, discovered, revealed, introFlag, classifier, companion, nameFlag] =
+    const [persisted, discovered, revealed, introFlag, classifier, companion, nameFlag, brainFlag] =
       await Promise.all([
         loadGameState(),
         loadDiscoveredCells(),
@@ -401,7 +462,18 @@ export const useGameStore = create<GameStore>((set, get) => ({
         loadClassifierState(),
         loadCompanionState(),
         getFlag('companion_name'),
+        getFlag('brain_mode'),
       ]);
+    if (brainFlag === 'llm') {
+      set({ brainMode: 'llm' });
+      void setBrainMode('llm').then((status) => {
+        if (status === 'ready') {
+          get().appendLog('sys', 'LANGUAGE CORE ONLINE · ALL PROCESSING ON-DEVICE');
+        } else if (getLLMStatus() === 'unavailable') {
+          get().appendLog('sys', 'LANGUAGE CORE UNAVAILABLE IN THIS CLIENT · AUTHORED ARCHIVE ANSWERS');
+        }
+      });
+    }
     set({
       companionName: nameFlag,
       keptAnswers: companion.answers,

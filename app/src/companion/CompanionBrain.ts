@@ -38,13 +38,30 @@ export type CompanionContext = {
   keptAnswer?: string;
   /** The player's transmission text, reflected into lines via {P}. */
   playerText?: string;
+
+  // Richer context, consumed by LLMBrain (AuthoredBrain ignores it):
+  taughtTotal?: number;
+  corrections?: number;
+  favoredType?: string | null;
+  /** Kept verbatim answers, oldest first (capped by caller). */
+  keptAnswers?: string[];
+  /** Recent log excerpt (companion lines and player transmissions), oldest first. */
+  recentTranscript?: string[];
 };
 
+/**
+ * All methods are async: AuthoredBrain resolves immediately, LLMBrain after
+ * on-device generation. Game code treats every brain identically.
+ */
 export interface CompanionBrain {
-  /** May return null: the instrument is sometimes silent after routine events. */
-  respond(event: CompanionEvent, context: CompanionContext): CompanionResponse | null;
+  /** May resolve null: the instrument is sometimes silent after routine events. */
+  respond(event: CompanionEvent, context: CompanionContext): Promise<CompanionResponse | null>;
   /** Next unasked question for this register, or null when none remain. */
-  nextQuestion(register: Register, askedIds: string[]): { id: string; response: CompanionResponse } | null;
-  /** Routes a player-initiated transmission by keyword. */
-  route(text: string, context: CompanionContext): CompanionResponse & { topic: string };
+  nextQuestion(
+    register: Register,
+    askedIds: string[],
+    context: CompanionContext
+  ): Promise<{ id: string; response: CompanionResponse } | null>;
+  /** Responds to a player-initiated transmission. */
+  route(text: string, context: CompanionContext): Promise<CompanionResponse & { topic: string }>;
 }

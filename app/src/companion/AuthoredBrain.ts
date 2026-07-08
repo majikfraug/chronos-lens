@@ -23,7 +23,7 @@ import {
 export class AuthoredBrain implements CompanionBrain {
   private recent: string[] = [];
 
-  respond(event: CompanionEvent, context: CompanionContext): CompanionResponse | null {
+  async respond(event: CompanionEvent, context: CompanionContext): Promise<CompanionResponse | null> {
     if (event === 'pattern') {
       const line = context.patternKey ? PATTERNS[context.patternKey] : undefined;
       return line ? this.finish(line, context) : null;
@@ -34,10 +34,11 @@ export class AuthoredBrain implements CompanionBrain {
     return this.finish(line, context);
   }
 
-  nextQuestion(
+  async nextQuestion(
     register: Register,
-    askedIds: string[]
-  ): { id: string; response: CompanionResponse } | null {
+    askedIds: string[],
+    _context: CompanionContext
+  ): Promise<{ id: string; response: CompanionResponse } | null> {
     const candidates = QUESTIONS.filter(
       (q) => !askedIds.includes(q.id) && registerAtLeast(register, q.reg)
     );
@@ -46,7 +47,10 @@ export class AuthoredBrain implements CompanionBrain {
     return { id: q.id, response: { text: q.text, mood: q.mood, isQuery: true } };
   }
 
-  route(text: string, context: CompanionContext): CompanionResponse & { topic: string } {
+  async route(
+    text: string,
+    context: CompanionContext
+  ): Promise<CompanionResponse & { topic: string }> {
     const late = context.register === 'CURIOUS';
     const ctx = { ...context, playerText: text };
     for (const entry of ROUTER) {
@@ -92,6 +96,3 @@ function snippet(text: string): string {
   const clean = text.trim().replace(/\s+/g, ' ');
   return clean.length <= 60 ? clean : `${clean.slice(0, 57)}…`;
 }
-
-/** The one brain the game talks to. Swappable for LLMBrain at v1.5. */
-export const brain: CompanionBrain = new AuthoredBrain();

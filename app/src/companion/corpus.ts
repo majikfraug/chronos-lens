@@ -625,3 +625,45 @@ export function applyContractions(text: string): string {
   }
   return out;
 }
+
+/**
+ * Pre-naming enforcement for generated (LLM) lines: a model may slip
+ * contractions despite instructions, and the no-contractions rule is the
+ * naming ceremony's entire payoff — so it is enforced mechanically.
+ */
+const EXPANSIONS: [RegExp, string][] = [
+  [/\bI'll\b/g, 'I will'],
+  [/\bI'm\b/g, 'I am'],
+  [/\bI've\b/g, 'I have'],
+  [/\bI'd\b/g, 'I would'],
+  [/\bIt's\b/g, 'It is'],
+  [/\bit's\b/g, 'it is'],
+  [/\bThat's\b/g, 'That is'],
+  [/\bthat's\b/g, 'that is'],
+  [/\bThere's\b/g, 'There is'],
+  [/\bthere's\b/g, 'there is'],
+  [/\bYou're\b/g, 'You are'],
+  [/\byou're\b/g, 'you are'],
+  [/\bdon't\b/g, 'do not'],
+  [/\bDon't\b/g, 'Do not'],
+  [/\bdoesn't\b/g, 'does not'],
+  [/\bcan't\b/g, 'cannot'],
+  [/\bisn't\b/g, 'is not'],
+  [/\baren't\b/g, 'are not'],
+  [/\bwon't\b/g, 'will not'],
+  [/\bdidn't\b/g, 'did not'],
+  [/\bhaven't\b/g, 'have not'],
+  [/\bwasn't\b/g, 'was not'],
+  [/\blet's\b/g, 'let us'],
+  [/\bLet's\b/g, 'Let us'],
+  [/\bwhat's\b/g, 'what is'],
+  [/\bWhat's\b/g, 'What is'],
+];
+
+export function expandContractions(text: string): string {
+  let out = text;
+  for (const [pattern, replacement] of EXPANSIONS) {
+    out = out.replace(pattern, replacement);
+  }
+  return out;
+}

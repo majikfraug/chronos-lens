@@ -4,6 +4,32 @@ Deviations from `docs/brief.md`, and why. Newest first.
 
 ---
 
+## 2026-07-08 — LLMBrain pulled forward from v1.5 (on-device model, director decision)
+
+The director evaluated the authored corpus in the field and concluded the
+"scripted responses" ceiling is the binding constraint on further voice
+feedback — the LLM companion must be evaluable now. Decisions:
+
+- **On-device only** (no API): Llama 3.2 1B instruct (QAT/LoRA quantized) via
+  react-native-executorch behind the existing CompanionBrain interface, which
+  became async. Nothing the player says leaves the device — privacy rule
+  intact. AuthoredBrain remains the default and the per-call fallback whenever
+  the model is unavailable or busy; a CORE toggle in the header switches
+  brains (persisted in flags.brain_mode).
+- **Voice enforcement is mechanical where it matters**: generated lines are
+  post-processed — think-blocks stripped, capped at 4 sentences, and
+  contractions EXPANDED pre-naming so the naming ceremony's tell cannot be
+  spoiled by a model slip. The character itself lives in
+  src/companion/systemPrompt.ts (voice-spec §5 as a system prompt + live play
+  context: register, taught counts, corrections, favored type, kept verbatim
+  answers, recent transcript).
+- **Hard constraint**: executorch cannot run inside Expo Go. On-phone LLM
+  requires an Expo dev-client build; installing one on the director's iPhone
+  requires the Apple Developer Program ($99/yr) — which M5's TestFlight beta
+  requires anyway. Until then, tools/companion-harness.ts runs the SAME
+  system-prompt modules against the same model family (Llama 3.2 1B GGUF) on
+  the desktop for voice evaluation and prompt tuning.
+
 ## 2026-07-07 — Conversational tone pass on the companion (voice spec intact)
 
 Director field feedback: the companion read as "too obscure … scripted

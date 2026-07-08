@@ -1,0 +1,18 @@
+{
+  "name": "chronos-lens-tools",
+  "private": true,
+  "type": "module",
+  "description": "Desktop harnesses for Chronos-Lens development. companion-harness.ts runs the LLM companion's exact system prompt against the same class of model the phone runs, for voice evaluation before a dev build exists.",
+  "scripts": {
+    "companion": "tsx companion-harness.ts",
+    "companion:demo": "tsx companion-harness.ts --demo"
+  },
+  "devDependencies": {
+    "node-llama-cpp": "^3.13.0",
+    "tsx": "^4.20.0"
+  },
+  "allowScripts": {
+    "node-llama-cpp": true,
+    "esbuild": true
+  }
+}
