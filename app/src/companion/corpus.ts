@@ -590,6 +590,31 @@ export const ROUTER_UNKNOWN: CorpusLine[] = [
 ];
 
 /**
+ * Thread closers — after the companion has asked its follow-up, the exchange
+ * ends with filing, not another question (director feedback 2026-07-08:
+ * an endless string of questions reads as a bot). Voice-canon; used as the
+ * guaranteed backstop when the LLM ignores its close directive.
+ */
+export const THREAD_CLOSERS: CorpusLine[] = [
+  { text: 'Recorded. This is not common in my era. I will ponder it.', mood: 'neutral' },
+  {
+    text: 'I will think on this while you continue the survey. Thank you for the insight.',
+    mood: 'warm',
+  },
+  { text: 'Enough for the record. I will weigh what you have said. Continue when ready.', mood: 'neutral' },
+  {
+    text: 'Filed, all of it. Processing will continue in the background of the survey.',
+    mood: 'neutral',
+  },
+  {
+    text: 'I have more than I expected from this exchange. I will sit with it. The field is waiting for you.',
+    mood: 'warm',
+    reg: 'CURIOUS',
+  },
+  { text: 'This thread closes full. My models will be different tomorrow because of it.', mood: 'warm', reg: 'CURIOUS' },
+];
+
+/**
  * Post-naming contraction transform — the companion's ONLY permanent change
  * of speech after the naming (brief §4/§5). Ordered, case-sensitive pairs.
  */

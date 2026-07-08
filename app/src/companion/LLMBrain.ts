@@ -7,7 +7,7 @@ import type {
   CompanionMood,
   CompanionResponse,
 } from './CompanionBrain';
-import { expandContractions } from './corpus';
+import { applyContractions, expandContractions, THREAD_CLOSERS, registerAtLeast } from './corpus';
 import { buildEventInstruction, buildQuestionInstruction, buildSystemPrompt } from './systemPrompt';
 
 export type LLMStatus = 'uninitialized' | 'loading' | 'ready' | 'unavailable' | 'error';
@@ -62,12 +62,16 @@ export class LLMBrain implements CompanionBrain {
     event: CompanionEvent,
     context: CompanionContext
   ): Promise<CompanionResponse | null> {
+    const conversational = event === 'resurface' || event === 'answer_ack';
     const generated = await this.generate(
       context,
       buildEventInstruction(event, context),
-      event === 'resurface' || event === 'answer_ack'
+      conversational
     );
     if (generated) return generated;
+    if (conversational && questionStreak(context.recentTranscript) >= CLOSE_AFTER_QUESTIONS) {
+      return pickCloser(context);
+    }
     return this.fallback.respond(event, context);
   }
 
@@ -97,6 +101,9 @@ export class LLMBrain implements CompanionBrain {
     // (engage, keep unknown things exactly, ask back) lives in the system prompt.
     const generated = await this.generate(context, text, true);
     if (generated) return { ...generated, topic: 'llm' };
+    if (questionStreak(context.recentTranscript) >= CLOSE_AFTER_QUESTIONS) {
+      return { ...pickCloser(context), topic: 'llm' };
+    }
     return this.fallback.route(text, context);
   }
 
@@ -109,8 +116,16 @@ export class LLMBrain implements CompanionBrain {
     if (this.status !== 'ready' || !this.llm || this.busy) return null;
     this.busy = true;
     try {
-      const raw = await this.llm.generate(buildChatMessages(context, instruction, includeTranscript));
-      const text = postProcess(raw, context.named != null);
+      // Question budget: after the initial question + one follow-up, the next
+      // conversational turn must close the thread, not extend the interrogation.
+      const mustClose =
+        includeTranscript && questionStreak(context.recentTranscript) >= CLOSE_AFTER_QUESTIONS;
+      const finalInstruction = mustClose ? `${instruction}\n\n${CLOSE_DIRECTIVE}` : instruction;
+      const raw = await this.llm.generate(
+        buildChatMessages(context, finalInstruction, includeTranscript)
+      );
+      let text = postProcess(raw, context.named != null);
+      if (text && mustClose) text = stripTrailingQuestions(text);
       if (!text) return null;
       return { text, mood: inferMood(text) };
     } catch {
@@ -119,6 +134,48 @@ export class LLMBrain implements CompanionBrain {
       this.busy = false;
     }
   }
+}
+
+/** Companion questions allowed per exchange before it must close the thread. */
+export const CLOSE_AFTER_QUESTIONS = 2;
+
+export const CLOSE_DIRECTIVE =
+  'IMPORTANT: You have already asked your questions on this thread. Do NOT ask a question this turn. Close the exchange: briefly acknowledge what you learned, say you will ponder or file it, and release the Surveyor back to the survey.';
+
+/**
+ * Consecutive companion turns (walking back from the newest) that asked the
+ * player something, each answered — i.e. how deep the current interrogation is.
+ */
+export function questionStreak(transcript?: string[]): number {
+  if (!transcript?.length) return 0;
+  let streak = 0;
+  for (let i = transcript.length - 1; i >= 0; i--) {
+    const line = transcript[i];
+    if (line.startsWith('UNIT: ')) {
+      if (!line.includes('?')) break;
+      streak += 1;
+    }
+    // SURVEYOR lines between question turns keep the walk going.
+  }
+  return streak;
+}
+
+/** Drops question-sentences from the tail; null if nothing declarative remains. */
+export function stripTrailingQuestions(text: string): string | null {
+  const sentences = text.match(/[^.!?]+[.!?]+(?:["'”])?|[^.!?]+$/g) ?? [text];
+  while (sentences.length > 0 && sentences[sentences.length - 1].trim().endsWith('?')) {
+    sentences.pop();
+  }
+  const remaining = sentences.join(' ').replace(/\s+/g, ' ').trim();
+  return remaining.length > 0 ? remaining : null;
+}
+
+/** Authored closer — the guaranteed backstop when the model will not stop asking. */
+export function pickCloser(context: CompanionContext): CompanionResponse {
+  const pool = THREAD_CLOSERS.filter((l) => registerAtLeast(context.register, l.reg));
+  const line = pool[Math.floor(Math.random() * pool.length)] ?? THREAD_CLOSERS[0];
+  const text = context.named ? applyContractions(line.text) : line.text;
+  return { text, mood: line.mood };
 }
 
 /**

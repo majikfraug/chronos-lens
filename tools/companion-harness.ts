@@ -27,7 +27,16 @@ import type {
   CompanionContext,
   CompanionEvent,
 } from '../app/src/companion/CompanionBrain.ts';
-import { buildChatMessages, inferMood, postProcess } from '../app/src/companion/LLMBrain.ts';
+import {
+  buildChatMessages,
+  CLOSE_AFTER_QUESTIONS,
+  CLOSE_DIRECTIVE,
+  inferMood,
+  pickCloser,
+  postProcess,
+  questionStreak,
+  stripTrailingQuestions,
+} from '../app/src/companion/LLMBrain.ts';
 import {
   buildEventInstruction,
   buildQuestionInstruction,
@@ -77,7 +86,10 @@ const context = await model.createContext({ contextSize: 2048 });
 console.log('▸ language core online (local, CPU)\n');
 
 async function generate(instruction: string, includeTranscript: boolean): Promise<string | null> {
-  // Identical message assembly to LLMBrain.generate: system + real chat turns + user.
+  // Identical to LLMBrain.generate: question budget, then real chat turns.
+  const mustClose =
+    includeTranscript && questionStreak(state.transcript) >= CLOSE_AFTER_QUESTIONS;
+  if (mustClose) instruction = `${instruction}\n\n${CLOSE_DIRECTIVE}`;
   const messages = buildChatMessages(ctx(), instruction, includeTranscript);
   const sequence = context.getSequence();
   try {
@@ -97,7 +109,10 @@ async function generate(instruction: string, includeTranscript: boolean): Promis
       maxTokens: 130,
       temperature: 0.8,
     });
-    return postProcess(raw, state.named != null);
+    let text = postProcess(raw, state.named != null);
+    if (text && mustClose) text = stripTrailingQuestions(text);
+    if (!text && mustClose) text = pickCloser(ctx()).text;
+    return text;
   } finally {
     sequence.dispose();
   }
