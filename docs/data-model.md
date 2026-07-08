@@ -48,6 +48,17 @@ Table `fog_reveal` (or a single PNG on disk, see below):
 - "Recorded by others" counts are simulated authored constants
   (`taxonomy.ts` `SIMULATED_PUBLIC_COUNTS`) — no backend in v1, brief §2.4.
 
+## M4 — Companion
+
+- `answers(id, ts, question, answer)` — the player's words, VERBATIM, never
+  edited (brief §5); quoted back at weighted moments and in the awakening.
+- `asked_questions(id)` — which companion questions have been asked (each asks
+  once, ever).
+- `patterns_fired(key)` — fire-once pattern flags (teach/correction/collection
+  milestones, revisit-home, far-out).
+- `flags.companion_name` — set at the L10 naming; its presence flips the
+  contraction tell in every subsequent line (corpus `applyContractions`).
+
 ## (planned) M4 — Companion
 
 - `companion_name` (null until L10 naming ceremony).

@@ -1,24 +1,34 @@
-import React, { useEffect, useRef } from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useGameStore, type LogEntry } from '../state/gameStore';
 import { colors } from '../theme/colors';
 import { fonts } from '../theme/typography';
 
 /**
- * The companion/system feed — the permanent home of the AI interface.
- * M2: displays system telemetry, discoveries, and milestone lines.
- * M4 replaces the disabled transmit row with the real dialogue engine
- * (AuthoredBrain, questions, keyword router) — see docs/brief.md §5.
+ * The companion/system feed and the live transmit channel (M4).
+ * Questions from the companion render in interest amber; while one is
+ * pending, whatever the player transmits is kept verbatim as the answer.
  */
 export function LogStrip(): React.JSX.Element {
   const log = useGameStore((s) => s.log);
+  const pendingQuestion = useGameStore((s) => s.pendingQuestion);
+  const companionName = useGameStore((s) => s.companionName);
+  const submitTransmission = useGameStore((s) => s.submitTransmission);
   const scrollRef = useRef<ScrollView>(null);
+  const [draft, setDraft] = useState('');
 
   useEffect(() => {
     // Follow the newest entry, like the prototype's log.scrollTop behavior.
     const t = setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 50);
     return () => clearTimeout(t);
   }, [log.length]);
+
+  const send = () => {
+    const text = draft;
+    if (!text.trim()) return;
+    setDraft('');
+    void submitTransmission(text);
+  };
 
   return (
     <View style={styles.wrap}>
@@ -27,30 +37,48 @@ export function LogStrip(): React.JSX.Element {
           <Text style={styles.empty}>▸ CHANNEL QUIET · SURVEY DATA WILL BE REPORTED HERE</Text>
         )}
         {log.map((entry) => (
-          <LogLine key={entry.id} entry={entry} />
+          <LogLine key={entry.id} entry={entry} label={companionName ?? 'LENS'} />
         ))}
       </ScrollView>
       <View style={styles.transmitRow}>
         <TextInput
-          style={styles.transmitInput}
-          placeholder="transmit to the Lens · channel opens at a later calibration"
-          placeholderTextColor={colors.phosphorFaint}
-          editable={false}
+          style={[styles.transmitInput, pendingQuestion && styles.transmitAnswering]}
+          value={draft}
+          onChangeText={setDraft}
+          placeholder={
+            pendingQuestion
+              ? 'respond · your words will be kept exactly'
+              : `transmit to ${companionName ?? 'the Lens'}`
+          }
+          placeholderTextColor={pendingQuestion ? colors.interestAmber : colors.phosphorFaint}
+          onSubmitEditing={send}
+          returnKeyType="send"
         />
-        <View style={styles.sendBtn}>
-          <Text style={styles.sendText}>SEND</Text>
-        </View>
+        <Pressable
+          style={[styles.sendBtn, !draft.trim() && styles.sendBtnIdle]}
+          onPress={send}
+          disabled={!draft.trim()}
+        >
+          <Text style={[styles.sendText, draft.trim() ? styles.sendTextReady : null]}>SEND</Text>
+        </Pressable>
       </View>
     </View>
   );
 }
 
-function LogLine({ entry }: { entry: LogEntry }): React.JSX.Element {
+function LogLine({ entry, label }: { entry: LogEntry; label: string }): React.JSX.Element {
   switch (entry.kind) {
     case 'ai':
       return (
         <View style={styles.aiBlock}>
-          <Text style={styles.aiLabel}>LENS</Text>
+          <Text style={styles.aiLabel}>{label}</Text>
+          <Text style={styles.aiText}>{entry.text}</Text>
+        </View>
+      );
+    case 'query':
+      return (
+        <View style={[styles.aiBlock, styles.queryBlock]}>
+          <Text style={[styles.aiLabel, styles.queryLabel]}>{label} · QUERY</Text>
           <Text style={styles.aiText}>{entry.text}</Text>
         </View>
       );
@@ -113,12 +141,19 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     paddingHorizontal: 10,
   },
+  queryBlock: {
+    borderLeftColor: colors.interestAmber,
+    backgroundColor: 'rgba(224,168,92,0.05)',
+  },
   aiLabel: {
     fontFamily: fonts.body,
     fontSize: 8,
     letterSpacing: 3,
     color: colors.companionAmberDim,
     marginBottom: 2,
+  },
+  queryLabel: {
+    color: colors.interestAmber,
   },
   aiText: {
     fontFamily: fonts.body,
@@ -145,17 +180,21 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 10,
   },
+  transmitAnswering: {
+    borderColor: 'rgba(224,168,92,0.5)',
+  },
   sendBtn: {
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: colors.line,
     paddingHorizontal: 14,
-    opacity: 0.35,
   },
+  sendBtnIdle: { opacity: 0.35 },
   sendText: {
     fontFamily: fonts.body,
     fontSize: 11,
     letterSpacing: 1.5,
     color: colors.phosphorDim,
   },
+  sendTextReady: { color: colors.neon },
 });

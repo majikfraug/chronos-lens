@@ -5,6 +5,7 @@ import { ScanlineOverlay } from '../components/ScanlineOverlay';
 import { HudBar } from '../components/HudBar';
 import { LogStrip } from '../components/LogStrip';
 import { FieldScreen } from '../screens/FieldScreen';
+import { AwakeningOverlay } from '../screens/AwakeningOverlay';
 import { IntroOverlay } from '../screens/IntroOverlay';
 import { LensScreen } from '../screens/LensScreen';
 import { ReliquaryScreen } from '../screens/ReliquaryScreen';
@@ -30,6 +31,7 @@ export function AppShell(): React.JSX.Element {
   const introSeen = useGameStore((s) => s.introSeen);
   const markIntroSeen = useGameStore((s) => s.markIntroSeen);
   const appendLog = useGameStore((s) => s.appendLog);
+  const awakeningPending = useGameStore((s) => s.awakeningPending);
   const register = registerFor(level, attunement);
   const prevThreshold = level === 1 ? 0 : XP_THRESHOLDS[level - 2];
   const nextThreshold = level >= MAX_LEVEL ? null : XP_THRESHOLDS[level - 1];
@@ -107,6 +109,7 @@ export function AppShell(): React.JSX.Element {
           }}
         />
       )}
+      {introSeen && awakeningPending && <AwakeningOverlay />}
       <ScanlineOverlay />
     </View>
   );

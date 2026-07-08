@@ -1,12 +1,24 @@
 import { create } from 'zustand';
 import { audio } from '../audio/engine';
+import { brain } from '../companion/AuthoredBrain';
+import type { CompanionContext, CompanionEvent } from '../companion/CompanionBrain';
 import {
   ATTUNEMENT_GAIN,
   ATTUNEMENT_MAX,
+  COMPANION,
   FIELD,
   MAX_LEVEL,
+  registerFor,
+  SCAN,
   XP_THRESHOLDS,
- SCAN } from '../config/economy';
+} from '../config/economy';
+import {
+  keepAnswer,
+  loadCompanionState,
+  markPatternFired,
+  markQuestionAsked,
+  type KeptAnswer,
+} from '../persistence/companionRepository';
 import {
   getFlag,
   loadDiscoveredCells,
@@ -33,9 +45,7 @@ import {
 } from '../persistence/scanRepository';
 import { discoveryXpFor, neighborCoarseCells } from '../terrain/discovery';
 import {
-  ACK_CONFIRM,
-  ACK_CORRECT,
-  ACK_TEACH,
+  ALL_TYPES,
   CUSTOM_TYPE_FIRST,
   TYPE_FIRST,
   type CustomType,
@@ -45,12 +55,18 @@ import {
 
 export type LogEntry = {
   id: number;
-  kind: 'sys' | 'disc' | 'ai' | 'milestone';
+  kind: 'sys' | 'disc' | 'ai' | 'milestone' | 'query';
   text: string;
 };
 
 let nextLogId = 1;
 const LOG_CAP = 60;
+
+// Session-scoped companion pacing (not persisted; resets each launch).
+let actionsSinceAsk = 0;
+let resurfacedThisSession = false;
+let wasAwayFromHome = false;
+let sessionEchoDone = false;
 
 type GameStore = {
   hydrated: boolean;
@@ -72,7 +88,25 @@ type GameStore = {
   reliquary: Partial<Record<TypeName, ReliquarySlot>>;
   customTypes: CustomType[];
 
+  /** Companion (M4): name, question queue, kept answers, fire-once patterns. */
+  companionName: string | null;
+  pendingQuestion: { id: string; text: string } | null;
+  keptAnswers: KeptAnswer[];
+  askedQuestionIds: string[];
+  firedPatterns: string[];
+  awakeningPending: boolean;
+
   appendLog: (kind: LogEntry['kind'], text: string) => void;
+  /** Speak a brain response into the log with its voice tone. No-op on null. */
+  speak: (event: CompanionEvent, extra?: Partial<CompanionContext>) => void;
+  /** One action tick: advances the question-gap counter, may ask or resurface. */
+  companionTick: () => void;
+  /** Fire a one-shot pattern if its register allows and it has not fired. */
+  firePattern: (key: string) => void;
+  /** The live transmit box: answers the pending question, else keyword-routes. */
+  submitTransmission: (text: string) => Promise<void>;
+  /** Completes the L10 awakening: keeps the name, flips the contraction tell. */
+  completeAwakening: (name: string) => Promise<void>;
   /** Persist a player-defined category (local-first emergent type, docs/future.md). */
   defineCustomType: (name: string, scale: Scale) => Promise<void>;
   /** Fix a category's name; scans and model weight move with it (merges if the name exists). */
@@ -117,6 +151,111 @@ export const useGameStore = create<GameStore>((set, get) => ({
   corrections: 0,
   reliquary: {},
   customTypes: [],
+
+  companionName: null,
+  pendingQuestion: null,
+  keptAnswers: [],
+  askedQuestionIds: [],
+  firedPatterns: [],
+  awakeningPending: false,
+
+  speak: (event, extra) => {
+    const s = get();
+    const response = brain.respond(event, {
+      register: registerFor(s.level, s.attunement),
+      named: s.companionName,
+      ...extra,
+    });
+    if (!response) return;
+    s.appendLog(response.isQuery ? 'query' : 'ai', response.text);
+    audio.voice(response.mood);
+  },
+
+  companionTick: () => {
+    const s = get();
+    actionsSinceAsk += 1;
+    if (s.pendingQuestion || actionsSinceAsk < COMPANION.questionGapActions) return;
+    const register = registerFor(s.level, s.attunement);
+
+    // A kept answer occasionally resurfaces instead of a new question.
+    if (
+      !resurfacedThisSession &&
+      s.keptAnswers.length > 0 &&
+      register !== 'INSTRUMENT' &&
+      Math.random() < COMPANION.resurfaceChance
+    ) {
+      resurfacedThisSession = true;
+      actionsSinceAsk = 0;
+      const kept = s.keptAnswers[Math.floor(Math.random() * s.keptAnswers.length)];
+      s.speak('resurface', { keptAnswer: kept.answer });
+      return;
+    }
+
+    const next = brain.nextQuestion(register, s.askedQuestionIds);
+    if (!next) return;
+    actionsSinceAsk = 0;
+    set({
+      pendingQuestion: { id: next.id, text: next.response.text },
+      askedQuestionIds: [...s.askedQuestionIds, next.id],
+    });
+    void markQuestionAsked(next.id);
+    get().appendLog('query', next.response.text);
+    audio.voice(next.response.mood);
+  },
+
+  firePattern: (key) => {
+    const s = get();
+    if (s.firedPatterns.includes(key)) return;
+    const response = brain.respond('pattern', {
+      register: registerFor(s.level, s.attunement),
+      named: s.companionName,
+      patternKey: key,
+    });
+    if (!response) return; // register too low: leave unfired so it can land later
+    set({ firedPatterns: [...s.firedPatterns, key] });
+    void markPatternFired(key);
+    s.appendLog('ai', response.text);
+    audio.voice(response.mood);
+  },
+
+  submitTransmission: async (text) => {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    const s = get();
+    s.appendLog('sys', `TRANSMIT ▸ ${trimmed}`);
+
+    if (s.pendingQuestion) {
+      const kept = await keepAnswer(s.pendingQuestion.text, trimmed);
+      set({ pendingQuestion: null, keptAnswers: [...s.keptAnswers, kept] });
+      s.speak('answer_ack');
+      s.gainAttunement(ATTUNEMENT_GAIN.answer);
+      return;
+    }
+
+    const response = brain.route(trimmed, {
+      register: registerFor(s.level, s.attunement),
+      named: s.companionName,
+    });
+    if (response.topic === 'unknown') {
+      // Unknown transmissions are the player teaching the archive — kept verbatim.
+      const kept = await keepAnswer('(unprompted transmission)', trimmed);
+      set({ keptAnswers: [...get().keptAnswers, kept] });
+    }
+    get().appendLog('ai', response.text);
+    audio.voice(response.mood);
+    get().gainAttunement(ATTUNEMENT_GAIN.ask);
+  },
+
+  completeAwakening: async (name) => {
+    const clean = name.trim().slice(0, 24);
+    if (!clean) return;
+    await setFlag('companion_name', clean);
+    set({ companionName: clean, awakeningPending: false });
+    // The first named line — the contraction is the entire announcement (brief §4).
+    get().appendLog('ai', `"${clean}." I'm keeping it. The collective issues indices; you gave something else. I'll carry it from here.`);
+    audio.voice('warm');
+    get().gainAttunement(ATTUNEMENT_GAIN.answer);
+  },
 
   refreshClassifier: async () => {
     const c = await loadClassifierState();
@@ -171,9 +310,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   reclassifyRelic: async (id, newType) => {
     await reclassifyScan(id, newType);
     await get().refreshClassifier();
-    const ack = ACK_CORRECT[Math.floor(Math.random() * ACK_CORRECT.length)];
-    get().appendLog('ai', ack.text.replace('{T}', newType.toLowerCase()));
-    audio.voice(ack.mood);
+    get().speak('scan_correct', { type: newType });
   },
 
   expungeRelic: async (id) => {
@@ -213,10 +350,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     );
     audio.play('file');
 
-    const ackPool = taught ? ACK_TEACH : corrected ? ACK_CORRECT : ACK_CONFIRM;
-    const ack = ackPool[Math.floor(Math.random() * ackPool.length)];
-    get().appendLog('ai', ack.text.replace('{T}', type.toLowerCase()));
-    audio.voice(ack.mood);
+    get().speak(taught ? 'scan_teach' : corrected ? 'scan_correct' : 'scan_confirm', { type });
 
     const isCustom = get().customTypes.some((c) => c.name === type);
     const firstLine = firstOfType ? (TYPE_FIRST[type] ?? (isCustom ? CUSTOM_TYPE_FIRST : undefined)) : undefined;
@@ -231,6 +365,18 @@ export const useGameStore = create<GameStore>((set, get) => ({
     get().gainXp(scale === 'FEATURE' ? SCAN.xpFeature : SCAN.xpArtifact);
     if (taught) get().gainXp(SCAN.xpTeachBonus);
     get().gainAttunement(ATTUNEMENT_GAIN.scan);
+
+    // Fire-once milestones from the play data itself (brief §4 patterns).
+    const after = get();
+    if (after.taughtTotal >= 10) after.firePattern('teach_10');
+    if (after.taughtTotal >= 25) after.firePattern('teach_25');
+    if (after.corrections >= 1) after.firePattern('correct_1');
+    if (after.corrections >= 5) after.firePattern('correct_5');
+    const attested = Object.keys(after.reliquary).length;
+    if (attested >= 5) after.firePattern('collect_5');
+    if (ALL_TYPES.every((t) => after.reliquary[t])) after.firePattern('collect_all');
+
+    after.companionTick();
   },
 
   appendLog: (kind, text) => {
@@ -246,14 +392,22 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   hydrate: async () => {
-    const [persisted, discovered, revealed, introFlag, classifier] = await Promise.all([
-      loadGameState(),
-      loadDiscoveredCells(),
-      loadRevealCells(),
-      getFlag('intro_seen'),
-      loadClassifierState(),
-    ]);
+    const [persisted, discovered, revealed, introFlag, classifier, companion, nameFlag] =
+      await Promise.all([
+        loadGameState(),
+        loadDiscoveredCells(),
+        loadRevealCells(),
+        getFlag('intro_seen'),
+        loadClassifierState(),
+        loadCompanionState(),
+        getFlag('companion_name'),
+      ]);
     set({
+      companionName: nameFlag,
+      keptAnswers: companion.answers,
+      askedQuestionIds: companion.askedQuestionIds,
+      firedPatterns: companion.firedPatterns,
+      awakeningPending: persisted.level >= MAX_LEVEL && !nameFlag,
       taughtCounts: classifier.taughtCounts,
       taughtTotal: classifier.taughtTotal,
       corrections: classifier.corrections,
@@ -272,6 +426,17 @@ export const useGameStore = create<GameStore>((set, get) => ({
       revealedCells: revealed,
       introSeen: introFlag === '1',
     });
+
+    // Occasional network echo at session start — simulated locally, brief §2.4.
+    if (
+      !sessionEchoDone &&
+      persisted.level >= 2 &&
+      introFlag === '1' &&
+      Math.random() < COMPANION.echoChanceSession
+    ) {
+      sessionEchoDone = true;
+      setTimeout(() => get().speak('echo'), 4000);
+    }
   },
 
   recordMovement: async (point) => {
@@ -316,10 +481,23 @@ export const useGameStore = create<GameStore>((set, get) => ({
       get().appendLog('disc', `+${earned} XP · DISCOVERY`);
       get().gainXp(earned);
       get().gainAttunement(ATTUNEMENT_GAIN.discovery);
+
+      // The instrument is usually silent on routine ground; sometimes it notes it.
+      if (Math.random() < COMPANION.discoveryLineChance) get().speak('discovery');
+      get().companionTick();
+    }
+
+    // Movement-driven fire-once patterns (brief §4).
+    const fromHome = Math.hypot(meters.x, meters.y);
+    if (fromHome > COMPANION.farOutMeters) get().firePattern('far_out');
+    if (fromHome > COMPANION.homeAwayMeters) wasAwayFromHome = true;
+    if (wasAwayFromHome && cellKeyFor(meters, FIELD.cellSizeM) === resolvedHomeCellKey) {
+      get().firePattern('revisit_home');
     }
   },
 
   gainXp: (amount) => {
+    const levelBefore = get().level;
     set((state) => {
       const xp = state.xp + amount;
       let level = state.level;
@@ -336,6 +514,17 @@ export const useGameStore = create<GameStore>((set, get) => ({
       void saveProgress(level, xp, state.attunement);
       return { xp, level, log };
     });
+    const after = get();
+    if (after.level > levelBefore) {
+      after.speak('levelup');
+      if (after.level >= 3 && Math.random() < COMPANION.echoChanceLevelup) {
+        setTimeout(() => get().speak('echo'), 1800);
+      }
+      // L10: suspend play for the awakening — brief §4. The overlay takes over.
+      if (after.level >= MAX_LEVEL && !after.companionName) {
+        set({ awakeningPending: true });
+      }
+    }
   },
 
   gainAttunement: (amount) => {

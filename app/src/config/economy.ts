@@ -43,6 +43,23 @@ export const SCAN = {
   xpTeachBonus: 3,
 } as const;
 
+/** Companion dialogue pacing, brief §5 (question queue: min action-gap, one pending). */
+export const COMPANION = {
+  /** Player actions (scans, discoveries) between companion questions. */
+  questionGapActions: 5,
+  /** Chance the companion comments on a routine discovery (usually silent). */
+  discoveryLineChance: 0.15,
+  /** Chance of a network echo at session start (level 2+) / after a level-up (level 3+). */
+  echoChanceSession: 0.35,
+  echoChanceLevelup: 0.5,
+  /** Chance a kept answer resurfaces after a scan (NOTICING+, once per session). */
+  resurfaceChance: 0.12,
+  /** Distance from origin that fires the far_out pattern, meters. */
+  farOutMeters: 1000,
+  /** Away-from-home distance that arms the revisit_home pattern, meters. */
+  homeAwayMeters: 300,
+} as const;
+
 /** Field map / discovery, brief §2.1 and §4. */
 export const FIELD = {
   /** Coarse discovery-accounting cell size, meters. Brief §4 "heat economy: ~100m cells". */

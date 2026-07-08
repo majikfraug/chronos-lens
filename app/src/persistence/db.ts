@@ -60,6 +60,23 @@ export function getDb(): Promise<SQLiteDatabase> {
           name TEXT PRIMARY KEY,
           scale TEXT NOT NULL
         );
+
+        CREATE TABLE IF NOT EXISTS answers (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          ts INTEGER NOT NULL,
+          question TEXT NOT NULL,
+          answer TEXT NOT NULL
+        );
+        -- answers are VERBATIM and never edited: brief section 5, "player
+        -- answers are stored verbatim and re-surfaced at weighted moments."
+
+        CREATE TABLE IF NOT EXISTS asked_questions (
+          id TEXT PRIMARY KEY
+        );
+
+        CREATE TABLE IF NOT EXISTS patterns_fired (
+          key TEXT PRIMARY KEY
+        );
       `);
       // Additive migration for installs created before scans grew a player-given name.
       try {

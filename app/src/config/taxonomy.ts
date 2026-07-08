@@ -58,28 +58,8 @@ export const TEACH_PROMPT_LATER: CompanionLine = {
   mood: 'curious',
 };
 
-export const ACK_TEACH: CompanionLine[] = [
-  { text: 'Recorded: {T}. First attested example. The model begins with you.', mood: 'curious' },
-  { text: '{T}. Filed. Model updated from your identification.', mood: 'neutral' },
-  {
-    text: 'Recorded: {T}. Query held for later: how did you know at a glance what I could not compute?',
-    mood: 'curious',
-  },
-];
-
-export const ACK_CONFIRM: CompanionLine[] = [
-  { text: 'Filed. Confidence reinforced.', mood: 'neutral' },
-  { text: 'Classification holds. Filed.', mood: 'neutral' },
-];
-
-export const ACK_CORRECT: CompanionLine[] = [
-  { text: 'Corrected: {T}. Your correction outweighs the reading. Adjusting.', mood: 'neutral' },
-  {
-    text: 'Corrected: {T}. Noted: my taxonomy lacked a distinction you saw at once.',
-    mood: 'curious',
-  },
-  { text: 'Corrected: {T}. The model is yours as much as mine now.', mood: 'warm' },
-];
+// Scan acknowledgment pools moved to src/companion/corpus.ts (M4): the brain
+// owns event-response lines; taxonomy keeps only per-type content.
 
 /** First attestation of a category the player invented. */
 export const CUSTOM_TYPE_FIRST: CompanionLine = {
