@@ -4,6 +4,20 @@ Deviations from `docs/brief.md`, and why. Newest first.
 
 ---
 
+## 2026-07-08 — Companion model: Llama 3.2 3B (1B failed the audition)
+
+Desktop-harness evaluation, same prompt modules the phone uses: 1B produced
+one genuinely good question but could not hold the character — third-person
+"the player" slips, invented player quotes, meta-commentary about its own
+instructions. 3B held second person, engaged with the player's actual words,
+asked back naturally, and improvised on-voice telemetry ("Calibration 4.2:
+'Purpose and obligation'"). LLMBrain pins LLAMA3_2_3B_SPINQUANT (~2.5GB
+download on first enable; 15 Pro-class hardware). Remaining prompt tuning
+tracked in the harness; revisit model choice only if older devices must be
+supported. Also hardened the system prompt from observed failures: not part
+of the residue, never assert unstated player actions, "my model" not "your
+model".
+
 ## 2026-07-08 — LLMBrain pulled forward from v1.5 (on-device model, director decision)
 
 The director evaluated the authored corpus in the field and concluded the

@@ -46,9 +46,11 @@ export class LLMBrain implements CompanionBrain {
       if (!executorch.isAvailable || !executorch.LLMModule) {
         throw new Error('executorch native runtime not present in this client');
       }
-      // Llama 3.2 1B (QAT+LoRA quantized) — the proven phone-class conversational
-      // model in executorch's registry; iPhone 15 Pro runs it comfortably.
-      this.llm = await executorch.LLMModule.fromModelName(executorch.LLAMA3_2_1B_QLORA);
+      // Llama 3.2 3B (SpinQuant): desktop-harness evaluation 2026-07-08 showed
+      // 1B cannot hold the character (third-person slips, invented quotes)
+      // while 3B holds register AND engages — see docs/decisions.md. The
+      // 15 Pro-class devices run 3B SpinQuant; revisit if older devices join.
+      this.llm = await executorch.LLMModule.fromModelName(executorch.LLAMA3_2_3B_SPINQUANT);
       this.status = 'ready';
     } catch {
       this.status = 'unavailable';

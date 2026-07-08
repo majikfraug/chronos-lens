@@ -34,10 +34,11 @@ import {
 } from '../app/src/companion/systemPrompt.ts';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-// --model3b: the 15 Pro can also run 3B (spinquant) — compare quality tiers here first.
-const MODEL_URI = process.argv.includes('--model3b')
-  ? 'hf:bartowski/Llama-3.2-3B-Instruct-GGUF:Q4_K_M'
-  : 'hf:bartowski/Llama-3.2-1B-Instruct-GGUF:Q4_K_M';
+// Default matches the phone model pick (Llama 3.2 3B — see decisions.md
+// 2026-07-08: 1B cannot hold the character). --model1b compares downward.
+const MODEL_URI = process.argv.includes('--model1b')
+  ? 'hf:bartowski/Llama-3.2-1B-Instruct-GGUF:Q4_K_M'
+  : 'hf:bartowski/Llama-3.2-3B-Instruct-GGUF:Q4_K_M';
 
 // ---- simulated play state (edit freely, or via REPL commands) --------------
 const state = {
