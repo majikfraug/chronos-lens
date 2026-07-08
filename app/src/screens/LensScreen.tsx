@@ -8,7 +8,15 @@ import {
 } from '@shopify/react-native-skia';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { LayoutChangeEvent, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  LayoutChangeEvent,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { audio } from '../audio/engine';
 import { FIELD } from '../config/economy';
 import {
@@ -51,6 +59,8 @@ export function LensScreen(): React.JSX.Element {
   const taughtCounts = useGameStore((s) => s.taughtCounts);
   const taughtTotal = useGameStore((s) => s.taughtTotal);
   const confirmScan = useGameStore((s) => s.confirmScan);
+  const customTypes = useGameStore((s) => s.customTypes);
+  const defineCustomType = useGameStore((s) => s.defineCustomType);
 
   const [stage, setStage] = useState({ width: 0, height: 0 });
   const [density, setDensity] = useState(0.15);
@@ -62,6 +72,8 @@ export function LensScreen(): React.JSX.Element {
   const [proposal, setProposal] = useState<Proposal | null>(null);
   const [chosen, setChosen] = useState<Chosen | null>(null);
   const [teachMode, setTeachMode] = useState(false);
+  const [defineOpen, setDefineOpen] = useState(false);
+  const [defineName, setDefineName] = useState('');
   const holdStart = useRef(0);
   const holdTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -165,7 +177,7 @@ export function LensScreen(): React.JSX.Element {
         appendLog('ai', prompt.text);
         audio.voice(prompt.mood);
       } else {
-        const p = proposeType(capturedScale, taughtCounts);
+        const p = proposeType(capturedScale, taughtCounts, customTypes);
         setProposal({ scale: capturedScale, type: p.type, confidence: p.confidence });
         setChosen({ scale: capturedScale, type: p.type });
         const band = p.confidence > 0.75 ? 'high' : p.confidence > 0.5 ? 'moderate' : 'low';
@@ -186,6 +198,17 @@ export function LensScreen(): React.JSX.Element {
     setStill(null);
     setProposal(null);
     setChosen(null);
+    setDefineOpen(false);
+    setDefineName('');
+  };
+
+  const onDefineType = async () => {
+    const clean = defineName.trim().toUpperCase().slice(0, 24);
+    if (!clean || !chosen) return;
+    await defineCustomType(clean, chosen.scale);
+    setChosen({ ...chosen, type: clean });
+    setDefineOpen(false);
+    setDefineName('');
   };
 
   const onConfirm = async () => {
@@ -212,7 +235,7 @@ export function LensScreen(): React.JSX.Element {
   const pickScale = (s: Scale) => {
     if (!chosen) return;
     if (chosen.scale === s) return;
-    const pool = poolForScale(s);
+    const pool = poolForScale(s, customTypes);
     const keepType = chosen.type && pool.includes(chosen.type) ? chosen.type : teachMode ? null : pool[0];
     setChosen({ scale: s, type: keepType });
   };
@@ -240,7 +263,7 @@ export function LensScreen(): React.JSX.Element {
     );
   }
 
-  const typePool = chosen ? poolForScale(chosen.scale) : [];
+  const typePool = chosen ? poolForScale(chosen.scale, customTypes) : [];
 
   return (
     <View style={styles.stage} onLayout={onStageLayout}>
@@ -387,7 +410,33 @@ export function LensScreen(): React.JSX.Element {
                   </Text>
                 </Pressable>
               ))}
+              <Pressable style={[styles.chip, styles.chipDefine]} onPress={() => setDefineOpen((v) => !v)}>
+                <Text style={[styles.chipText, { color: colors.interestAmber }]}>+ DEFINE</Text>
+              </Pressable>
             </View>
+
+            {defineOpen && (
+              <View style={styles.defineRow}>
+                <TextInput
+                  style={styles.defineInput}
+                  value={defineName}
+                  onChangeText={setDefineName}
+                  placeholder="name a new category"
+                  placeholderTextColor={colors.phosphorFaint}
+                  autoCapitalize="characters"
+                  autoFocus
+                  maxLength={24}
+                  onSubmitEditing={() => void onDefineType()}
+                />
+                <Pressable
+                  style={[styles.actionBtn, styles.defineBtn, !defineName.trim() && styles.btnDisabled]}
+                  disabled={!defineName.trim()}
+                  onPress={() => void onDefineType()}
+                >
+                  <Text style={styles.actionTextDim}>ADD</Text>
+                </Pressable>
+              </View>
+            )}
 
             <View style={styles.confirmRow}>
               <Pressable
@@ -529,6 +578,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 9,
   },
   chipProposed: { borderColor: 'rgba(113,232,201,0.5)' },
+  chipDefine: { borderColor: 'rgba(224,168,92,0.45)', borderStyle: 'dashed' },
+  defineRow: {
+    alignSelf: 'stretch',
+    flexDirection: 'row',
+    gap: 6,
+  },
+  defineInput: {
+    flex: 1,
+    fontFamily: fonts.body,
+    fontSize: 12,
+    color: colors.bright,
+    borderWidth: 1,
+    borderColor: colors.line,
+    backgroundColor: colors.panel2,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+  },
+  defineBtn: { flex: 0, paddingHorizontal: 16 },
   chipSelected: { backgroundColor: colors.phosphorFaint, borderColor: colors.phosphor },
   chipText: {
     fontFamily: fonts.body,

@@ -63,6 +63,11 @@ export function FieldScreen(): React.JSX.Element {
 
   const isPanned = Math.abs(panOffset.x) > 1 || Math.abs(panOffset.y) > 1;
 
+  const nudge = (dx: number, dy: number) => {
+    const step = viewMetres * 0.3;
+    setPanOffset((o) => ({ x: o.x + dx * step, y: o.y + dy * step }));
+  };
+
   const onStageLayout = (e: LayoutChangeEvent) => {
     const { width, height } = e.nativeEvent.layout;
     setStageSize({ width, height });
@@ -121,11 +126,31 @@ export function FieldScreen(): React.JSX.Element {
         >
           <Text style={styles.zoomBtnText}>−</Text>
         </Pressable>
-        {isPanned && (
-          <Pressable style={styles.zoomBtn} onPress={() => setPanOffset({ x: 0, y: 0 })}>
-            <Text style={[styles.zoomBtnText, { color: colors.neon }]}>⌖</Text>
+      </View>
+
+      {/* Pan pad: step the view by ~30% of the visible width; ⌖ snaps home. */}
+      <View style={styles.panPad}>
+        <View style={styles.panRow}>
+          <View style={styles.panSpacer} />
+          <PanBtn label="▲" onPress={() => nudge(0, 1)} />
+          <View style={styles.panSpacer} />
+        </View>
+        <View style={styles.panRow}>
+          <PanBtn label="◀" onPress={() => nudge(-1, 0)} />
+          <Pressable
+            style={[styles.panBtn, !isPanned && styles.panBtnIdle]}
+            onPress={() => setPanOffset({ x: 0, y: 0 })}
+            disabled={!isPanned}
+          >
+            <Text style={[styles.zoomBtnText, isPanned && { color: colors.neon }]}>⌖</Text>
           </Pressable>
-        )}
+          <PanBtn label="▶" onPress={() => nudge(1, 0)} />
+        </View>
+        <View style={styles.panRow}>
+          <View style={styles.panSpacer} />
+          <PanBtn label="▼" onPress={() => nudge(0, -1)} />
+          <View style={styles.panSpacer} />
+        </View>
       </View>
 
       <View style={styles.legend} pointerEvents="none">
@@ -136,6 +161,14 @@ export function FieldScreen(): React.JSX.Element {
         </View>
       </View>
     </View>
+  );
+}
+
+function PanBtn({ label, onPress }: { label: string; onPress: () => void }): React.JSX.Element {
+  return (
+    <Pressable style={styles.panBtn} onPress={onPress} hitSlop={2}>
+      <Text style={styles.panBtnText}>{label}</Text>
+    </Pressable>
   );
 }
 
@@ -211,6 +244,32 @@ const styles = StyleSheet.create({
     color: colors.phosphor,
     fontFamily: fonts.body,
     fontSize: 17,
+  },
+  panPad: {
+    position: 'absolute',
+    right: 8,
+    bottom: 26,
+    gap: 3,
+  },
+  panRow: {
+    flexDirection: 'row',
+    gap: 3,
+  },
+  panSpacer: { width: 30, height: 30 },
+  panBtn: {
+    width: 30,
+    height: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(16,20,15,0.85)',
+    borderWidth: 1,
+    borderColor: colors.line,
+  },
+  panBtnIdle: { opacity: 0.4 },
+  panBtnText: {
+    color: colors.phosphorDim,
+    fontFamily: fonts.body,
+    fontSize: 11,
   },
   legend: {
     position: 'absolute',

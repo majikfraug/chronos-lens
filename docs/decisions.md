@@ -4,6 +4,17 @@ Deviations from `docs/brief.md`, and why. Newest first.
 
 ---
 
+## 2026-07-07 — Audio plays through the iOS silent switch (deviation from §7's first reading)
+
+Brief §7 says "respect silent switch conventions." First implementation used
+the ambient session category (silent switch mutes the app) and the director
+heard nothing across multiple field tests — a phone that lives in silent mode
+makes the app appear silently broken, and nothing in the UI can even detect or
+explain it. Convention among games is genuinely mixed; the app has its own
+prominent mute toggle in the header. Switched to playsInSilentMode: true.
+Revisit at M5: the settings/privacy screen should carry a "hardware silent
+switch mutes the Lens" toggle, defaulting to on-through-silent.
+
 ## 2026-07-07 — Audio ships as rendered stems of the §7 spec (Expo Go limit)
 
 Brief §3 names react-native-audio-api for live synthesis, but it contains

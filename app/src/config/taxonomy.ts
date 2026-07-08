@@ -28,12 +28,19 @@ export const ARTIFACT_TYPES = [
 
 export const FEATURE_TYPES = ['DWELLING SITE', 'LABOR SITE', 'HOLY SITE', 'TRANSIT WAY'] as const;
 
-export const ALL_TYPES = [...ARTIFACT_TYPES, ...FEATURE_TYPES];
+export const ALL_TYPES: readonly string[] = [...ARTIFACT_TYPES, ...FEATURE_TYPES];
 
-export type TypeName = (typeof ALL_TYPES)[number];
+/**
+ * Open string, not a union: the player can define categories of their own
+ * (local-first version of v2's emergent-type consensus — see docs/future.md).
+ */
+export type TypeName = string;
 
-export function poolForScale(scale: Scale): readonly TypeName[] {
-  return scale === 'ARTIFACT' ? ARTIFACT_TYPES : FEATURE_TYPES;
+export type CustomType = { name: TypeName; scale: Scale };
+
+export function poolForScale(scale: Scale, customTypes: CustomType[] = []): TypeName[] {
+  const builtIn = scale === 'ARTIFACT' ? ARTIFACT_TYPES : FEATURE_TYPES;
+  return [...builtIn, ...customTypes.filter((c) => c.scale === scale).map((c) => c.name)];
 }
 
 /** First ~N scans: the companion has no model and the player identifies. Brief §2.3. */
@@ -73,6 +80,12 @@ export const ACK_CORRECT: CompanionLine[] = [
   },
   { text: 'Corrected: {T}. The model is yours as much as mine now.', mood: 'warm' },
 ];
+
+/** First attestation of a category the player invented. */
+export const CUSTOM_TYPE_FIRST: CompanionLine = {
+  text: '{T}: first attested. This category does not exist in my taxonomy. It exists in yours. The taxonomy is now partly yours. Recorded.',
+  mood: 'curious',
+};
 
 /** First-of-type reflections — the companion wonders about the CATEGORY. */
 export const TYPE_FIRST: Partial<Record<TypeName, CompanionLine>> = {
@@ -139,7 +152,7 @@ export const TYPE_FIRST: Partial<Record<TypeName, CompanionLine>> = {
  * v1 has no backend and these are authored constants, per brief §2.4 which
  * requires labeling this mechanism honestly. Real aggregation is v2.
  */
-export const SIMULATED_PUBLIC_COUNTS: Record<TypeName, number> = {
+export const SIMULATED_PUBLIC_COUNTS: Partial<Record<TypeName, number>> = {
   DOMESTIC: 44,
   ATTIRE: 31,
   MECHANISM: 18,
@@ -159,9 +172,10 @@ export const SIMULATED_PUBLIC_COUNTS: Record<TypeName, number> = {
 /** Proposal from taught counts — the model IS the player's teaching (brief §2.3). */
 export function proposeType(
   scale: Scale,
-  taughtCounts: Partial<Record<TypeName, number>>
+  taughtCounts: Partial<Record<TypeName, number>>,
+  customTypes: CustomType[] = []
 ): { type: TypeName; confidence: number } {
-  const pool = poolForScale(scale);
+  const pool = poolForScale(scale, customTypes);
   const weights = pool.map((t) => 1 + (taughtCounts[t] ?? 0) * 2);
   const total = weights.reduce((a, b) => a + b, 0);
   let r = Math.random() * total;

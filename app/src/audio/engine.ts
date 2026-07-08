@@ -72,7 +72,12 @@ function shoot(name: string): void {
 
 function applyAudioMode(): void {
   void setAudioModeAsync({
-    playsInSilentMode: false, // respect the silent switch, brief §7
+    // Plays through the hardware silent switch: the instrument has its own mute
+    // (header toggle), and respecting the switch made the app appear silently
+    // broken to a tester whose phone lives in silent mode. Deviation from the
+    // first reading of brief §7 — logged in docs/decisions.md (2026-07-07);
+    // a settings toggle arrives with the M5 settings screen.
+    playsInSilentMode: true,
     shouldPlayInBackground: false,
     // Coexist with the camera's capture session instead of being killed by it —
     // without this, opening the Lens silences all playback on iOS.

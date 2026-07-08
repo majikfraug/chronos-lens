@@ -20,8 +20,12 @@ import {
 } from '../persistence/gameRepository';
 import { cellKeyFor, toLocalMeters, type LatLon } from '../location/projection';
 import {
+  addCustomType,
+  deleteScan,
   loadClassifierState,
+  reclassifyScan,
   recordScan,
+  renameScan,
   saveThumbnail,
   type ReliquarySlot,
 } from '../persistence/scanRepository';
@@ -30,7 +34,9 @@ import {
   ACK_CONFIRM,
   ACK_CORRECT,
   ACK_TEACH,
+  CUSTOM_TYPE_FIRST,
   TYPE_FIRST,
+  type CustomType,
   type Scale,
   type TypeName,
 } from '../config/taxonomy';
@@ -62,8 +68,16 @@ type GameStore = {
   taughtTotal: number;
   corrections: number;
   reliquary: Partial<Record<TypeName, ReliquarySlot>>;
+  customTypes: CustomType[];
 
   appendLog: (kind: LogEntry['kind'], text: string) => void;
+  /** Persist a player-defined category (local-first emergent type, docs/future.md). */
+  defineCustomType: (name: string, scale: Scale) => Promise<void>;
+  renameRelic: (id: number, name: string | null) => Promise<void>;
+  reclassifyRelic: (id: number, newType: TypeName) => Promise<void>;
+  expungeRelic: (id: number) => Promise<void>;
+  /** Reload classifier/reliquary state from SQLite after item-level edits. */
+  refreshClassifier: () => Promise<void>;
   /** Files a resolved capture: persists scan + thumbnail, grows the model, rewards, companion ack. */
   confirmScan: (args: {
     scale: Scale;
@@ -96,6 +110,52 @@ export const useGameStore = create<GameStore>((set, get) => ({
   taughtTotal: 0,
   corrections: 0,
   reliquary: {},
+  customTypes: [],
+
+  refreshClassifier: async () => {
+    const c = await loadClassifierState();
+    set({
+      taughtCounts: c.taughtCounts,
+      taughtTotal: c.taughtTotal,
+      corrections: c.corrections,
+      reliquary: c.reliquary,
+      customTypes: c.customTypes,
+    });
+  },
+
+  defineCustomType: async (name, scale) => {
+    const clean = name.trim().toUpperCase().slice(0, 24);
+    if (!clean) return;
+    await addCustomType(clean, scale);
+    set((state) =>
+      state.customTypes.some((c) => c.name === clean)
+        ? {}
+        : { customTypes: [...state.customTypes, { name: clean, scale }] }
+    );
+  },
+
+  renameRelic: async (id, name) => {
+    await renameScan(id, name);
+    if (name) {
+      get().appendLog('ai', `Designation recorded: "${name}". Your names enter the archive beside my types.`);
+      audio.voice('warm');
+    }
+  },
+
+  reclassifyRelic: async (id, newType) => {
+    await reclassifyScan(id, newType);
+    await get().refreshClassifier();
+    const ack = ACK_CORRECT[Math.floor(Math.random() * ACK_CORRECT.length)];
+    get().appendLog('ai', ack.text.replace('{T}', newType.toLowerCase()));
+    audio.voice(ack.mood);
+  },
+
+  expungeRelic: async (id) => {
+    await deleteScan(id);
+    await get().refreshClassifier();
+    get().appendLog('sys', 'RECORD EXPUNGED AT YOUR INSTRUCTION');
+    audio.play('discard');
+  },
 
   confirmScan: async ({ scale, type, taught, corrected, thumbPng }) => {
     const thumbUri = saveThumbnail(thumbPng);
@@ -107,8 +167,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const reliquary = {
         ...state.reliquary,
         [type]: prev
-          ? { ...prev, count: prev.count + 1 }
-          : { count: 1, thumbUri, taughtFirst: taught || corrected },
+          ? { ...prev, count: prev.count + 1, lastTs: Date.now() }
+          : { count: 1, thumbUri, taughtFirst: taught || corrected, lastTs: Date.now() },
       };
       return {
         taughtCounts,
@@ -132,10 +192,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
     get().appendLog('ai', ack.text.replace('{T}', type.toLowerCase()));
     audio.voice(ack.mood);
 
-    const firstLine = firstOfType ? TYPE_FIRST[type] : undefined;
+    const isCustom = get().customTypes.some((c) => c.name === type);
+    const firstLine = firstOfType ? (TYPE_FIRST[type] ?? (isCustom ? CUSTOM_TYPE_FIRST : undefined)) : undefined;
     if (firstLine) {
+      const text = firstLine.text.replace('{T}', type.charAt(0) + type.slice(1).toLowerCase());
       setTimeout(() => {
-        get().appendLog('ai', firstLine.text);
+        get().appendLog('ai', text);
         audio.voice(firstLine.mood);
       }, 1400);
     }
@@ -170,6 +232,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       taughtTotal: classifier.taughtTotal,
       corrections: classifier.corrections,
       reliquary: classifier.reliquary,
+      customTypes: classifier.customTypes,
       hydrated: true,
       level: persisted.level,
       xp: persisted.xp,

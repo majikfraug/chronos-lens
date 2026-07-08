@@ -58,12 +58,7 @@ export function AppShell(): React.JSX.Element {
                 const nowMuted = audio.toggleMute();
                 setMutedUi(nowMuted);
                 if (!nowMuted) audio.play('file'); // audible confirmation the channel works
-                appendLog(
-                  'sys',
-                  nowMuted
-                    ? 'AUDIO CHANNEL MUTED'
-                    : 'AUDIO CHANNEL OPEN · HARDWARE SILENT SWITCH IS RESPECTED'
-                );
+                appendLog('sys', nowMuted ? 'AUDIO CHANNEL MUTED' : 'AUDIO CHANNEL OPEN');
               }}
             >
               <Text style={[styles.hudText, mutedUi && styles.muteOff]}>{mutedUi ? '♪ OFF' : '♪'}</Text>

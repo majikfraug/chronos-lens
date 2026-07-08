@@ -53,7 +53,20 @@ export function getDb(): Promise<SQLiteDatabase> {
           thumb_path TEXT,
           taught_first INTEGER NOT NULL DEFAULT 0
         );
+        -- reliquary is legacy as of M3.1: slots now derive from scans directly
+        -- so items can be renamed/reclassified/expunged. Kept for old installs.
+
+        CREATE TABLE IF NOT EXISTS custom_types (
+          name TEXT PRIMARY KEY,
+          scale TEXT NOT NULL
+        );
       `);
+      // Additive migration for installs created before scans grew a player-given name.
+      try {
+        await db.execAsync('ALTER TABLE scans ADD COLUMN name TEXT');
+      } catch {
+        // column already exists
+      }
       return db;
     });
   }
