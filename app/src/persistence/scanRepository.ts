@@ -115,6 +115,50 @@ export async function addCustomType(name: string, scale: Scale): Promise<void> {
   ]);
 }
 
+/**
+ * Renames a player-defined category, carrying its scans and its weight in the
+ * taught model along. Renaming onto an existing type merges into it.
+ */
+export async function renameCustomType(oldName: TypeName, newName: TypeName): Promise<void> {
+  const db = await getDb();
+  const row = await db.getFirstAsync<{ scale: string }>(
+    'SELECT scale FROM custom_types WHERE name = ?',
+    [oldName]
+  );
+  if (!row || oldName === newName) return;
+  await db.runAsync('INSERT OR IGNORE INTO custom_types (name, scale) VALUES (?, ?)', [
+    newName,
+    row.scale,
+  ]);
+  await db.runAsync('DELETE FROM custom_types WHERE name = ?', [oldName]);
+  await db.runAsync('UPDATE scans SET type = ? WHERE type = ?', [newName, oldName]);
+  const model = await db.getFirstAsync<{ taught_count: number }>(
+    'SELECT taught_count FROM ai_model WHERE type = ?',
+    [oldName]
+  );
+  if (model) {
+    await db.runAsync(
+      `INSERT INTO ai_model (type, taught_count) VALUES (?, ?)
+       ON CONFLICT(type) DO UPDATE SET taught_count = taught_count + ?`,
+      [newName, model.taught_count, model.taught_count]
+    );
+    await db.runAsync('DELETE FROM ai_model WHERE type = ?', [oldName]);
+  }
+}
+
+/** Deletes an EMPTY player-defined category. Returns false if it still holds records. */
+export async function deleteCustomType(name: TypeName): Promise<boolean> {
+  const db = await getDb();
+  const held = await db.getFirstAsync<{ n: number }>(
+    'SELECT COUNT(*) AS n FROM scans WHERE type = ?',
+    [name]
+  );
+  if ((held?.n ?? 0) > 0) return false;
+  await db.runAsync('DELETE FROM custom_types WHERE name = ?', [name]);
+  await db.runAsync('DELETE FROM ai_model WHERE type = ?', [name]);
+  return true;
+}
+
 export async function listScansOfType(type: TypeName): Promise<ScanRecord[]> {
   const db = await getDb();
   const rows = await db.getAllAsync<{

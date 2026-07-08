@@ -134,34 +134,39 @@ function hiss(dur, vol = 0.06, f = 1200, q = 0.7) {
 
 const stems = {};
 
-// Bed: sines 52+78Hz through slow-LFO lowpass + faint bandpassed noise (§7).
-// 8s seamless loop — 52·8 and 78·8 are integer cycle counts, LFO runs exactly
-// one period, noise tail crossfades into its head.
+// Bed: an evolving pad on the §7 drone frequencies — detuned sine pairs on
+// 52/78Hz with soft partials, each breathing on its own slow LFO, all through
+// a deep lowpass. The spec's bandpassed-noise component is deliberately
+// omitted from the STEM: in a short loop it reads as repeating static (field
+// test 2026-07-07); it returns as gentle continuous texture in the live
+// synth engine, whose bed should also react to environment (density, register,
+// terrain) — see docs/future.md.
+// 24s seamless loop: every frequency and LFO completes integer cycles in 24s,
+// and the first 2s (filter settle) are trimmed without breaking phase.
 stems.ambient = (() => {
-  const dur = 8;
-  const out = buf(dur);
-  const s52 = osc('sine', dur, 52);
-  const s78 = osc('sine', dur, 78);
-  const drone = buf(dur);
-  for (let i = 0; i < drone.length; i++) drone[i] = s52[i] + s78[i];
-  // slow-LFO lowpass: cutoff 200±60Hz at 1/8 Hz — approximated in 16 blocks
-  const blocks = 16;
-  const blockLen = Math.floor(drone.length / blocks);
-  for (let b = 0; b < blocks; b++) {
-    const cutoff = 200 + 60 * Math.sin((2 * Math.PI * b) / blocks);
-    const seg = drone.subarray(b * blockLen, b === blocks - 1 ? drone.length : (b + 1) * blockLen);
-    biquad(seg, 'lowpass', cutoff);
+  const trim = 2;
+  const dur = 24;
+  const out = buf(dur + trim);
+  const comps = [
+    { f: 52, amp: 1.0, lfoHz: 1 / 24, lfoPhase: 0.0, lfoDepth: 0.35 },
+    { f: 52.25, amp: 0.6, lfoHz: 2 / 24, lfoPhase: 1.7, lfoDepth: 0.55 },
+    { f: 78, amp: 0.8, lfoHz: 1 / 24, lfoPhase: 3.1, lfoDepth: 0.4 },
+    { f: 78.125, amp: 0.5, lfoHz: 3 / 24, lfoPhase: 4.4, lfoDepth: 0.55 },
+    { f: 104, amp: 0.32, lfoHz: 2 / 24, lfoPhase: 2.2, lfoDepth: 0.65 },
+    { f: 156, amp: 0.16, lfoHz: 3 / 24, lfoPhase: 5.3, lfoDepth: 0.7 },
+  ];
+  for (let i = 0; i < out.length; i++) {
+    const t = i / SR;
+    let s = 0;
+    for (const c of comps) {
+      const swell = 1 - c.lfoDepth * (0.5 + 0.5 * Math.sin(2 * Math.PI * c.lfoHz * t + c.lfoPhase));
+      s += Math.sin(2 * Math.PI * c.f * t) * c.amp * swell;
+    }
+    out[i] = s;
   }
-  const n = noise(dur);
-  biquad(n, 'bandpass', 1400, 0.4);
-  for (let i = 0; i < out.length; i++) out[i] = (drone[i] + n[i] * 0.35) * 0.02;
-  // crossfade last 0.5s into first 0.5s for a clean loop seam
-  const xf = Math.floor(0.5 * SR);
-  for (let i = 0; i < xf; i++) {
-    const a = i / xf;
-    out[i] = out[i] * a + out[out.length - xf + i] * (1 - a);
-  }
-  return out.subarray(0, out.length - xf);
+  biquad(out, 'lowpass', 260);
+  for (let i = 0; i < out.length; i++) out[i] *= 0.022;
+  return out.subarray(trim * SR, (trim + dur) * SR);
 })();
 
 // Scan: low hum with rising partial + rhythmic relay clacking, ~9 clicks / 2.2s (§7).

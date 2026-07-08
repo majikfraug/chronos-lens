@@ -21,10 +21,12 @@ import {
 import { cellKeyFor, toLocalMeters, type LatLon } from '../location/projection';
 import {
   addCustomType,
+  deleteCustomType,
   deleteScan,
   loadClassifierState,
   reclassifyScan,
   recordScan,
+  renameCustomType,
   renameScan,
   saveThumbnail,
   type ReliquarySlot,
@@ -73,6 +75,10 @@ type GameStore = {
   appendLog: (kind: LogEntry['kind'], text: string) => void;
   /** Persist a player-defined category (local-first emergent type, docs/future.md). */
   defineCustomType: (name: string, scale: Scale) => Promise<void>;
+  /** Fix a category's name; scans and model weight move with it (merges if the name exists). */
+  reviseCustomType: (oldName: TypeName, newName: string) => Promise<void>;
+  /** Remove an empty player-defined category. No-op (with log) if it still holds records. */
+  removeCustomType: (name: TypeName) => Promise<void>;
   renameRelic: (id: number, name: string | null) => Promise<void>;
   reclassifyRelic: (id: number, newType: TypeName) => Promise<void>;
   expungeRelic: (id: number) => Promise<void>;
@@ -132,6 +138,26 @@ export const useGameStore = create<GameStore>((set, get) => ({
         ? {}
         : { customTypes: [...state.customTypes, { name: clean, scale }] }
     );
+  },
+
+  reviseCustomType: async (oldName, newName) => {
+    const clean = newName.trim().toUpperCase().slice(0, 24);
+    if (!clean || clean === oldName) return;
+    await renameCustomType(oldName, clean);
+    await get().refreshClassifier();
+    get().appendLog('sys', `DESIGNATION REVISED · ${oldName} → ${clean}`);
+    audio.play('file');
+  },
+
+  removeCustomType: async (name) => {
+    const removed = await deleteCustomType(name);
+    if (removed) {
+      await get().refreshClassifier();
+      get().appendLog('sys', `CATEGORY REMOVED · ${name}`);
+      audio.play('discard');
+    } else {
+      get().appendLog('sys', 'CATEGORY HOLDS RECORDS · RECLASSIFY OR EXPUNGE THEM FIRST');
+    }
   },
 
   renameRelic: async (id, name) => {

@@ -13,6 +13,15 @@ instead.
   system prompt. Game code does not change; only the brain implementation
   swaps in behind the existing interface.
 - Expanded POI storytelling (deeper per-category "what was this" content).
+- **Live reactive ambient engine** (needs the dev-client build and
+  react-native-audio-api): replace the looped ambient stem with real-time
+  synthesis — a mellow evolving pad whose harmonic content, filter motion, and
+  texture respond to environmental factors: temporal density, cell heat,
+  register/attunement, terrain (water proximity), time of day. Director's
+  request 2026-07-07; the stem renderer's component table is the starting
+  patch. The §7 bandpassed-noise texture belongs here too (continuous, not
+  looped — it reads as repeating static in a short stem, which is why the
+  current ambient.wav omits it).
 
 ## M4 (committed roadmap, noting director requests 2026-07-07)
 

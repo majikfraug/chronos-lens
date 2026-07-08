@@ -78,7 +78,13 @@ export function ReliquaryScreen(): React.JSX.Element {
 
       <View style={styles.grid}>
         {sorted.map((t) => (
-          <Slot key={t} type={t} onOpen={() => reliquary[t] && setOpenType(t)} />
+          <Slot
+            key={t}
+            type={t}
+            onOpen={() =>
+              (reliquary[t] || customTypes.some((c) => c.name === t)) && setOpenType(t)
+            }
+          />
         ))}
       </View>
 
@@ -94,7 +100,11 @@ function Slot({ type, onOpen }: { type: TypeName; onOpen: () => void }): React.J
   const pub = SIMULATED_PUBLIC_COUNTS[type];
 
   return (
-    <Pressable style={[styles.slot, slot && styles.slotLit]} onPress={onOpen} disabled={!slot}>
+    <Pressable
+      style={[styles.slot, slot && styles.slotLit]}
+      onPress={onOpen}
+      disabled={!slot && !isCustom}
+    >
       {slot && slot.count > 1 && <Text style={styles.stack}>×{slot.count}</Text>}
       <View style={styles.thumb}>
         {slot?.thumbUri ? (
@@ -125,12 +135,17 @@ function SlotDetail({ type, onClose }: { type: TypeName; onClose: () => void }):
   const renameRelic = useGameStore((s) => s.renameRelic);
   const reclassifyRelic = useGameStore((s) => s.reclassifyRelic);
   const expungeRelic = useGameStore((s) => s.expungeRelic);
+  const reviseCustomType = useGameStore((s) => s.reviseCustomType);
+  const removeCustomType = useGameStore((s) => s.removeCustomType);
+  const isCustom = customTypes.some((c) => c.name === type);
 
   const [items, setItems] = useState<ScanRecord[]>([]);
   const [renamingId, setRenamingId] = useState<number | null>(null);
   const [renameText, setRenameText] = useState('');
   const [reclassifyingId, setReclassifyingId] = useState<number | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
+  const [revisingCategory, setRevisingCategory] = useState(false);
+  const [categoryText, setCategoryText] = useState('');
 
   const reload = async (t: TypeName) => setItems(await listScansOfType(t));
   useEffect(() => {
@@ -255,7 +270,68 @@ function SlotDetail({ type, onClose }: { type: TypeName; onClose: () => void }):
               <Text style={styles.modalClose}>✕</Text>
             </Pressable>
           </View>
-          <ScrollView style={styles.modalScroll}>{items.map(item)}</ScrollView>
+
+          {isCustom && (
+            <View style={styles.categoryMgmt}>
+              <View style={styles.itemActions}>
+                <Pressable
+                  onPress={() => {
+                    setRevisingCategory((v) => !v);
+                    setCategoryText(type);
+                  }}
+                >
+                  <Text style={styles.itemAction}>REVISE NAME</Text>
+                </Pressable>
+                {items.length === 0 ? (
+                  <Pressable
+                    onPress={async () => {
+                      await removeCustomType(type);
+                      onClose();
+                    }}
+                  >
+                    <Text style={[styles.itemAction, styles.itemDanger]}>REMOVE CATEGORY</Text>
+                  </Pressable>
+                ) : (
+                  <Text style={styles.categoryHint}>
+                    holds {items.length} record{items.length === 1 ? '' : 's'} · reclassify or
+                    expunge them to remove
+                  </Text>
+                )}
+              </View>
+              {revisingCategory && (
+                <View style={styles.renameRow}>
+                  <TextInput
+                    style={styles.renameInput}
+                    value={categoryText}
+                    onChangeText={setCategoryText}
+                    autoCapitalize="characters"
+                    autoFocus
+                    maxLength={24}
+                    onSubmitEditing={async () => {
+                      await reviseCustomType(type, categoryText);
+                      onClose();
+                    }}
+                  />
+                  <Pressable
+                    style={styles.renameBtn}
+                    onPress={async () => {
+                      await reviseCustomType(type, categoryText);
+                      onClose();
+                    }}
+                  >
+                    <Text style={styles.itemAction}>KEEP</Text>
+                  </Pressable>
+                </View>
+              )}
+            </View>
+          )}
+
+          <ScrollView style={styles.modalScroll}>
+            {items.length === 0 && (
+              <Text style={styles.emptyDetail}>No records filed under this designation yet.</Text>
+            )}
+            {items.map(item)}
+          </ScrollView>
         </View>
       </View>
     </Modal>
@@ -414,6 +490,25 @@ const styles = StyleSheet.create({
     color: colors.phosphorDim,
   },
   modalScroll: { paddingHorizontal: 12 },
+  categoryMgmt: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.panel2,
+    gap: 6,
+  },
+  categoryHint: {
+    fontFamily: fonts.body,
+    fontSize: 8.5,
+    color: colors.phosphorFaint,
+    alignSelf: 'center',
+  },
+  emptyDetail: {
+    fontFamily: fonts.body,
+    fontSize: 10.5,
+    color: colors.phosphorFaint,
+    paddingVertical: 14,
+  },
   item: {
     paddingVertical: 10,
     borderBottomWidth: 1,
