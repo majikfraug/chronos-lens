@@ -153,6 +153,7 @@ export function LensScreen(): React.JSX.Element {
       );
       setStill(dithered);
       setMessage('');
+      audio.reassert(); // the capture session may have displaced the playback session
       audio.play('resolve');
 
       const teach = taughtTotal < TEACH_PHASE;

@@ -1,4 +1,5 @@
 import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from 'expo-audio';
+import { AppState } from 'react-native';
 
 /**
  * The audio engine facade — game code only ever talks to this interface.
@@ -69,6 +70,16 @@ function shoot(name: string): void {
   p[name].play();
 }
 
+function applyAudioMode(): void {
+  void setAudioModeAsync({
+    playsInSilentMode: false, // respect the silent switch, brief §7
+    shouldPlayInBackground: false,
+    // Coexist with the camera's capture session instead of being killed by it —
+    // without this, opening the Lens silences all playback on iOS.
+    interruptionMode: 'mixWithOthers',
+  }).catch(() => {});
+}
+
 export const audio = {
   /**
    * Initialize after first user interaction (brief §7: the bed fades in after
@@ -77,13 +88,26 @@ export const audio = {
   kick(): void {
     if (started) return;
     started = true;
-    void setAudioModeAsync({
-      playsInSilentMode: false, // respect the silent switch, brief §7
-      shouldPlayInBackground: false,
-    }).catch(() => {});
+    applyAudioMode();
+    // The session can be torn down while backgrounded or by other AV activity;
+    // re-assert it whenever the app returns to the foreground.
+    AppState.addEventListener('change', (state) => {
+      if (state === 'active') audio.reassert();
+    });
     const p = getPlayers();
     if (!p) return;
     if (!muted) {
+      p.ambient.volume = AMBIENT_VOLUME;
+      p.ambient.play();
+    }
+  },
+
+  /** Re-activate the audio session and resume the bed after an interruption. */
+  reassert(): void {
+    if (!started) return;
+    applyAudioMode();
+    const p = getPlayers();
+    if (p && !muted && !p.ambient.playing) {
       p.ambient.volume = AMBIENT_VOLUME;
       p.ambient.play();
     }

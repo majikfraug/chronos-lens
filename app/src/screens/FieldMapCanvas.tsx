@@ -24,6 +24,8 @@ type Props = {
   terrainImage: SkImage | null;
   heightfield: Heightfield | null;
   playerMeters: LocalMeters;
+  /** Where the view looks — equals playerMeters unless the player panned away. */
+  centerMeters: LocalMeters;
   revealedCells: Set<string>;
   viewMetres: number;
 };
@@ -39,13 +41,14 @@ export function FieldMapCanvas({
   terrainImage,
   heightfield,
   playerMeters,
+  centerMeters,
   revealedCells,
   viewMetres,
 }: Props): React.JSX.Element {
   const pxPerMeter = width / viewMetres;
   const viewHeightMetres = height / pxPerMeter;
-  const leftWorldX = playerMeters.x - viewMetres / 2;
-  const topWorldY = playerMeters.y + viewHeightMetres / 2;
+  const leftWorldX = centerMeters.x - viewMetres / 2;
+  const topWorldY = centerMeters.y + viewHeightMetres / 2;
 
   const worldToCanvas = (wx: number, wy: number): { x: number; y: number } => ({
     x: (wx - leftWorldX) * pxPerMeter,

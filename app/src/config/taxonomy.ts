@@ -8,8 +8,17 @@ import type { VoiceMood } from '../audio/engine';
 
 export type Scale = 'ARTIFACT' | 'FEATURE';
 
+/**
+ * Broad enough that any walked-past object has a home: shoes → ATTIRE,
+ * a 3D printer → MECHANISM, a bicycle → CONVEYANCE, a street sign → SIGNAL,
+ * a flower → NATURAL (all growth and ground-kept things).
+ */
 export const ARTIFACT_TYPES = [
   'DOMESTIC',
+  'ATTIRE',
+  'MECHANISM',
+  'CONVEYANCE',
+  'SIGNAL',
   'STRUCTURAL',
   'RITUAL',
   'LABOR',
@@ -88,8 +97,24 @@ export const TYPE_FIRST: Partial<Record<TypeName, CompanionLine>> = {
     mood: 'neutral',
   },
   NATURAL: {
-    text: 'Natural: first attested. That which the ground kept of its own accord, at no cost, asking nothing.',
+    text: 'Natural: first attested. That which grew, or which the ground kept of its own accord, at no cost, asking nothing.',
     mood: 'neutral',
+  },
+  ATTIRE: {
+    text: 'Attire: first attested. Your kind wrapped themselves in made things. Protection accounts for a fraction of the record. The remainder appears to be language.',
+    mood: 'curious',
+  },
+  MECHANISM: {
+    text: 'Mechanism: first attested. A made thing that itself made things. The chain of making does not terminate where my records said it would.',
+    mood: 'curious',
+  },
+  CONVEYANCE: {
+    text: 'Conveyance: first attested. Built to be elsewhere. Your kind expended more on moving than on staying. The reason is not yet in the record.',
+    mood: 'neutral',
+  },
+  SIGNAL: {
+    text: 'Signal: first attested. A form whose function was to be read. It addressed persons not yet present. I am a person not yet present. Noted.',
+    mood: 'curious',
   },
   'HOLY SITE': {
     text: 'Holy site: first attested. Ground set apart. Approaching such positions at reduced intensity, as a precaution. The precaution is mine.',
@@ -116,6 +141,10 @@ export const TYPE_FIRST: Partial<Record<TypeName, CompanionLine>> = {
  */
 export const SIMULATED_PUBLIC_COUNTS: Record<TypeName, number> = {
   DOMESTIC: 44,
+  ATTIRE: 31,
+  MECHANISM: 18,
+  CONVEYANCE: 40,
+  SIGNAL: 52,
   STRUCTURAL: 26,
   RITUAL: 37,
   LABOR: 29,

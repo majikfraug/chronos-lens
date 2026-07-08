@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { LayoutChangeEvent, Pressable, StyleSheet, Text, View } from 'react-native';
+import React, { useMemo, useRef, useState } from 'react';
+import { LayoutChangeEvent, PanResponder, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useLocationTracking } from '../location/useLocationTracking';
 import { toLocalMeters } from '../location/projection';
 import { useGameStore } from '../state/gameStore';
@@ -26,6 +26,8 @@ export function FieldScreen(): React.JSX.Element {
 
   const [zoom, setZoom] = useState(DEFAULT_ZOOM);
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
+  /** View offset from the player, meters — drag to survey elsewhere; {0,0} = locked on. */
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
 
   const { heightfield, terrainImage, status: terrainStatus } = useTerrain(playerPosition, origin);
 
@@ -35,6 +37,31 @@ export function FieldScreen(): React.JSX.Element {
     () => (playerPosition && origin ? toLocalMeters(playerPosition, origin) : null),
     [playerPosition, origin]
   );
+
+  // Refs so the PanResponder (created once) always sees current values.
+  const panStart = useRef({ x: 0, y: 0 });
+  const panOffsetRef = useRef(panOffset);
+  panOffsetRef.current = panOffset;
+  const mppRef = useRef(1);
+  mppRef.current = stageSize.width > 0 ? viewMetres / stageSize.width : 1;
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_evt, g) => Math.abs(g.dx) + Math.abs(g.dy) > 8,
+      onPanResponderGrant: () => {
+        panStart.current = panOffsetRef.current;
+      },
+      onPanResponderMove: (_evt, g) => {
+        // Content follows the finger: screen +x drag looks west, +y drag looks north.
+        setPanOffset({
+          x: panStart.current.x - g.dx * mppRef.current,
+          y: panStart.current.y + g.dy * mppRef.current,
+        });
+      },
+    })
+  ).current;
+
+  const isPanned = Math.abs(panOffset.x) > 1 || Math.abs(panOffset.y) > 1;
 
   const onStageLayout = (e: LayoutChangeEvent) => {
     const { width, height } = e.nativeEvent.layout;
@@ -51,15 +78,18 @@ export function FieldScreen(): React.JSX.Element {
   return (
     <View style={styles.stage} onLayout={onStageLayout}>
       {stageSize.width > 0 && playerMeters ? (
-        <FieldMapCanvas
-          width={stageSize.width}
-          height={stageSize.height}
-          terrainImage={terrainImage}
-          heightfield={heightfield}
-          playerMeters={playerMeters}
-          revealedCells={revealedCells}
-          viewMetres={viewMetres}
-        />
+        <View style={StyleSheet.absoluteFill} {...panResponder.panHandlers}>
+          <FieldMapCanvas
+            width={stageSize.width}
+            height={stageSize.height}
+            terrainImage={terrainImage}
+            heightfield={heightfield}
+            playerMeters={playerMeters}
+            centerMeters={{ x: playerMeters.x + panOffset.x, y: playerMeters.y + panOffset.y }}
+            revealedCells={revealedCells}
+            viewMetres={viewMetres}
+          />
+        </View>
       ) : (
         <View style={styles.telemetryWrap}>
           <Text style={styles.telemetryLine}>{telemetryFor(locationStatus)}</Text>
@@ -91,6 +121,11 @@ export function FieldScreen(): React.JSX.Element {
         >
           <Text style={styles.zoomBtnText}>−</Text>
         </Pressable>
+        {isPanned && (
+          <Pressable style={styles.zoomBtn} onPress={() => setPanOffset({ x: 0, y: 0 })}>
+            <Text style={[styles.zoomBtnText, { color: colors.neon }]}>⌖</Text>
+          </Pressable>
+        )}
       </View>
 
       <View style={styles.legend} pointerEvents="none">
