@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect } from 'react';
-import { StyleSheet, Text } from 'react-native';
+import { KeyboardAvoidingView, Platform, StyleSheet, Text } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { AppShell } from './src/navigation/AppShell';
 import { useGameStore } from './src/state/gameStore';
@@ -32,7 +32,13 @@ export default function App(): React.JSX.Element {
     // row above the home indicator.
     <SafeAreaProvider>
       <SafeAreaView style={styles.container} edges={['top', 'bottom', 'left', 'right']}>
-        <AppShell />
+        {/* Lifts the log strip + transmit input above the iOS keyboard. */}
+        <KeyboardAvoidingView
+          style={styles.container}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+          <AppShell />
+        </KeyboardAvoidingView>
         <StatusBar style="light" />
       </SafeAreaView>
     </SafeAreaProvider>

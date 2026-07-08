@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useGameStore, type LogEntry } from '../state/gameStore';
 import { colors } from '../theme/colors';
 import { fonts } from '../theme/typography';
@@ -23,6 +23,14 @@ export function LogStrip(): React.JSX.Element {
     return () => clearTimeout(t);
   }, [log.length]);
 
+  useEffect(() => {
+    // Keep the newest lines in view when the keyboard reshapes the layout.
+    const sub = Keyboard.addListener('keyboardDidShow', () =>
+      scrollRef.current?.scrollToEnd({ animated: false })
+    );
+    return () => sub.remove();
+  }, []);
+
   const send = () => {
     const text = draft;
     if (!text.trim()) return;
@@ -40,6 +48,14 @@ export function LogStrip(): React.JSX.Element {
           <LogLine key={entry.id} entry={entry} label={companionName ?? 'LENS'} />
         ))}
       </ScrollView>
+      {pendingQuestion && (
+        <View style={styles.pinnedQuery}>
+          <Text style={styles.pinnedQueryLabel}>RESPONDING TO</Text>
+          <Text style={styles.pinnedQueryText} numberOfLines={3}>
+            {pendingQuestion.text}
+          </Text>
+        </View>
+      )}
       <View style={styles.transmitRow}>
         <TextInput
           style={[styles.transmitInput, pendingQuestion && styles.transmitAnswering]}
@@ -159,6 +175,26 @@ const styles = StyleSheet.create({
     fontFamily: fonts.body,
     fontSize: 12.5,
     lineHeight: 18,
+    color: colors.companionAmber,
+  },
+  pinnedQuery: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderTopWidth: 1,
+    borderTopColor: colors.line,
+    backgroundColor: 'rgba(224,168,92,0.05)',
+  },
+  pinnedQueryLabel: {
+    fontFamily: fonts.body,
+    fontSize: 7.5,
+    letterSpacing: 2.5,
+    color: colors.interestAmber,
+    marginBottom: 2,
+  },
+  pinnedQueryText: {
+    fontFamily: fonts.body,
+    fontSize: 11.5,
+    lineHeight: 16,
     color: colors.companionAmber,
   },
   transmitRow: {
