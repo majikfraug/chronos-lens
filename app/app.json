@@ -1,6 +1,7 @@
 {
   "expo": {
     "name": "Chronos Lens",
+    "owner": "majikfraug",
     "slug": "chronos-lens",
     "scheme": "chronoslens",
     "version": "1.0.0",
@@ -28,7 +29,9 @@
       "permissions": [
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
-        "CAMERA"
+        "CAMERA",
+        "RECORD_AUDIO",
+        "MODIFY_AUDIO_SETTINGS"
       ]
     },
     "web": {
@@ -52,6 +55,11 @@
       "expo-splash-screen",
       "expo-audio",
       "expo-asset"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "b5914f4b-4dfc-40f6-907a-bf62e5e1e0c8"
+      }
+    }
   }
 }
