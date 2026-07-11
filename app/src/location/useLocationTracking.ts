@@ -34,10 +34,14 @@ export function useLocationTracking(): LocationTrackingStatus {
             distanceInterval: 5,
           },
           (loc) => {
-            void recordMovement({
-              lat: loc.coords.latitude,
-              lon: loc.coords.longitude,
-            });
+            void recordMovement(
+              {
+                lat: loc.coords.latitude,
+                lon: loc.coords.longitude,
+              },
+              // meters/second; null or negative when the fix has no speed
+              loc.coords.speed != null && loc.coords.speed >= 0 ? loc.coords.speed : undefined
+            );
           }
         );
       } catch {

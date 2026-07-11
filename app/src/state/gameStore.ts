@@ -19,6 +19,7 @@ import {
   markQuestionAsked,
   type KeptAnswer,
 } from '../persistence/companionRepository';
+import { wipeAllData } from '../persistence/reset';
 import {
   getFlag,
   loadDiscoveredCells,
@@ -69,6 +70,7 @@ let wasAwayFromHome = false;
 let sessionEchoDone = false;
 let askInFlight = false;
 const patternsInFlight = new Set<string>();
+let inVehicle = false;
 
 type GameStore = {
   hydrated: boolean;
@@ -134,7 +136,9 @@ type GameStore = {
   markIntroSeen: () => void;
   hydrate: () => Promise<void>;
   /** The one entry point for a new GPS fix: sets origin (first fix), position, fog reveal, and discovery XP. */
-  recordMovement: (point: LatLon) => Promise<void>;
+  recordMovement: (point: LatLon, speedMs?: number) => Promise<void>;
+  /** Full wipe: progress, model, reliquary, answers, name — a brand-new survey. */
+  resetSurvey: () => Promise<void>;
   gainXp: (amount: number) => void;
   gainAttunement: (amount: number) => void;
 };
@@ -316,6 +320,43 @@ export const useGameStore = create<GameStore>((set, get) => ({
     get().appendLog('ai', `"${clean}." I'm keeping it. The collective issues indices; you gave something else. I'll carry it from here.`);
     audio.voice('warm');
     get().gainAttunement(ATTUNEMENT_GAIN.answer);
+  },
+
+  resetSurvey: async () => {
+    const keepBrainMode = get().brainMode;
+    await wipeAllData();
+    if (keepBrainMode !== 'authored') void setFlag('brain_mode', keepBrainMode);
+
+    // Session pacing resets with the world.
+    actionsSinceAsk = 0;
+    resurfacedThisSession = false;
+    wasAwayFromHome = false;
+    sessionEchoDone = false;
+    inVehicle = false;
+
+    set({
+      level: 1,
+      xp: 0,
+      attunement: 0,
+      origin: null, // next GPS fix becomes the new survey origin
+      homeCellKey: null,
+      discoveredCells: new Set(),
+      revealedCells: new Set(),
+      introSeen: false, // the boot sequence and first transmission play again
+      log: [],
+      taughtCounts: {},
+      taughtTotal: 0,
+      corrections: 0,
+      reliquary: {},
+      customTypes: [],
+      companionName: null,
+      pendingQuestion: null,
+      keptAnswers: [],
+      askedQuestionIds: [],
+      firedPatterns: [],
+      awakeningPending: false,
+    });
+    audio.play('sync');
   },
 
   refreshClassifier: async () => {
@@ -511,7 +552,24 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
   },
 
-  recordMovement: async (point) => {
+  recordMovement: async (point, speedMs) => {
+    // Vehicle gate with hysteresis: enter above vehicleSpeedMs, exit below
+    // vehicleExitSpeedMs. Fog keeps revealing along the route; rewards and
+    // companion chatter suspend (anti-farming, anti-distraction).
+    if (speedMs != null) {
+      const wasInVehicle = inVehicle;
+      if (!inVehicle && speedMs > FIELD.vehicleSpeedMs) inVehicle = true;
+      else if (inVehicle && speedMs < FIELD.vehicleExitSpeedMs) inVehicle = false;
+      if (inVehicle !== wasInVehicle && get().origin) {
+        get().appendLog(
+          'sys',
+          inVehicle
+            ? 'TRANSIT VELOCITY DETECTED · SURVEY REWARDS SUSPENDED'
+            : 'GROUND PACE RESTORED · SURVEY ACTIVE'
+        );
+      }
+    }
+
     let { origin, homeCellKey } = get();
     if (!origin) {
       // The origin point is itself (0,0) in local meters, by definition.
@@ -536,6 +594,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
       set({ revealedCells: next });
       void markRevealCell(revealKey);
     }
+
+    // No rewards, patterns, or companion chatter while in a vehicle.
+    if (inVehicle) return;
 
     // Discovery XP: coarse cell + its 8 neighbors, same as prototype accountReveal().
     for (const cell of neighborCoarseCells(meters, FIELD.cellSizeM)) {

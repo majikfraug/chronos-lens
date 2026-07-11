@@ -68,6 +68,14 @@ export const FIELD = {
   revealRadiusM: 90,
   /** Grid the fog-of-war reveal history is snapped to for storage/de-dup — finer than cellSizeM so the feathered reveal reads as continuous. */
   revealSnapM: 20,
+  /**
+   * Above this GPS ground speed (m/s) the player is in a vehicle: fog still
+   * reveals along the route, but discovery XP/attunement/companion chatter
+   * suspend — anti-farming and anti-distraction (director, 2026-07-11).
+   * 6 m/s ≈ 21.6 km/h, above any sustained run. Exit hysteresis at 4 m/s.
+   */
+  vehicleSpeedMs: 6,
+  vehicleExitSpeedMs: 4,
   /** Base discovery XP for a newly-revealed non-site field cell. */
   discoveryXpBase: 8,
   /** Extra XP per cell of distance from home, capped — remote cells are worth more. */

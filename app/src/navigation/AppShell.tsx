@@ -25,6 +25,8 @@ const TABS: { key: Tab; label: string }[] = [
 export function AppShell(): React.JSX.Element {
   const [tab, setTab] = useState<Tab>('field');
   const [mutedUi, setMutedUi] = useState(audio.isMuted());
+  const [resetArmed, setResetArmed] = useState(false);
+  const resetSurvey = useGameStore((s) => s.resetSurvey);
   const level = useGameStore((s) => s.level);
   const xp = useGameStore((s) => s.xp);
   const attunement = useGameStore((s) => s.attunement);
@@ -54,6 +56,25 @@ export function AppShell(): React.JSX.Element {
             <Text style={styles.hudText}>
               XP <Text style={styles.hudValue}>{xp}</Text>
             </Text>
+            <Pressable
+              style={[styles.muteBtn, resetArmed && styles.resetArmed]}
+              hitSlop={8}
+              onPress={() => {
+                if (!resetArmed) {
+                  setResetArmed(true);
+                  // Disarm if the second tap doesn't come quickly.
+                  setTimeout(() => setResetArmed(false), 4000);
+                } else {
+                  setResetArmed(false);
+                  void resetSurvey();
+                  setTab('field');
+                }
+              }}
+            >
+              <Text style={[styles.hudText, resetArmed && styles.resetArmedText]}>
+                {resetArmed ? 'ERASE ALL?' : '⟲'}
+              </Text>
+            </Pressable>
             <Pressable
               style={styles.muteBtn}
               hitSlop={8}
@@ -168,6 +189,12 @@ const styles = StyleSheet.create({
   },
   muteOff: {
     color: colors.phosphorFaint,
+  },
+  resetArmed: {
+    borderColor: colors.warn,
+  },
+  resetArmedText: {
+    color: colors.warn,
   },
   bars: {
     flexDirection: 'row',
