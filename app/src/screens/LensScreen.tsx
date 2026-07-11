@@ -59,6 +59,7 @@ export function LensScreen(): React.JSX.Element {
   const taughtCounts = useGameStore((s) => s.taughtCounts);
   const taughtTotal = useGameStore((s) => s.taughtTotal);
   const confirmScan = useGameStore((s) => s.confirmScan);
+  const calibLensResolved = useGameStore((s) => s.calibLensResolved);
   const customTypes = useGameStore((s) => s.customTypes);
   const defineCustomType = useGameStore((s) => s.defineCustomType);
 
@@ -167,6 +168,7 @@ export function LensScreen(): React.JSX.Element {
       setMessage('');
       audio.reassert(); // the capture session may have displaced the playback session
       audio.play('resolve');
+      calibLensResolved();
 
       const teach = taughtTotal < TEACH_PHASE;
       setTeachMode(teach);

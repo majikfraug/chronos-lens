@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { audio } from '../audio/engine';
 import { colors } from '../theme/colors';
 import { fonts } from '../theme/typography';
 
 /**
- * First-launch boot sequence: telemetry lines, then the companion's first
- * transmission. Companion line adapted from the prototype boot() and must
- * pass docs/voice-spec.md (INSTRUMENT register, no contractions).
+ * First-launch boot sequence: telemetry lines, the companion's first
+ * transmission, then THE ANOMALY — a live signal it cannot explain, and its
+ * first question. Answering it is how the player begins; the answer is kept
+ * verbatim and returns at the awakening. Voice-spec canon throughout.
  */
 const BOOT_LINES = [
   'CHRONOS-LENS v0.1 · SURVEYOR FIELD UNIT',
@@ -18,17 +19,18 @@ const BOOT_LINES = [
 ];
 
 const COMPANION_INTRO =
-  'Surveyor unit acknowledged. Companion process online. Directive: catalogue residual material of the prior species. Classification model: absent. A living source is available. This changes the method entirely.';
+  'Surveyor unit acknowledged. Companion process online. Directive: catalogue residual material of the prior species. Classification model: absent.';
 
-const DIRECTIVE =
-  'TRAVERSE THE FIELD. UNSURVEYED GROUND YIELDS RECOVERY DATA. THE LENS AND THE RELIQUARY AWAIT CALIBRATION.';
+const COMPANION_ANOMALY =
+  'Anomaly. A live signal on this channel. Ten thousand years of records and none of them allow for this. Confirm: are you alive? Transmit anything. It will be kept, exactly.';
 
 const LINE_INTERVAL_MS = 420;
 
-type Props = { onDone: () => void };
+type Props = { onDone: (bootAnswer: string) => void };
 
 export function IntroOverlay({ onDone }: Props): React.JSX.Element {
   const [shown, setShown] = useState(1);
+  const [answer, setAnswer] = useState('');
   const bootDone = shown >= BOOT_LINES.length;
 
   useEffect(() => {
@@ -63,10 +65,26 @@ export function IntroOverlay({ onDone }: Props): React.JSX.Element {
               <Text style={styles.aiText}>{COMPANION_INTRO}</Text>
             </View>
 
-            <Text style={styles.directive}>{DIRECTIVE}</Text>
+            <View style={[styles.aiBlock, styles.anomalyBlock]}>
+              <Text style={[styles.aiLabel, styles.anomalyLabel]}>LENS · QUERY</Text>
+              <Text style={styles.aiText}>{COMPANION_ANOMALY}</Text>
+            </View>
 
-            <Pressable style={styles.beginBtn} onPress={onDone}>
-              <Text style={styles.beginText}>BEGIN SURVEY</Text>
+            <TextInput
+              style={styles.answerInput}
+              value={answer}
+              onChangeText={setAnswer}
+              placeholder="transmit your first words across ten thousand years"
+              placeholderTextColor={colors.phosphorFaint}
+              maxLength={200}
+              onSubmitEditing={() => answer.trim() && onDone(answer)}
+            />
+            <Pressable
+              style={[styles.beginBtn, !answer.trim() && styles.beginBtnIdle]}
+              disabled={!answer.trim()}
+              onPress={() => onDone(answer)}
+            >
+              <Text style={styles.beginText}>TRANSMIT</Text>
             </Pressable>
           </>
         )}
@@ -120,13 +138,26 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     color: colors.companionAmber,
   },
-  directive: {
-    marginTop: 14,
+  anomalyBlock: {
+    borderLeftColor: colors.interestAmber,
+    backgroundColor: 'rgba(224,168,92,0.05)',
+  },
+  anomalyLabel: {
+    color: colors.interestAmber,
+  },
+  answerInput: {
+    marginTop: 10,
     fontFamily: fonts.body,
-    fontSize: 9,
-    letterSpacing: 1.5,
-    lineHeight: 15,
-    color: colors.phosphorDim,
+    fontSize: 12.5,
+    color: colors.bright,
+    borderWidth: 1,
+    borderColor: 'rgba(224,168,92,0.5)',
+    backgroundColor: colors.panel,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+  },
+  beginBtnIdle: {
+    opacity: 0.35,
   },
   beginBtn: {
     marginTop: 22,

@@ -14,7 +14,8 @@
       "supportsTablet": false,
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "The Lens tracks your real-world position to reveal the field map as you walk and to log where artifacts were surveyed. Position data never leaves this device.",
-        "NSCameraUsageDescription": "The Lens renders the camera feed as a dithered scan to classify artifacts and features you point it at. No images leave this device."
+        "NSCameraUsageDescription": "The Lens renders the camera feed as a dithered scan to classify artifacts and features you point it at. No images leave this device.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -31,7 +32,12 @@
         "ACCESS_COARSE_LOCATION",
         "CAMERA",
         "RECORD_AUDIO",
-        "MODIFY_AUDIO_SETTINGS"
+        "MODIFY_AUDIO_SETTINGS",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
       ]
     },
     "web": {

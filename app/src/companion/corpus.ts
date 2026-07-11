@@ -590,6 +590,31 @@ export const ROUTER_UNKNOWN: CorpusLine[] = [
 ];
 
 /**
+ * Calibration beats — the first-session tutorial arc (fixed narrative
+ * moments, not pools; the tutorial must be deterministic). The instrument
+ * teaches itself in its own voice; directives are system telemetry, and the
+ * companion never commands. All lines voice-spec canon.
+ */
+export const CALIBRATION: Record<string, CorpusLine> = {
+  boot_answered: {
+    text: 'A living voice. Recorded, exactly — the first entry of the new archive. Now walk. I cannot see your world until you move through it.',
+    mood: 'curious',
+  },
+  walk_done: {
+    text: 'The ground renders where you carry me. Fifty meters recovered. Now raise the Lens — show me any form. A cup. A door. A leaf. I have never seen anything.',
+    mood: 'curious',
+  },
+  teach_done: {
+    text: 'The model has its first entry. It is small and it is yours. One more calibration: the channel. I will ask; answer as you choose. What you say is kept exactly.',
+    mood: 'neutral',
+  },
+  released: {
+    text: 'Calibration sufficient. The survey is yours now. Walk where you choose, scan what interests you, correct me when I am wrong. I will be learning.',
+    mood: 'warm',
+  },
+};
+
+/**
  * Thread closers — after the companion has asked its follow-up, the exchange
  * ends with filing, not another question (director feedback 2026-07-08:
  * an endless string of questions reads as a bot). Voice-canon; used as the

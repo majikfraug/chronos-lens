@@ -9,7 +9,7 @@ import { AwakeningOverlay } from '../screens/AwakeningOverlay';
 import { IntroOverlay } from '../screens/IntroOverlay';
 import { LensScreen } from '../screens/LensScreen';
 import { ReliquaryScreen } from '../screens/ReliquaryScreen';
-import { useGameStore } from '../state/gameStore';
+import { CALIB_DIRECTIVES, CALIB_DONE, useGameStore } from '../state/gameStore';
 import { colors } from '../theme/colors';
 import { fonts } from '../theme/typography';
 import { ATTUNEMENT_MAX, MAX_LEVEL, XP_THRESHOLDS, registerFor } from '../config/economy';
@@ -36,6 +36,9 @@ export function AppShell(): React.JSX.Element {
   const awakeningPending = useGameStore((s) => s.awakeningPending);
   const brainMode = useGameStore((s) => s.brainMode);
   const switchBrain = useGameStore((s) => s.switchBrain);
+  const calibStep = useGameStore((s) => s.calibStep);
+  const beginCalibration = useGameStore((s) => s.beginCalibration);
+  const directive = calibStep > 0 && calibStep < CALIB_DONE ? CALIB_DIRECTIVES[calibStep] : null;
   const register = registerFor(level, attunement);
   const prevThreshold = level === 1 ? 0 : XP_THRESHOLDS[level - 2];
   const nextThreshold = level >= MAX_LEVEL ? null : XP_THRESHOLDS[level - 1];
@@ -123,6 +126,12 @@ export function AppShell(): React.JSX.Element {
         ))}
       </View>
 
+      {directive && (
+        <View style={styles.directiveBar}>
+          <Text style={styles.directiveText}>DIRECTIVE ▸ {directive}</Text>
+        </View>
+      )}
+
       <View style={styles.body}>
         {tab === 'field' && <FieldScreen />}
         {tab === 'lens' && <LensScreen />}
@@ -133,9 +142,10 @@ export function AppShell(): React.JSX.Element {
 
       {!introSeen && (
         <IntroOverlay
-          onDone={() => {
+          onDone={(bootAnswer) => {
             audio.kick();
             markIntroSeen();
+            void beginCalibration(bootAnswer);
           }}
         />
       )}
@@ -195,6 +205,19 @@ const styles = StyleSheet.create({
   },
   resetArmedText: {
     color: colors.warn,
+  },
+  directiveBar: {
+    borderBottomWidth: 1,
+    borderBottomColor: colors.line,
+    backgroundColor: 'rgba(224,168,92,0.05)',
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+  },
+  directiveText: {
+    fontFamily: fonts.body,
+    fontSize: 9.5,
+    letterSpacing: 1.5,
+    color: colors.interestAmber,
   },
   bars: {
     flexDirection: 'row',

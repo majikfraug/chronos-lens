@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { audio } from '../audio/engine';
 import { brain, getLLMStatus, setBrainMode, type BrainMode } from '../companion/brainProvider';
 import type { CompanionContext, CompanionEvent } from '../companion/CompanionBrain';
+import { CALIBRATION } from '../companion/corpus';
 import {
   ATTUNEMENT_GAIN,
   ATTUNEMENT_MAX,
@@ -72,6 +73,19 @@ let askInFlight = false;
 const patternsInFlight = new Set<string>();
 let inVehicle = false;
 
+// Calibration (first-session tutorial) — walk-distance accumulator for step 1.
+let calibWalkM = 0;
+let lastFixMeters: { x: number; y: number } | null = null;
+
+/** Steps: 0 boot · 1 walk 50m · 2 first resolve · 3 first identify · 4 first answer · 5 done. */
+export const CALIB_DONE = 5;
+export const CALIB_DIRECTIVES: Record<number, string> = {
+  1: 'TRAVERSE 50 METERS · THE MAP LEARNS BY WALKING',
+  2: 'RAISE THE LENS · HOLD SCAN UNTIL A FORM RESOLVES',
+  3: 'IDENTIFY THE FORM · YOUR WORD BECOMES THE MODEL',
+  4: 'A QUERY WAITS ON THE CHANNEL · TRANSMIT YOUR ANSWER',
+};
+
 type GameStore = {
   hydrated: boolean;
   level: number;
@@ -100,6 +114,8 @@ type GameStore = {
   firedPatterns: string[];
   awakeningPending: boolean;
   brainMode: BrainMode;
+  /** First-session tutorial step; see CALIB_DIRECTIVES. CALIB_DONE = free play. */
+  calibStep: number;
 
   appendLog: (kind: LogEntry['kind'], text: string) => void;
   /** Speak a brain response into the log with its voice tone. No-op on null. */
@@ -114,6 +130,12 @@ type GameStore = {
   completeAwakening: (name: string) => Promise<void>;
   /** Switches the companion core (authored corpus vs on-device LLM). Persisted. */
   switchBrain: (mode: BrainMode) => Promise<void>;
+  /** Boot answered ("are you alive?") — keeps it verbatim, starts calibration. */
+  beginCalibration: (bootAnswer: string) => Promise<void>;
+  /** Advances calibration, speaks the beat, persists. Internal to game systems. */
+  advanceCalibration: (step: number) => void;
+  /** Lens screen reports the first successful capture resolve. */
+  calibLensResolved: () => void;
   /** Persist a player-defined category (local-first emergent type, docs/future.md). */
   defineCustomType: (name: string, scale: Scale) => Promise<void>;
   /** Fix a category's name; scans and model weight move with it (merges if the name exists). */
@@ -199,6 +221,45 @@ export const useGameStore = create<GameStore>((set, get) => ({
   firedPatterns: [],
   awakeningPending: false,
   brainMode: 'authored',
+  calibStep: CALIB_DONE, // assume done until hydration says otherwise
+
+  beginCalibration: async (bootAnswer) => {
+    const trimmed = bootAnswer.trim();
+    if (trimmed) {
+      const kept = await keepAnswer('Confirm: are you alive?', trimmed);
+      set({ keptAnswers: [...get().keptAnswers, kept] });
+    }
+    get().advanceCalibration(1);
+  },
+
+  advanceCalibration: (step) => {
+    if (step <= get().calibStep && get().calibStep !== CALIB_DONE) return;
+    set({ calibStep: step });
+    void setFlag('calib_step', String(step));
+    const beat =
+      step === 1
+        ? CALIBRATION.boot_answered
+        : step === 2
+          ? CALIBRATION.walk_done
+          : step === 4
+            ? CALIBRATION.teach_done
+            : step === CALIB_DONE
+              ? CALIBRATION.released
+              : null; // step 3: the Lens teach prompt already speaks at identify
+    if (beat) {
+      get().appendLog('ai', beat.text);
+      audio.voice(beat.mood);
+    }
+    if (step === 4) {
+      // The channel beat: the companion asks its first question immediately.
+      actionsSinceAsk = COMPANION.questionGapActions;
+      setTimeout(() => get().companionTick(), 1600);
+    }
+  },
+
+  calibLensResolved: () => {
+    if (get().calibStep === 2) get().advanceCalibration(3);
+  },
 
   switchBrain: async (nextMode) => {
     set({ brainMode: nextMode });
@@ -297,6 +358,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
       set({ pendingQuestion: null, keptAnswers: [...s.keptAnswers, kept] });
       s.speak('answer_ack', { keptAnswer: trimmed });
       s.gainAttunement(ATTUNEMENT_GAIN.answer);
+      if (get().calibStep === 4) {
+        // First channel answer completes calibration; the release beat lands after the ack.
+        setTimeout(() => get().advanceCalibration(CALIB_DONE), 2600);
+      }
       return;
     }
 
@@ -333,6 +398,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
     wasAwayFromHome = false;
     sessionEchoDone = false;
     inVehicle = false;
+    calibWalkM = 0;
+    lastFixMeters = null;
 
     set({
       level: 1,
@@ -355,6 +422,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       askedQuestionIds: [],
       firedPatterns: [],
       awakeningPending: false,
+      calibStep: 0, // the new survey starts with calibration
     });
     audio.play('sync');
   },
@@ -478,7 +546,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (attested >= 5) after.firePattern('collect_5');
     if (ALL_TYPES.every((t) => after.reliquary[t])) after.firePattern('collect_all');
 
-    after.companionTick();
+    if (after.calibStep === 3) {
+      // First identification filed — the channel beat follows (asks the first question).
+      setTimeout(() => get().advanceCalibration(4), 2600);
+    } else {
+      after.companionTick();
+    }
   },
 
   appendLog: (kind, text) => {
@@ -505,6 +578,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         getFlag('companion_name'),
         getFlag('brain_mode'),
       ]);
+    const calibFlag = await getFlag('calib_step');
     if (brainFlag === 'llm') {
       set({ brainMode: 'llm' });
       void setBrainMode('llm').then((status) => {
@@ -538,6 +612,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       discoveredCells: discovered,
       revealedCells: revealed,
       introSeen: introFlag === '1',
+      // Pre-calibration installs (intro already seen, no flag) skip the tutorial.
+      calibStep: calibFlag != null ? Number(calibFlag) : introFlag === '1' ? CALIB_DONE : 0,
     });
 
     // Occasional network echo at session start — simulated locally, brief §2.4.
@@ -585,6 +661,15 @@ export const useGameStore = create<GameStore>((set, get) => ({
     // origin and homeCellKey are always set together, so this is always non-null in practice.
     const resolvedHomeCellKey = homeCellKey ?? cellKeyFor({ x: 0, y: 0 }, FIELD.cellSizeM);
     const meters = toLocalMeters(point, origin);
+
+    // Calibration step 1: fifty meters of real walking (vehicle fixes don't count).
+    if (get().calibStep === 1 && !inVehicle) {
+      if (lastFixMeters) {
+        calibWalkM += Math.hypot(meters.x - lastFixMeters.x, meters.y - lastFixMeters.y);
+      }
+      if (calibWalkM >= 50) get().advanceCalibration(2);
+    }
+    lastFixMeters = meters;
 
     // Fog-of-war: finer snap grid so accumulated reveals read as continuous.
     const revealKey = cellKeyFor(meters, FIELD.revealSnapM);
