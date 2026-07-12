@@ -65,6 +65,19 @@ export type LogEntry = {
 let nextLogId = 1;
 const LOG_CAP = 60;
 
+/** Logs language-core download progress to the strip, one line per 10% step. */
+function downloadProgressLogger(): (fraction: number) => void {
+  let lastStep = -1;
+  return (fraction) => {
+    const step = Math.floor(fraction * 10);
+    if (step <= lastStep) return;
+    lastStep = step;
+    useGameStore
+      .getState()
+      .appendLog('sys', `LANGUAGE CORE DOWNLOAD · ${Math.min(100, step * 10)}%`);
+  };
+}
+
 // Naming retry cooldown (persisted via flags; loaded at hydrate).
 let namingRetryTs = 0;
 const NAMING_RETRY_MS = 4 * 60 * 60 * 1000;
@@ -334,7 +347,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return;
     }
     get().appendLog('sys', 'RESPONSE CORE · LANGUAGE MODEL · INITIALIZING');
-    const status = await setBrainMode('llm');
+    const status = await setBrainMode('llm', downloadProgressLogger());
     if (status === 'ready') {
       get().appendLog('sys', 'LANGUAGE CORE ONLINE · ALL PROCESSING ON-DEVICE');
     } else {
@@ -699,7 +712,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     namingRetryTs = retryFlag ? Number(retryFlag) : 0;
     if (brainFlag === 'llm') {
       set({ brainMode: 'llm' });
-      void setBrainMode('llm').then((status) => {
+      void setBrainMode('llm', downloadProgressLogger()).then((status) => {
         if (status === 'ready') {
           get().appendLog('sys', 'LANGUAGE CORE ONLINE · ALL PROCESSING ON-DEVICE');
         } else if (getLLMStatus() === 'unavailable') {

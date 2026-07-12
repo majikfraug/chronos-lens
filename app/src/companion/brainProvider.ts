@@ -23,9 +23,12 @@ export function getLLMStatus(): LLMStatus {
 }
 
 /** Switches brains; 'llm' kicks off model init (download + load on first use). */
-export async function setBrainMode(next: BrainMode): Promise<LLMStatus | 'authored'> {
+export async function setBrainMode(
+  next: BrainMode,
+  onDownloadProgress?: (fraction: number) => void
+): Promise<LLMStatus | 'authored'> {
   mode = next;
-  if (next === 'llm') return llm.init();
+  if (next === 'llm') return llm.init(onDownloadProgress);
   return 'authored';
 }
 

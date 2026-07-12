@@ -35,8 +35,8 @@ export class LLMBrain implements CompanionBrain {
     return this.status;
   }
 
-  /** Loads the native module and model (first call downloads ~1.2GB). Safe to call repeatedly. */
-  async init(): Promise<LLMStatus> {
+  /** Loads the native module and model (first call downloads ~2.5GB). Safe to call repeatedly. */
+  async init(onDownloadProgress?: (fraction: number) => void): Promise<LLMStatus> {
     if (this.status === 'ready' || this.status === 'loading') return this.status;
     this.status = 'loading';
     try {
@@ -51,7 +51,10 @@ export class LLMBrain implements CompanionBrain {
       // 1B cannot hold the character (third-person slips, invented quotes)
       // while 3B holds register AND engages — see docs/decisions.md. The
       // 15 Pro-class devices run 3B SpinQuant; revisit if older devices join.
-      this.llm = await executorch.LLMModule.fromModelName(executorch.LLAMA3_2_3B_SPINQUANT);
+      this.llm = await executorch.LLMModule.fromModelName(
+        executorch.LLAMA3_2_3B_SPINQUANT,
+        onDownloadProgress
+      );
       this.status = 'ready';
     } catch {
       this.status = 'unavailable';
