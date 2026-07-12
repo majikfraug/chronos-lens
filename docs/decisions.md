@@ -4,6 +4,14 @@ Deviations from `docs/brief.md`, and why. Newest first.
 
 ---
 
+## 2026-07-11 — iOS minimum deployment target: 17.0
+
+react-native-executorch (the on-device LLM runtime) requires iOS 17.0; Expo
+SDK 54 defaults to 15.1, which failed the first dev-client build. Set via
+expo-build-properties. Consequence for release: the App Store build requires
+iOS 17+ (iPhone XS and newer, ~2018+) — an acceptable floor for v1; revisit
+only if beta feedback surfaces older devices.
+
 ## 2026-07-08 — Companion model: Llama 3.2 3B (1B failed the audition)
 
 Desktop-harness evaluation, same prompt modules the phone uses: 1B produced
