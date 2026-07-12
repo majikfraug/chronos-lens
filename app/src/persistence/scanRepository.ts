@@ -40,12 +40,14 @@ export async function loadClassifierState(): Promise<ClassifierState> {
     db.getAllAsync<{
       type: string;
       n: number;
-      first_thumb: string | null;
+      latest_thumb: string | null;
       first_taught: number;
       last_ts: number;
     }>(
+      // Slot thumbnail is the MOST RECENT capture (director: reliquary reads
+      // new-to-old); "first taught" still refers to the earliest filing.
       `SELECT type, COUNT(*) AS n, MAX(ts) AS last_ts,
-              (SELECT thumb_path FROM scans s2 WHERE s2.type = s1.type ORDER BY ts ASC LIMIT 1) AS first_thumb,
+              (SELECT thumb_path FROM scans s2 WHERE s2.type = s1.type ORDER BY ts DESC LIMIT 1) AS latest_thumb,
               (SELECT taught + corrected FROM scans s3 WHERE s3.type = s1.type ORDER BY ts ASC LIMIT 1) AS first_taught
        FROM scans s1 GROUP BY type`
     ),
@@ -64,7 +66,7 @@ export async function loadClassifierState(): Promise<ClassifierState> {
   for (const row of slotRows) {
     reliquary[row.type] = {
       count: row.n,
-      thumbUri: row.first_thumb,
+      thumbUri: row.latest_thumb,
       taughtFirst: row.first_taught > 0,
       lastTs: row.last_ts,
     };

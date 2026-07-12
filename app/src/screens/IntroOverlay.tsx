@@ -359,10 +359,12 @@ const styles = StyleSheet.create({
   exchangeInner: {
     gap: 7,
   },
+  // The boss AI's boot text: thick Game-Boy-era pixels, unchanged in 10,000 years.
   hiiLine: {
-    fontFamily: fonts.display,
-    fontSize: 15,
-    letterSpacing: 1.5,
+    fontFamily: fonts.hii,
+    fontSize: 9,
+    lineHeight: 16,
+    letterSpacing: 0.5,
     color: colors.bright,
   },
   noiseLine: {
@@ -443,9 +445,9 @@ const styles = StyleSheet.create({
   },
   inputLabel: {
     marginTop: 10,
-    fontFamily: fonts.display,
-    fontSize: 14,
-    letterSpacing: 2,
+    fontFamily: fonts.hii,
+    fontSize: 9,
+    lineHeight: 16,
     color: colors.bright,
   },
   answerInput: {

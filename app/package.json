@@ -4,6 +4,7 @@
   "main": "index.ts",
   "dependencies": {
     "@expo-google-fonts/ibm-plex-mono": "^0.4.1",
+    "@expo-google-fonts/press-start-2p": "^0.4.1",
     "@expo-google-fonts/vt323": "^0.4.1",
     "@shopify/react-native-skia": "2.2.12",
     "expo": "~54.0.0",

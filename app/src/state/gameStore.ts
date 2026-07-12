@@ -519,10 +519,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set((state) => {
       const taughtCounts = { ...state.taughtCounts, [type]: (state.taughtCounts[type] ?? 0) + 1 };
       const prev = state.reliquary[type];
+      // The slot thumbnail always shows the latest capture (new-to-old reliquary).
       const reliquary = {
         ...state.reliquary,
         [type]: prev
-          ? { ...prev, count: prev.count + 1, lastTs: Date.now() }
+          ? { ...prev, count: prev.count + 1, lastTs: Date.now(), thumbUri }
           : { count: 1, thumbUri, taughtFirst: taught || corrected, lastTs: Date.now() },
       };
       return {

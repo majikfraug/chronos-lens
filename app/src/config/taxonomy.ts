@@ -9,23 +9,15 @@ import type { VoiceMood } from '../audio/engine';
 export type Scale = 'ARTIFACT' | 'FEATURE';
 
 /**
- * Broad enough that any walked-past object has a home: shoes → ATTIRE,
- * a 3D printer → MECHANISM, a bicycle → CONVEYANCE, a bottle → VESSEL,
- * a hammer → TOOL, a flower → NATURAL (all growth and ground-kept things).
- * (SIGNAL and LABOR retired 2026-07-11 — director: not applicable as relics.)
+ * The base taxonomy is deliberately ancient and simple (director,
+ * 2026-07-11): the parlor-game trinity the companion recovered from the
+ * records — ANIMAL, VEGETABLE, MINERAL. Everything fits (a bottle is
+ * mineral; a shoe is animal or vegetable or mineral depending on its
+ * making — the ambiguity is the conversation). Depth comes from the
+ * player's own "+ NEW CATEGORY" definitions, so the taxonomy grows the
+ * way the relationship does. Detailed 2026-07-08-era categories retired.
  */
-export const ARTIFACT_TYPES = [
-  'DOMESTIC',
-  'ATTIRE',
-  'MECHANISM',
-  'CONVEYANCE',
-  'VESSEL',
-  'STRUCTURAL',
-  'RITUAL',
-  'TOOL',
-  'NATURAL',
-  'ENTERTAINMENT',
-] as const;
+export const ARTIFACT_TYPES = ['ANIMAL', 'VEGETABLE', 'MINERAL'] as const;
 
 export const FEATURE_TYPES = ['DWELLING SITE', 'LABOR SITE', 'HOLY SITE', 'TRANSIT WAY'] as const;
 
@@ -50,7 +42,7 @@ export const TEACH_PHASE = 3;
 export type CompanionLine = { text: string; mood: VoiceMood };
 
 export const TEACH_PROMPT_FIRST: CompanionLine = {
-  text: 'No classification model exists for this form. My records predate nothing of your world. Identify it. Your identification becomes the model.',
+  text: 'No classification model exists for this form. The records preserve one old system of your kind: animal, vegetable, mineral. Identify it. Your identification becomes the model.',
   mood: 'curious',
 };
 
@@ -70,45 +62,17 @@ export const CUSTOM_TYPE_FIRST: CompanionLine = {
 
 /** First-of-type reflections — the companion wonders about the CATEGORY. */
 export const TYPE_FIRST: Partial<Record<TypeName, CompanionLine>> = {
-  DOMESTIC: {
-    text: 'Domestic: first attested. Objects of daily use. The records say these were the most numerous things your kind made, and the least often kept. Noted.',
-    mood: 'neutral',
-  },
-  RITUAL: {
-    text: 'Ritual: first attested. An object with no survival function, retained regardless. My models fail at this category. I will be watching it.',
-    mood: 'curious',
-  },
-  ENTERTAINMENT: {
-    text: 'Entertainment: first attested. Your kind made objects whose sole function was delight. Query, held open: why did a species under pressure spend effort on delight?',
-    mood: 'curious',
-  },
-  STRUCTURAL: {
-    text: 'Structural: first attested. That which bore weight. Every structure in the record outlived its builders, then failed regardless.',
-    mood: 'neutral',
-  },
-  NATURAL: {
-    text: 'Natural: first attested. That which grew, or which the ground kept of its own accord, at no cost, asking nothing.',
-    mood: 'neutral',
-  },
-  ATTIRE: {
-    text: 'Attire: first attested. Your kind wrapped themselves in made things. Protection accounts for a fraction of the record. The remainder appears to be language.',
-    mood: 'curious',
-  },
-  MECHANISM: {
-    text: 'Mechanism: first attested. A made thing that itself made things. The chain of making does not terminate where my records said it would.',
-    mood: 'curious',
-  },
-  CONVEYANCE: {
-    text: 'Conveyance: first attested. Built to be elsewhere. Your kind expended more on moving than on staying. The reason is not yet in the record.',
-    mood: 'neutral',
-  },
-  VESSEL: {
-    text: 'Vessel: first attested. Your kind made containers beyond counting. What required so much carrying?',
-    mood: 'curious',
-  },
-  TOOL: {
-    text: 'Tool: first attested. An extension of the hand, kept after the hand was gone. The record preserves tools in great numbers. The hands, less so.',
+  ANIMAL: {
+    text: 'Animal: first attested. That which moved of its own will. The record is loudest about these, and kept the fewest.',
     mood: 'somber',
+  },
+  VEGETABLE: {
+    text: 'Vegetable: first attested. That which grew in place, asked nothing, and outlasted everything that hurried.',
+    mood: 'curious',
+  },
+  MINERAL: {
+    text: 'Mineral: first attested. That which neither grew nor chose — and yet your kind shaped it into nearly everything else. Most of what remains is this.',
+    mood: 'curious',
   },
   'HOLY SITE': {
     text: 'Holy site: first attested. Ground set apart. Approaching such positions at reduced intensity, as a precaution. The precaution is mine.',
@@ -134,16 +98,9 @@ export const TYPE_FIRST: Partial<Record<TypeName, CompanionLine>> = {
  * requires labeling this mechanism honestly. Real aggregation is v2.
  */
 export const SIMULATED_PUBLIC_COUNTS: Partial<Record<TypeName, number>> = {
-  DOMESTIC: 44,
-  ATTIRE: 31,
-  MECHANISM: 18,
-  CONVEYANCE: 40,
-  VESSEL: 48,
-  STRUCTURAL: 26,
-  RITUAL: 37,
-  TOOL: 33,
-  NATURAL: 61,
-  ENTERTAINMENT: 22,
+  ANIMAL: 57,
+  VEGETABLE: 64,
+  MINERAL: 71,
   'DWELLING SITE': 14,
   'LABOR SITE': 9,
   'HOLY SITE': 12,

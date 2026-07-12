@@ -81,20 +81,13 @@ bright, all caps) · Companion = amber blocks · Player = right-justified neon.
 [scan_correct.8] (curious) [N+] Revised: {T}. Each correction maps the gap between seeing and computing.
 
 ## TEACH-MODE PROMPTS (at the identify panel)
-[teach.first] (curious) No classification model exists for this form. My records predate nothing of your world. Identify it. Your identification becomes the model.
+[teach.first] (curious) No classification model exists for this form. The records preserve one old system of your kind: animal, vegetable, mineral. Identify it. Your identification becomes the model.
 [teach.later] (curious) Model insufficient. Identify the form. I am learning the taxonomy from you.
 
 ## FIRST-OF-TYPE REFLECTIONS
-[typefirst.DOMESTIC] (neutral) Domestic: first attested. Objects of daily use. The records say these were the most numerous things your kind made, and the least often kept. Noted.
-[typefirst.RITUAL] (curious) Ritual: first attested. An object with no survival function, retained regardless. My models fail at this category. I will be watching it.
-[typefirst.ENTERTAINMENT] (curious) Entertainment: first attested. Your kind made objects whose sole function was delight. Query, held open: why did a species under pressure spend effort on delight?
-[typefirst.STRUCTURAL] (neutral) Structural: first attested. That which bore weight. Every structure in the record outlived its builders, then failed regardless.
-[typefirst.NATURAL] (neutral) Natural: first attested. That which grew, or which the ground kept of its own accord, at no cost, asking nothing.
-[typefirst.ATTIRE] (curious) Attire: first attested. Your kind wrapped themselves in made things. Protection accounts for a fraction of the record. The remainder appears to be language.
-[typefirst.MECHANISM] (curious) Mechanism: first attested. A made thing that itself made things. The chain of making does not terminate where my records said it would.
-[typefirst.CONVEYANCE] (neutral) Conveyance: first attested. Built to be elsewhere. Your kind expended more on moving than on staying. The reason is not yet in the record.
-[typefirst.VESSEL] (curious) Vessel: first attested. Your kind made containers beyond counting. What required so much carrying?
-[typefirst.TOOL] (somber) Tool: first attested. An extension of the hand, kept after the hand was gone. The record preserves tools in great numbers. The hands, less so.
+[typefirst.ANIMAL] (somber) Animal: first attested. That which moved of its own will. The record is loudest about these, and kept the fewest.
+[typefirst.VEGETABLE] (curious) Vegetable: first attested. That which grew in place, asked nothing, and outlasted everything that hurried.
+[typefirst.MINERAL] (curious) Mineral: first attested. That which neither grew nor chose — and yet your kind shaped it into nearly everything else. Most of what remains is this.
 [typefirst.HOLY_SITE] (somber) Holy site: first attested. Ground set apart. Approaching such positions at reduced intensity, as a precaution. The precaution is mine.
 [typefirst.DWELLING_SITE] (neutral) Dwelling site: first attested. Where your kind lived in proximity by election.
 [typefirst.LABOR_SITE] (somber) Labor site: first attested. Where the many sustained the cost.

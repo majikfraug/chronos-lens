@@ -32,7 +32,7 @@ type SortMode = 'TAXONOMY' | 'RECENT' | 'HELD';
 export function ReliquaryScreen(): React.JSX.Element {
   const reliquary = useGameStore((s) => s.reliquary);
   const customTypes = useGameStore((s) => s.customTypes);
-  const [sort, setSort] = useState<SortMode>('TAXONOMY');
+  const [sort, setSort] = useState<SortMode>('RECENT');
   const [openType, setOpenType] = useState<TypeName | null>(null);
 
   const allTypes: TypeName[] = [...ALL_TYPES, ...customTypes.map((c) => c.name)];
@@ -146,6 +146,9 @@ function SlotDetail({ type, onClose }: { type: TypeName; onClose: () => void }):
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
   const [revisingCategory, setRevisingCategory] = useState(false);
   const [categoryText, setCategoryText] = useState('');
+  /** Tapping a thumbnail opens the full-size scan with actions beneath it. */
+  const [focusedId, setFocusedId] = useState<number | null>(null);
+  const focused = items.find((i) => i.id === focusedId) ?? null;
 
   const reload = async (t: TypeName) => setItems(await listScansOfType(t));
   useEffect(() => {
@@ -174,59 +177,45 @@ function SlotDetail({ type, onClose }: { type: TypeName; onClose: () => void }):
   const commitExpunge = async (id: number) => {
     await expungeRelic(id);
     setConfirmDeleteId(null);
+    setFocusedId(null);
     const remaining = items.filter((i) => i.id !== id);
     setItems(remaining);
     if (remaining.length === 0) onClose();
   };
 
-  const item = (it: ScanRecord) => {
+  /** Shared action row + expanding editors, used in both list and focused views. */
+  const actions = (it: ScanRecord) => {
     const scanItemPool = poolForScale(it.scale, customTypes).filter((t) => t !== type);
     return (
-      <View key={it.id} style={styles.item}>
-        <View style={styles.itemRow}>
-          {it.thumbUri ? (
-            <Image source={{ uri: it.thumbUri }} style={styles.itemThumb} resizeMode="cover" />
+      <>
+        <View style={styles.itemActions}>
+          <Pressable onPress={() => startRename(it)}>
+            <Text style={styles.itemAction}>RENAME</Text>
+          </Pressable>
+          <Pressable
+            onPress={() => {
+              setReclassifyingId(reclassifyingId === it.id ? null : it.id);
+              setRenamingId(null);
+              setConfirmDeleteId(null);
+            }}
+          >
+            <Text style={styles.itemAction}>RECLASSIFY</Text>
+          </Pressable>
+          {confirmDeleteId === it.id ? (
+            <Pressable onPress={() => void commitExpunge(it.id)}>
+              <Text style={[styles.itemAction, styles.itemDanger]}>CONFIRM EXPUNGE?</Text>
+            </Pressable>
           ) : (
-            <View style={[styles.itemThumb, styles.itemThumbEmpty]} />
+            <Pressable
+              onPress={() => {
+                setConfirmDeleteId(it.id);
+                setRenamingId(null);
+                setReclassifyingId(null);
+              }}
+            >
+              <Text style={[styles.itemAction, styles.itemDanger]}>EXPUNGE</Text>
+            </Pressable>
           )}
-          <View style={styles.itemMeta}>
-            <Text style={styles.itemName}>
-              {it.name ?? `${type} · unnamed`}
-            </Text>
-            <Text style={styles.itemSub}>
-              {new Date(it.ts).toLocaleDateString()} ·{' '}
-              {it.taught ? 'TAUGHT' : it.corrected ? 'CORRECTED' : 'CONFIRMED'}
-            </Text>
-            <View style={styles.itemActions}>
-              <Pressable onPress={() => startRename(it)}>
-                <Text style={styles.itemAction}>RENAME</Text>
-              </Pressable>
-              <Pressable
-                onPress={() => {
-                  setReclassifyingId(reclassifyingId === it.id ? null : it.id);
-                  setRenamingId(null);
-                  setConfirmDeleteId(null);
-                }}
-              >
-                <Text style={styles.itemAction}>RECLASSIFY</Text>
-              </Pressable>
-              {confirmDeleteId === it.id ? (
-                <Pressable onPress={() => void commitExpunge(it.id)}>
-                  <Text style={[styles.itemAction, styles.itemDanger]}>CONFIRM EXPUNGE?</Text>
-                </Pressable>
-              ) : (
-                <Pressable
-                  onPress={() => {
-                    setConfirmDeleteId(it.id);
-                    setRenamingId(null);
-                    setReclassifyingId(null);
-                  }}
-                >
-                  <Text style={[styles.itemAction, styles.itemDanger]}>EXPUNGE</Text>
-                </Pressable>
-              )}
-            </View>
-          </View>
         </View>
 
         {renamingId === it.id && (
@@ -256,6 +245,32 @@ function SlotDetail({ type, onClose }: { type: TypeName; onClose: () => void }):
             ))}
           </View>
         )}
+      </>
+    );
+  };
+
+  const item = (it: ScanRecord) => {
+    return (
+      <View key={it.id} style={styles.item}>
+        <View style={styles.itemRow}>
+          {it.thumbUri ? (
+            <Pressable onPress={() => setFocusedId(it.id)}>
+              <Image source={{ uri: it.thumbUri }} style={styles.itemThumb} resizeMode="cover" />
+            </Pressable>
+          ) : (
+            <View style={[styles.itemThumb, styles.itemThumbEmpty]} />
+          )}
+          <View style={styles.itemMeta}>
+            <Text style={styles.itemName}>
+              {it.name ?? `${type} · unnamed`}
+            </Text>
+            <Text style={styles.itemSub}>
+              {new Date(it.ts).toLocaleDateString()} ·{' '}
+              {it.taught ? 'TAUGHT' : it.corrected ? 'CORRECTED' : 'CONFIRMED'}
+            </Text>
+            {actions(it)}
+          </View>
+        </View>
       </View>
     );
   };
@@ -326,12 +341,36 @@ function SlotDetail({ type, onClose }: { type: TypeName; onClose: () => void }):
             </View>
           )}
 
-          <ScrollView style={styles.modalScroll}>
-            {items.length === 0 && (
-              <Text style={styles.emptyDetail}>No records filed under this designation yet.</Text>
-            )}
-            {items.map(item)}
-          </ScrollView>
+          {focused ? (
+            // Full-size scan view: the dithered capture large, actions beneath.
+            <ScrollView style={styles.modalScroll}>
+              <View style={styles.focusedWrap}>
+                {focused.thumbUri && (
+                  <Image
+                    source={{ uri: focused.thumbUri }}
+                    style={styles.focusedImage}
+                    resizeMode="contain"
+                  />
+                )}
+                <Text style={styles.itemName}>{focused.name ?? `${type} · unnamed`}</Text>
+                <Text style={styles.itemSub}>
+                  {new Date(focused.ts).toLocaleDateString()} ·{' '}
+                  {focused.taught ? 'TAUGHT' : focused.corrected ? 'CORRECTED' : 'CONFIRMED'}
+                </Text>
+                {actions(focused)}
+                <Pressable style={styles.backBtn} onPress={() => setFocusedId(null)}>
+                  <Text style={styles.itemAction}>◂ BACK TO {type}</Text>
+                </Pressable>
+              </View>
+            </ScrollView>
+          ) : (
+            <ScrollView style={styles.modalScroll}>
+              {items.length === 0 && (
+                <Text style={styles.emptyDetail}>No records filed under this designation yet.</Text>
+              )}
+              {items.map(item)}
+            </ScrollView>
+          )}
         </View>
       </View>
     </Modal>
@@ -519,6 +558,25 @@ const styles = StyleSheet.create({
   itemThumb: { width: 72, height: 54, backgroundColor: colors.panel2 },
   itemThumbEmpty: { borderWidth: 1, borderColor: colors.line },
   itemMeta: { flex: 1, gap: 2 },
+  focusedWrap: {
+    paddingVertical: 12,
+    gap: 6,
+  },
+  focusedImage: {
+    width: '100%',
+    aspectRatio: 4 / 3,
+    backgroundColor: colors.panel2,
+    borderWidth: 1,
+    borderColor: colors.line,
+  },
+  backBtn: {
+    marginTop: 8,
+    alignSelf: 'flex-start',
+    borderWidth: 1,
+    borderColor: colors.line,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+  },
   itemName: {
     fontFamily: fonts.body,
     fontSize: 11.5,
