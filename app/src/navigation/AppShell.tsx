@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Keyboard, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { audio } from '../audio/engine';
 import { ScanlineOverlay } from '../components/ScanlineOverlay';
 import { LogStrip } from '../components/LogStrip';
@@ -66,6 +66,20 @@ export function AppShell(): React.JSX.Element {
   const modulesBooting = useGameStore((s) => s.modulesBooting);
   const finishModuleBoot = useGameStore((s) => s.finishModuleBoot);
   const [modulesOnline, setModulesOnline] = useState(3);
+  const [keyboardUp, setKeyboardUp] = useState(false);
+
+  useEffect(() => {
+    // While typing, the module viewport folds away so the conversation and
+    // input own the space above the keyboard (chat mode).
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const show = Keyboard.addListener(showEvent, () => setKeyboardUp(true));
+    const hide = Keyboard.addListener(hideEvent, () => setKeyboardUp(false));
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
   const directive =
     !modulesBooting && calibStep > 0 && calibStep < CALIB_DONE ? CALIB_DIRECTIVES[calibStep] : null;
 
@@ -163,7 +177,7 @@ export function AppShell(): React.JSX.Element {
         </View>
       )}
 
-      <View style={styles.body}>
+      <View style={[styles.body, keyboardUp && styles.bodyCollapsed]}>
         {modulesBooting && modulesOnline === 0 ? (
           <View style={styles.bootingBody}>
             <Text style={styles.bootingText}>ASSIGNING NEW ARCHIVE …</Text>
@@ -309,5 +323,11 @@ const styles = StyleSheet.create({
     // width×width; the communication channel below gets everything else.
     width: '100%',
     aspectRatio: 1,
+  },
+  bodyCollapsed: {
+    // Chat mode: viewport folds away while the keyboard is up.
+    aspectRatio: undefined,
+    height: 0,
+    overflow: 'hidden',
   },
 });

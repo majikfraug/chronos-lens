@@ -16,6 +16,7 @@ export function LogStrip(): React.JSX.Element {
   const submitTransmission = useGameStore((s) => s.submitTransmission);
   const scrollRef = useRef<ScrollView>(null);
   const [draft, setDraft] = useState('');
+  const [inputFocused, setInputFocused] = useState(false);
 
   useEffect(() => {
     // Follow the newest entry, like the prototype's log.scrollTop behavior.
@@ -40,7 +41,12 @@ export function LogStrip(): React.JSX.Element {
 
   return (
     <View style={styles.wrap}>
-      <ScrollView ref={scrollRef} style={styles.scroll} contentContainerStyle={styles.scrollInner}>
+      <ScrollView
+        ref={scrollRef}
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollInner}
+        keyboardDismissMode="on-drag"
+      >
         {log.length === 0 && (
           <Text style={styles.empty}>▸ CHANNEL QUIET · SURVEY DATA WILL BE REPORTED HERE</Text>
         )}
@@ -69,7 +75,14 @@ export function LogStrip(): React.JSX.Element {
           placeholderTextColor={pendingQuestion ? colors.interestAmber : colors.phosphorFaint}
           onSubmitEditing={send}
           returnKeyType="send"
+          onFocus={() => setInputFocused(true)}
+          onBlur={() => setInputFocused(false)}
         />
+        {inputFocused && (
+          <Pressable style={styles.dismissBtn} onPress={() => Keyboard.dismiss()} hitSlop={6}>
+            <Text style={styles.dismissText}>⌄</Text>
+          </Pressable>
+        )}
         <Pressable
           style={[styles.sendBtn, !draft.trim() && styles.sendBtnIdle]}
           onPress={send}
@@ -243,6 +256,17 @@ const styles = StyleSheet.create({
   },
   transmitAnswering: {
     borderColor: 'rgba(224,168,92,0.5)',
+  },
+  dismissBtn: {
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.line,
+    paddingHorizontal: 10,
+  },
+  dismissText: {
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: colors.phosphorDim,
   },
   sendBtn: {
     justifyContent: 'center',
