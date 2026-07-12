@@ -142,10 +142,10 @@ export function AppShell(): React.JSX.Element {
 
       {!introSeen && (
         <IntroOverlay
-          onDone={(bootAnswer) => {
+          onDone={(bootAnswer, designation) => {
             audio.kick();
             markIntroSeen();
-            void beginCalibration(bootAnswer);
+            void beginCalibration(bootAnswer, designation);
           }}
         />
       )}

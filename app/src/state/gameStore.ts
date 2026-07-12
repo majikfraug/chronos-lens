@@ -57,7 +57,7 @@ import {
 
 export type LogEntry = {
   id: number;
-  kind: 'sys' | 'disc' | 'ai' | 'milestone' | 'query';
+  kind: 'sys' | 'disc' | 'ai' | 'milestone' | 'query' | 'player';
   text: string;
 };
 
@@ -116,6 +116,8 @@ type GameStore = {
   brainMode: BrainMode;
   /** First-session tutorial step; see CALIB_DIRECTIVES. CALIB_DONE = free play. */
   calibStep: number;
+  /** What the player answered to "WHAT IS YOUR DESIGNATION?" at first contact. */
+  surveyorDesignation: string | null;
 
   appendLog: (kind: LogEntry['kind'], text: string) => void;
   /** Speak a brain response into the log with its voice tone. No-op on null. */
@@ -130,8 +132,8 @@ type GameStore = {
   completeAwakening: (name: string) => Promise<void>;
   /** Switches the companion core (authored corpus vs on-device LLM). Persisted. */
   switchBrain: (mode: BrainMode) => Promise<void>;
-  /** Boot answered ("are you alive?") — keeps it verbatim, starts calibration. */
-  beginCalibration: (bootAnswer: string) => Promise<void>;
+  /** First contact answered — keeps both transmissions verbatim, starts calibration. */
+  beginCalibration: (bootAnswer: string, designation: string) => Promise<void>;
   /** Advances calibration, speaks the beat, persists. Internal to game systems. */
   advanceCalibration: (step: number) => void;
   /** Lens screen reports the first successful capture resolve. */
@@ -176,14 +178,9 @@ function brainContext(
   const favoredType =
     Object.entries(s.taughtCounts).sort((a, b) => (b[1] ?? 0) - (a[1] ?? 0))[0]?.[0] ?? null;
   const recentTranscript = s.log
-    .filter(
-      (e) =>
-        e.kind === 'ai' || e.kind === 'query' || (e.kind === 'sys' && e.text.startsWith('TRANSMIT ▸'))
-    )
+    .filter((e) => e.kind === 'ai' || e.kind === 'query' || e.kind === 'player')
     .slice(-8)
-    .map((e) =>
-      e.kind === 'sys' ? `SURVEYOR: ${e.text.replace('TRANSMIT ▸ ', '')}` : `UNIT: ${e.text}`
-    );
+    .map((e) => (e.kind === 'player' ? `SURVEYOR: ${e.text}` : `UNIT: ${e.text}`));
   return {
     register: registerFor(s.level, s.attunement),
     named: s.companionName,
@@ -222,13 +219,21 @@ export const useGameStore = create<GameStore>((set, get) => ({
   awakeningPending: false,
   brainMode: 'authored',
   calibStep: CALIB_DONE, // assume done until hydration says otherwise
+  surveyorDesignation: null,
 
-  beginCalibration: async (bootAnswer) => {
-    const trimmed = bootAnswer.trim();
-    if (trimmed) {
-      const kept = await keepAnswer('Confirm: are you alive?', trimmed);
-      set({ keptAnswers: [...get().keptAnswers, kept] });
+  beginCalibration: async (bootAnswer, designation) => {
+    const answer = bootAnswer.trim();
+    const name = designation.trim().slice(0, 40);
+    const kept: KeptAnswer[] = [];
+    if (answer) kept.push(await keepAnswer('DO YOU READ ME?', answer));
+    if (name) {
+      kept.push(await keepAnswer('WHAT IS YOUR DESIGNATION?', name));
+      void setFlag('surveyor_designation', name);
     }
+    set({
+      keptAnswers: [...get().keptAnswers, ...kept],
+      surveyorDesignation: name || null,
+    });
     get().advanceCalibration(1);
   },
 
@@ -238,7 +243,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     void setFlag('calib_step', String(step));
     const beat =
       step === 1
-        ? CALIBRATION.boot_answered
+        ? CALIBRATION.designated
         : step === 2
           ? CALIBRATION.walk_done
           : step === 4
@@ -247,7 +252,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
               ? CALIBRATION.released
               : null; // step 3: the Lens teach prompt already speaks at identify
     if (beat) {
-      get().appendLog('ai', beat.text);
+      const text = beat.text.replace('{D}', get().surveyorDesignation ?? 'Surveyor');
+      get().appendLog('ai', text);
       audio.voice(beat.mood);
     }
     if (step === 4) {
@@ -351,7 +357,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const trimmed = text.trim();
     if (!trimmed) return;
     const s = get();
-    s.appendLog('sys', `TRANSMIT ▸ ${trimmed}`);
+    s.appendLog('player', trimmed);
 
     if (s.pendingQuestion) {
       const kept = await keepAnswer(s.pendingQuestion.text, trimmed);
@@ -423,6 +429,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       firedPatterns: [],
       awakeningPending: false,
       calibStep: 0, // the new survey starts with calibration
+      surveyorDesignation: null,
     });
     audio.play('sync');
   },
@@ -579,6 +586,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         getFlag('brain_mode'),
       ]);
     const calibFlag = await getFlag('calib_step');
+    const designationFlag = await getFlag('surveyor_designation');
     if (brainFlag === 'llm') {
       set({ brainMode: 'llm' });
       void setBrainMode('llm').then((status) => {
@@ -614,6 +622,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       introSeen: introFlag === '1',
       // Pre-calibration installs (intro already seen, no flag) skip the tutorial.
       calibStep: calibFlag != null ? Number(calibFlag) : introFlag === '1' ? CALIB_DONE : 0,
+      surveyorDesignation: designationFlag,
     });
 
     // Occasional network echo at session start — simulated locally, brief §2.4.

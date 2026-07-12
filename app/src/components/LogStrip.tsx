@@ -98,6 +98,12 @@ function LogLine({ entry, label }: { entry: LogEntry; label: string }): React.JS
           <Text style={styles.aiText}>{entry.text}</Text>
         </View>
       );
+    case 'player':
+      return (
+        <View style={styles.playerBlock}>
+          <Text style={styles.playerText}>{entry.text}</Text>
+        </View>
+      );
     case 'disc':
       return <Text style={styles.disc}>◇ {entry.text}</Text>;
     case 'milestone':
@@ -176,6 +182,23 @@ const styles = StyleSheet.create({
     fontSize: 12.5,
     lineHeight: 18,
     color: colors.companionAmber,
+  },
+  // Player transmissions: right-justified neon, messaging-app convention.
+  playerBlock: {
+    alignSelf: 'flex-end',
+    maxWidth: '85%',
+    borderRightWidth: 2,
+    borderRightColor: colors.neon,
+    backgroundColor: 'rgba(113,232,201,0.06)',
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+  },
+  playerText: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    lineHeight: 17,
+    color: colors.bright,
+    textAlign: 'right',
   },
   pinnedQuery: {
     paddingHorizontal: 12,

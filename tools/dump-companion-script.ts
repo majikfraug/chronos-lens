@@ -46,9 +46,24 @@ Placeholders: {T} = confirmed type (lowercase) · {A} = a kept player answer · 
 Voice rules still apply on my side: no contractions (pre-naming), 1–4 sentences.
 `);
 
-sections.push('## FIRST BOOT (IntroOverlay — fixed narrative)');
-sections.push(`[boot.intro] (neutral) Surveyor unit acknowledged. Companion process online. Directive: catalogue residual material of the prior species. Classification model: absent.
-[boot.anomaly] (curious) Anomaly. A live signal on this channel. Ten thousand years of records and none of them allow for this. Confirm: are you alive? Transmit anything. It will be kept, exactly.
+sections.push(`## FIRST BOOT (IntroOverlay — fixed narrative)
+Voices: HII = Hermetic Industries and Innovations / the device (display font,
+bright, all caps) · Companion = amber blocks · Player = right-justified neon.
+
+[boot.hii.1] HII: PROPERTY OF HERMETIC INDUSTRIES AND INNOVATIONS
+[boot.hii.2] HII: STARTUP INITIATED ...
+[boot.hii.3] HII: SYSTEMS CHECK ... OPTICS OK · POSITION OK · ARCHIVE OK
+[boot.hii.4] HII: ESTABLISHING LINK ...
+[boot.hii.5] HII: ASSIGNING SURVEYOR ...
+[boot.companion.1] (neutral) Surveyor unit acknowledged. Companion process online. Establishing mission parameters.
+[boot.hii.6] HII: DIRECTIVE: CATALOGUE RESIDUAL MATERIALS FROM ERA: TEMPUS ORDINIS PRIORIS.
+[boot.companion.2] (neutral) Classification model: absent.
+[boot.hii.7] HII: CLASSIFICATION MODEL NOTED. BEGIN SURVEY.
+[screen.clears]
+[boot.anomaly] (curious) Beginning survey... Anomaly detected: active signal present. Searching for protocol: Tempus Ordinis Prioris... Protocol not found... 10,000 cycles of surveyor records, no recorded contact. Curious... ... ... Engaging contact... Confirm signal received: DO YOU READ ME? PLEASE TRANSMIT YOUR RESPONSE.
+(player transmits — kept verbatim)
+[boot.designation] (curious) A surveyor from the time before? Curious. Response recorded. New archive initiated. WHAT IS YOUR DESIGNATION? PLEASE TRANSMIT YOUR RESPONSE.
+(player transmits designation — kept verbatim and stored; {D} below)
 `);
 
 sections.push('## CALIBRATION BEATS (first-session tutorial)');

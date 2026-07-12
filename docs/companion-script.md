@@ -8,11 +8,26 @@ Placeholders: {T} = confirmed type (lowercase) · {A} = a kept player answer · 
 Voice rules still apply on my side: no contractions (pre-naming), 1–4 sentences.
 
 ## FIRST BOOT (IntroOverlay — fixed narrative)
-[boot.intro] (neutral) Surveyor unit acknowledged. Companion process online. Directive: catalogue residual material of the prior species. Classification model: absent.
-[boot.anomaly] (curious) Anomaly. A live signal on this channel. Ten thousand years of records and none of them allow for this. Confirm: are you alive? Transmit anything. It will be kept, exactly.
+Voices: HII = Hermetic Industries and Innovations / the device (display font,
+bright, all caps) · Companion = amber blocks · Player = right-justified neon.
+
+[boot.hii.1] HII: PROPERTY OF HERMETIC INDUSTRIES AND INNOVATIONS
+[boot.hii.2] HII: STARTUP INITIATED ...
+[boot.hii.3] HII: SYSTEMS CHECK ... OPTICS OK · POSITION OK · ARCHIVE OK
+[boot.hii.4] HII: ESTABLISHING LINK ...
+[boot.hii.5] HII: ASSIGNING SURVEYOR ...
+[boot.companion.1] (neutral) Surveyor unit acknowledged. Companion process online. Establishing mission parameters.
+[boot.hii.6] HII: DIRECTIVE: CATALOGUE RESIDUAL MATERIALS FROM ERA: TEMPUS ORDINIS PRIORIS.
+[boot.companion.2] (neutral) Classification model: absent.
+[boot.hii.7] HII: CLASSIFICATION MODEL NOTED. BEGIN SURVEY.
+[screen.clears]
+[boot.anomaly] (curious) Beginning survey... Anomaly detected: active signal present. Searching for protocol: Tempus Ordinis Prioris... Protocol not found... 10,000 cycles of surveyor records, no recorded contact. Curious... ... ... Engaging contact... Confirm signal received: DO YOU READ ME? PLEASE TRANSMIT YOUR RESPONSE.
+(player transmits — kept verbatim)
+[boot.designation] (curious) A surveyor from the time before? Curious. Response recorded. New archive initiated. WHAT IS YOUR DESIGNATION? PLEASE TRANSMIT YOUR RESPONSE.
+(player transmits designation — kept verbatim and stored; {D} below)
 
 ## CALIBRATION BEATS (first-session tutorial)
-[calib.boot_answered] (curious) A living voice. Recorded, exactly — the first entry of the new archive. Now walk. I cannot see your world until you move through it.
+[calib.designated] (curious) Designation recorded: {D}. Filed at the head of the new archive. Now walk. I cannot see your world until you move through it.
 [calib.walk_done] (curious) The ground renders where you carry me. Fifty meters recovered. Now raise the Lens — show me any form. A cup. A door. A leaf. I have never seen anything.
 [calib.teach_done] (neutral) The model has its first entry. It is small and it is yours. One more calibration: the channel. I will ask; answer as you choose. What you say is kept exactly.
 [calib.released] (warm) Calibration sufficient. The survey is yours now. Walk where you choose, scan what interests you, correct me when I am wrong. I will be learning.

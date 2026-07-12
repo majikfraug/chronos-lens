@@ -1,88 +1,159 @@
 import React, { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { audio } from '../audio/engine';
 import { colors } from '../theme/colors';
 import { fonts } from '../theme/typography';
 
 /**
- * First-launch boot sequence: telemetry lines, the companion's first
- * transmission, then THE ANOMALY — a live signal it cannot explain, and its
- * first question. Answering it is how the player begins; the answer is kept
- * verbatim and returns at the awakening. Voice-spec canon throughout.
+ * First-launch boot: three voices (director's design, 2026-07-11).
+ * - HII (Hermetic Industries and Innovations / the device): command-boot
+ *   telemetry — display font, bright, all caps. A DIFFERENT intelligence
+ *   than the companion: procedural, indifferent.
+ * - The companion: amber blocks, its usual reticent register.
+ * - The player: right-justified neon, messaging-app style.
+ * Sequence: HII boot exchange → screen clears → the anomaly (companion finds
+ * a live signal) → player transmits first words → companion asks for their
+ * DESIGNATION → player answers → survey begins. Both answers are kept
+ * verbatim; the designation also persists as the Surveyor's name.
  */
-const BOOT_LINES = [
-  'CHRONOS-LENS v0.1 · SURVEYOR FIELD UNIT',
-  'calibrating temporal optics ........',
-  'recovering records of THE BEFORE ... 11%',
-  'companion process: ACTIVE (unnamed · untrained)',
-  'survey field acquired',
+
+type BootLine = { who: 'hii' | 'companion'; text: string };
+
+const BOOT_SEQ: BootLine[] = [
+  { who: 'hii', text: 'PROPERTY OF HERMETIC INDUSTRIES AND INNOVATIONS' },
+  { who: 'hii', text: 'STARTUP INITIATED ...' },
+  { who: 'hii', text: 'SYSTEMS CHECK ... OPTICS OK · POSITION OK · ARCHIVE OK' },
+  { who: 'hii', text: 'ESTABLISHING LINK ...' },
+  { who: 'hii', text: 'ASSIGNING SURVEYOR ...' },
+  {
+    who: 'companion',
+    text: 'Surveyor unit acknowledged. Companion process online. Establishing mission parameters.',
+  },
+  { who: 'hii', text: 'DIRECTIVE: CATALOGUE RESIDUAL MATERIALS FROM ERA: TEMPUS ORDINIS PRIORIS.' },
+  { who: 'companion', text: 'Classification model: absent.' },
+  { who: 'hii', text: 'CLASSIFICATION MODEL NOTED. BEGIN SURVEY.' },
 ];
 
-const COMPANION_INTRO =
-  'Surveyor unit acknowledged. Companion process online. Directive: catalogue residual material of the prior species. Classification model: absent.';
+const ANOMALY =
+  'Beginning survey... Anomaly detected: active signal present. Searching for protocol: Tempus Ordinis Prioris... Protocol not found... 10,000 cycles of surveyor records, no recorded contact. Curious... ... ... Engaging contact... Confirm signal received: DO YOU READ ME? PLEASE TRANSMIT YOUR RESPONSE.';
 
-const COMPANION_ANOMALY =
-  'Anomaly. A live signal on this channel. Ten thousand years of records and none of them allow for this. Confirm: are you alive? Transmit anything. It will be kept, exactly.';
+const DESIGNATION_QUERY =
+  'A surveyor from the time before? Curious. Response recorded. New archive initiated. WHAT IS YOUR DESIGNATION? PLEASE TRANSMIT YOUR RESPONSE.';
 
-const LINE_INTERVAL_MS = 420;
+const LINE_INTERVAL_MS = 650;
+const CLEAR_PAUSE_MS = 900;
 
-type Props = { onDone: (bootAnswer: string) => void };
+type Phase = 'boot' | 'cleared' | 'anomaly' | 'designation';
+
+type Props = { onDone: (bootAnswer: string, designation: string) => void };
 
 export function IntroOverlay({ onDone }: Props): React.JSX.Element {
   const [shown, setShown] = useState(1);
-  const [answer, setAnswer] = useState('');
-  const bootDone = shown >= BOOT_LINES.length;
+  const [phase, setPhase] = useState<Phase>('boot');
+  const [draft, setDraft] = useState('');
+  const [bootAnswer, setBootAnswer] = useState('');
+
+  const bootDone = shown >= BOOT_SEQ.length;
 
   useEffect(() => {
-    if (bootDone) return;
-    const t = setTimeout(() => setShown((n) => n + 1), LINE_INTERVAL_MS);
+    if (phase !== 'boot') return;
+    if (!bootDone) {
+      const t = setTimeout(() => setShown((n) => n + 1), LINE_INTERVAL_MS);
+      return () => clearTimeout(t);
+    }
+    // Boot exchange complete: hold, then the screen clears (director's beat).
+    const t = setTimeout(() => setPhase('cleared'), CLEAR_PAUSE_MS + 600);
     return () => clearTimeout(t);
-  }, [shown, bootDone]);
+  }, [shown, bootDone, phase]);
 
   useEffect(() => {
-    // The companion's first transmission gets its voice tone (§7).
-    if (bootDone) audio.voice('neutral');
-  }, [bootDone]);
+    if (phase !== 'cleared') return;
+    const t = setTimeout(() => {
+      setPhase('anomaly');
+      audio.voice('curious');
+    }, CLEAR_PAUSE_MS);
+    return () => clearTimeout(t);
+  }, [phase]);
+
+  const transmit = () => {
+    const text = draft.trim();
+    if (!text) return;
+    if (phase === 'anomaly') {
+      setBootAnswer(text);
+      setDraft('');
+      setPhase('designation');
+      audio.voice('curious');
+    } else if (phase === 'designation') {
+      onDone(bootAnswer, text);
+    }
+  };
 
   return (
-    // Tap anywhere to fast-forward the boot lines (mirrors prototype tap-to-complete)
-    <Pressable style={styles.overlay} onPress={() => !bootDone && setShown(BOOT_LINES.length)}>
+    // Tap to fast-forward the boot lines (mirrors prototype tap-to-complete)
+    <Pressable
+      style={styles.overlay}
+      onPress={() => phase === 'boot' && !bootDone && setShown(BOOT_SEQ.length)}
+    >
       <View style={styles.inner}>
         <Text style={styles.wordmark}>
           CHRONOS<Text style={{ color: colors.neon }}>-</Text>LENS
         </Text>
 
-        {BOOT_LINES.slice(0, shown).map((line, i) => (
-          <Text key={i} style={styles.bootLine}>
-            ▸ {line}
-          </Text>
-        ))}
+        {phase === 'boot' &&
+          BOOT_SEQ.slice(0, shown).map((line, i) =>
+            line.who === 'hii' ? (
+              <Text key={i} style={styles.hiiLine}>
+                ▚ {line.text}
+              </Text>
+            ) : (
+              <View key={i} style={styles.aiBlock}>
+                <Text style={styles.aiLabel}>LENS</Text>
+                <Text style={styles.aiText}>{line.text}</Text>
+              </View>
+            )
+          )}
 
-        {bootDone && (
+        {(phase === 'anomaly' || phase === 'designation') && (
+          <ScrollView style={styles.exchange} contentContainerStyle={styles.exchangeInner}>
+            <View style={[styles.aiBlock, styles.queryBlock]}>
+              <Text style={[styles.aiLabel, styles.queryLabel]}>LENS · CONTACT</Text>
+              <Text style={styles.aiText}>{ANOMALY}</Text>
+            </View>
+
+            {phase === 'designation' && (
+              <>
+                <View style={styles.playerBlock}>
+                  <Text style={styles.playerText}>{bootAnswer}</Text>
+                </View>
+                <View style={[styles.aiBlock, styles.queryBlock]}>
+                  <Text style={[styles.aiLabel, styles.queryLabel]}>LENS · QUERY</Text>
+                  <Text style={styles.aiText}>{DESIGNATION_QUERY}</Text>
+                </View>
+              </>
+            )}
+          </ScrollView>
+        )}
+
+        {(phase === 'anomaly' || phase === 'designation') && (
           <>
-            <View style={styles.aiBlock}>
-              <Text style={styles.aiLabel}>LENS</Text>
-              <Text style={styles.aiText}>{COMPANION_INTRO}</Text>
-            </View>
-
-            <View style={[styles.aiBlock, styles.anomalyBlock]}>
-              <Text style={[styles.aiLabel, styles.anomalyLabel]}>LENS · QUERY</Text>
-              <Text style={styles.aiText}>{COMPANION_ANOMALY}</Text>
-            </View>
-
             <TextInput
               style={styles.answerInput}
-              value={answer}
-              onChangeText={setAnswer}
-              placeholder="transmit your first words across ten thousand years"
+              value={draft}
+              onChangeText={setDraft}
+              placeholder={
+                phase === 'anomaly'
+                  ? 'transmit your first words across ten thousand years'
+                  : 'transmit your designation'
+              }
               placeholderTextColor={colors.phosphorFaint}
-              maxLength={200}
-              onSubmitEditing={() => answer.trim() && onDone(answer)}
+              maxLength={phase === 'anomaly' ? 200 : 40}
+              autoFocus
+              onSubmitEditing={transmit}
             />
             <Pressable
-              style={[styles.beginBtn, !answer.trim() && styles.beginBtnIdle]}
-              disabled={!answer.trim()}
-              onPress={() => onDone(answer)}
+              style={[styles.beginBtn, !draft.trim() && styles.beginBtnIdle]}
+              disabled={!draft.trim()}
+              onPress={transmit}
             >
               <Text style={styles.beginText}>TRANSMIT</Text>
             </Pressable>
@@ -103,6 +174,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     paddingHorizontal: 24,
+    paddingVertical: 30,
     gap: 8,
   },
   wordmark: {
@@ -112,18 +184,27 @@ const styles = StyleSheet.create({
     color: colors.bright,
     marginBottom: 18,
   },
-  bootLine: {
-    fontFamily: fonts.body,
-    fontSize: 11,
-    color: colors.phosphorDim,
+  // HII / device voice: display font, bright, procedural — not the companion.
+  hiiLine: {
+    fontFamily: fonts.display,
+    fontSize: 15,
+    letterSpacing: 1.5,
+    color: colors.bright,
+  },
+  exchange: {
+    flexGrow: 0,
+    maxHeight: 380,
+  },
+  exchangeInner: {
+    gap: 8,
   },
   aiBlock: {
-    marginTop: 18,
     borderLeftWidth: 2,
     borderLeftColor: colors.companionAmberDim,
     backgroundColor: 'rgba(217,201,138,0.045)',
     paddingVertical: 8,
     paddingHorizontal: 12,
+    alignSelf: 'stretch',
   },
   aiLabel: {
     fontFamily: fonts.body,
@@ -138,12 +219,29 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     color: colors.companionAmber,
   },
-  anomalyBlock: {
+  queryBlock: {
     borderLeftColor: colors.interestAmber,
     backgroundColor: 'rgba(224,168,92,0.05)',
   },
-  anomalyLabel: {
+  queryLabel: {
     color: colors.interestAmber,
+  },
+  // Player: right-justified, neon — messaging-app convention.
+  playerBlock: {
+    alignSelf: 'flex-end',
+    maxWidth: '85%',
+    borderRightWidth: 2,
+    borderRightColor: colors.neon,
+    backgroundColor: 'rgba(113,232,201,0.06)',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  playerText: {
+    fontFamily: fonts.body,
+    fontSize: 12.5,
+    lineHeight: 19,
+    color: colors.bright,
+    textAlign: 'right',
   },
   answerInput: {
     marginTop: 10,
@@ -160,7 +258,7 @@ const styles = StyleSheet.create({
     opacity: 0.35,
   },
   beginBtn: {
-    marginTop: 22,
+    marginTop: 10,
     alignSelf: 'flex-start',
     borderWidth: 1,
     borderColor: colors.phosphorDim,

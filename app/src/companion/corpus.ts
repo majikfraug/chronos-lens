@@ -596,8 +596,9 @@ export const ROUTER_UNKNOWN: CorpusLine[] = [
  * companion never commands. All lines voice-spec canon.
  */
 export const CALIBRATION: Record<string, CorpusLine> = {
-  boot_answered: {
-    text: 'A living voice. Recorded, exactly — the first entry of the new archive. Now walk. I cannot see your world until you move through it.',
+  // {D} = the designation the player transmitted at first contact.
+  designated: {
+    text: 'Designation recorded: {D}. Filed at the head of the new archive. Now walk. I cannot see your world until you move through it.',
     mood: 'curious',
   },
   walk_done: {
