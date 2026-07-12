@@ -35,6 +35,8 @@ export type CompanionContext = {
   named: string | null;
   /** Confirmed type for scan events, lowercased into lines via {T}. */
   type?: string;
+  /** Player-assigned name of the scanned relic, when given at capture. */
+  relicName?: string;
   /** Which fire-once pattern, for event 'pattern'. */
   patternKey?: string;
   /** A kept verbatim answer, quoted into lines via {A}. */

@@ -116,12 +116,14 @@ function LogLine({ entry, label }: { entry: LogEntry; label: string }): React.JS
 
 const styles = StyleSheet.create({
   wrap: {
+    flex: 1, // the communication channel owns all space below the square viewport
+    minHeight: 0,
     borderTopWidth: 1,
     borderTopColor: colors.line,
     backgroundColor: colors.panel,
   },
   scroll: {
-    maxHeight: 110,
+    flex: 1,
     minHeight: 64,
   },
   scrollInner: {

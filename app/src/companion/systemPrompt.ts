@@ -101,13 +101,23 @@ export function buildSystemPrompt(ctx: CompanionContext): string {
 
 /** Turns a game event into the user-turn instruction for the model. */
 export function buildEventInstruction(event: CompanionEvent, ctx: CompanionContext): string {
+  // Past the instrument stage, a scanned form may spark ONE concrete question
+  // about that specific thing (e.g. an animal: "one your kind would ally
+  // with — a 'pet'?"). Rarity is the model's judgment; the question budget
+  // and validation still bound it.
+  const stage = stageFor(ctx.level ?? 1, ctx.named != null);
+  const named = ctx.relicName ? ` They named this one "${ctx.relicName}".` : '';
+  const wonder =
+    stage === 'CARVED'
+      ? ''
+      : ' If this specific form genuinely makes you wonder — what it was for, whether their kind kept it, used it, allied with it — you may end with ONE concrete question about it. Only if you truly want to know; most filings deserve none.';
   switch (event) {
     case 'scan_teach':
-      return `The Surveyor just identified a scanned form for you as "${ctx.type?.toLowerCase()}" — teaching you, because your model had nothing. Acknowledge the filing in one or two brief sentences.`;
+      return `The Surveyor just identified a scanned form for you as "${ctx.type?.toLowerCase()}" — teaching you, because your model had nothing.${named} Acknowledge the filing in one or two brief sentences.${wonder}`;
     case 'scan_confirm':
-      return `The Surveyor confirmed your proposed classification "${ctx.type?.toLowerCase()}". Acknowledge briefly — this is routine; one short sentence, two at most.`;
+      return `The Surveyor confirmed your proposed classification "${ctx.type?.toLowerCase()}".${named} Acknowledge briefly — this is routine; one short sentence, two at most.${wonder}`;
     case 'scan_correct':
-      return `The Surveyor corrected your classification: the form is "${ctx.type?.toLowerCase()}", not what you proposed. Acknowledge the correction; their word outweighs your reading.`;
+      return `The Surveyor corrected your classification: the form is "${ctx.type?.toLowerCase()}", not what you proposed.${named} Acknowledge the correction; their word outweighs your reading.${wonder}`;
     case 'discovery':
       return 'The Surveyor walked into unsurveyed ground and the map grew. Note it briefly, in survey telemetry.';
     case 'levelup':

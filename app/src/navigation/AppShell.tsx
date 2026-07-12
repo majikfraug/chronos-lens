@@ -305,7 +305,9 @@ const styles = StyleSheet.create({
     color: colors.neon,
   },
   body: {
-    flex: 1,
-    minHeight: 0,
+    // Square module viewport (director 2026-07-12): the map and Lens render
+    // width×width; the communication channel below gets everything else.
+    width: '100%',
+    aspectRatio: 1,
   },
 });

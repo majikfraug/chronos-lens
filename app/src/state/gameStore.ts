@@ -646,7 +646,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
       `Filed ${type.toLowerCase()}${relicName ? ` "${relicName}"` : ''}${corrected ? ' (they corrected me)' : ''}.`
     );
 
-    get().speak(taught ? 'scan_teach' : corrected ? 'scan_correct' : 'scan_confirm', { type });
+    get().speak(taught ? 'scan_teach' : corrected ? 'scan_correct' : 'scan_confirm', {
+      type,
+      relicName: relicName ?? undefined,
+    });
 
     const isCustom = get().customTypes.some((c) => c.name === type);
     const firstLine = firstOfType ? (TYPE_FIRST[type] ?? (isCustom ? CUSTOM_TYPE_FIRST : undefined)) : undefined;

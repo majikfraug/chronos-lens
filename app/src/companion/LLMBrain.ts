@@ -43,10 +43,14 @@ export class LLMBrain implements CompanionBrain {
       // Lazy require: in Expo Go the native module does not exist and this throws.
       /* eslint-disable @typescript-eslint/no-require-imports */
       const executorch = require('react-native-executorch');
+      const { ExpoResourceFetcher } = require('react-native-executorch-expo-resource-fetcher');
       /* eslint-enable @typescript-eslint/no-require-imports */
       if (!executorch.isAvailable || !executorch.LLMModule) {
         throw new Error('executorch native runtime not present in this client');
       }
+      // 0.9 API: the runtime needs a resource-fetcher adapter registered before
+      // any model load ("ResourceFetcher adapter is not initialized" otherwise).
+      executorch.initExecutorch({ resourceFetcher: ExpoResourceFetcher });
       // Llama 3.2 3B (SpinQuant): desktop-harness evaluation 2026-07-08 showed
       // 1B cannot hold the character (third-person slips, invented quotes)
       // while 3B holds register AND engages — see docs/decisions.md. The
