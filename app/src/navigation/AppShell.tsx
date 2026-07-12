@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { audio } from '../audio/engine';
 import { ScanlineOverlay } from '../components/ScanlineOverlay';
@@ -18,9 +18,17 @@ type Tab = 'field' | 'lens' | 'reliquary';
 
 const TABS: { key: Tab; label: string }[] = [
   { key: 'field', label: 'FIELD' },
-  { key: 'lens', label: 'LENS' },
+  { key: 'lens', label: 'L.E.N.S.' },
   { key: 'reliquary', label: 'RELIQUARY' },
 ];
+
+/** Bring-up telemetry, one line per module coming online (director's boot design). */
+const MODULE_BOOT_LINES = [
+  'MAP MODULE ONLINE · FIELD RECOVERY ACTIVE',
+  'L.E.N.S. ONLINE · LOCALIZED EPOCH NORMALIZATION SCANNER',
+  'RELIQUARY ONLINE · TYPE ARCHIVE READY',
+];
+const MODULE_BOOT_INTERVAL_MS = 1100;
 
 export function AppShell(): React.JSX.Element {
   const [tab, setTab] = useState<Tab>('field');
@@ -38,7 +46,31 @@ export function AppShell(): React.JSX.Element {
   const switchBrain = useGameStore((s) => s.switchBrain);
   const calibStep = useGameStore((s) => s.calibStep);
   const beginCalibration = useGameStore((s) => s.beginCalibration);
-  const directive = calibStep > 0 && calibStep < CALIB_DONE ? CALIB_DIRECTIVES[calibStep] : null;
+  const modulesBooting = useGameStore((s) => s.modulesBooting);
+  const finishModuleBoot = useGameStore((s) => s.finishModuleBoot);
+  const [modulesOnline, setModulesOnline] = useState(3);
+  const directive =
+    !modulesBooting && calibStep > 0 && calibStep < CALIB_DONE ? CALIB_DIRECTIVES[calibStep] : null;
+
+  useEffect(() => {
+    if (!modulesBooting) return;
+    // System startup: MAP, L.E.N.S., RELIQUARY appear one by one.
+    setModulesOnline(0);
+    let count = 0;
+    const iv = setInterval(() => {
+      count += 1;
+      setModulesOnline(count);
+      useGameStore.getState().appendLog('sys', MODULE_BOOT_LINES[count - 1]);
+      audio.play('sync');
+      if (count >= MODULE_BOOT_LINES.length) {
+        clearInterval(iv);
+        setTimeout(() => finishModuleBoot(), 900);
+      }
+    }, MODULE_BOOT_INTERVAL_MS);
+    return () => clearInterval(iv);
+  }, [modulesBooting, finishModuleBoot]);
+
+  const visibleTabs = modulesBooting ? TABS.slice(0, modulesOnline) : TABS;
   const register = registerFor(level, attunement);
   const prevThreshold = level === 1 ? 0 : XP_THRESHOLDS[level - 2];
   const nextThreshold = level >= MAX_LEVEL ? null : XP_THRESHOLDS[level - 1];
@@ -112,7 +144,7 @@ export function AppShell(): React.JSX.Element {
       </View>
 
       <View style={styles.tabs}>
-        {TABS.map((t) => (
+        {visibleTabs.map((t) => (
           <Pressable
             key={t.key}
             style={[styles.tab, tab === t.key && styles.tabActive]}
@@ -133,9 +165,17 @@ export function AppShell(): React.JSX.Element {
       )}
 
       <View style={styles.body}>
-        {tab === 'field' && <FieldScreen />}
-        {tab === 'lens' && <LensScreen />}
-        {tab === 'reliquary' && <ReliquaryScreen />}
+        {modulesBooting && modulesOnline === 0 ? (
+          <View style={styles.bootingBody}>
+            <Text style={styles.bootingText}>ASSIGNING NEW ARCHIVE …</Text>
+          </View>
+        ) : (
+          <>
+            {tab === 'field' && <FieldScreen />}
+            {tab === 'lens' && <LensScreen />}
+            {tab === 'reliquary' && <ReliquaryScreen />}
+          </>
+        )}
       </View>
 
       <LogStrip />
@@ -218,6 +258,18 @@ const styles = StyleSheet.create({
     fontSize: 9.5,
     letterSpacing: 1.5,
     color: colors.interestAmber,
+  },
+  bootingBody: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.bg,
+  },
+  bootingText: {
+    fontFamily: fonts.body,
+    fontSize: 11,
+    letterSpacing: 2,
+    color: colors.phosphorDim,
   },
   bars: {
     flexDirection: 'row',

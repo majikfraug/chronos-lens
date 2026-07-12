@@ -118,6 +118,8 @@ type GameStore = {
   calibStep: number;
   /** What the player answered to "WHAT IS YOUR DESIGNATION?" at first contact. */
   surveyorDesignation: string | null;
+  /** True during the post-designation module bring-up (MAP → L.E.N.S. → RELIQUARY). Session-only. */
+  modulesBooting: boolean;
 
   appendLog: (kind: LogEntry['kind'], text: string) => void;
   /** Speak a brain response into the log with its voice tone. No-op on null. */
@@ -134,6 +136,8 @@ type GameStore = {
   switchBrain: (mode: BrainMode) => Promise<void>;
   /** First contact answered — keeps both transmissions verbatim, starts calibration. */
   beginCalibration: (bootAnswer: string, designation: string) => Promise<void>;
+  /** Module bring-up animation finished: walk prompt speaks, directive shows. */
+  finishModuleBoot: () => void;
   /** Advances calibration, speaks the beat, persists. Internal to game systems. */
   advanceCalibration: (step: number) => void;
   /** Lens screen reports the first successful capture resolve. */
@@ -220,6 +224,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
   brainMode: 'authored',
   calibStep: CALIB_DONE, // assume done until hydration says otherwise
   surveyorDesignation: null,
+  modulesBooting: false,
+
+  finishModuleBoot: () => {
+    set({ modulesBooting: false });
+    const line = CALIBRATION.walk_prompt;
+    get().appendLog('ai', line.text);
+    audio.voice(line.mood);
+  },
 
   beginCalibration: async (bootAnswer, designation) => {
     const answer = bootAnswer.trim();
@@ -233,6 +245,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({
       keptAnswers: [...get().keptAnswers, ...kept],
       surveyorDesignation: name || null,
+      modulesBooting: true, // AppShell runs the bring-up, then finishModuleBoot()
     });
     get().advanceCalibration(1);
   },

@@ -598,7 +598,12 @@ export const ROUTER_UNKNOWN: CorpusLine[] = [
 export const CALIBRATION: Record<string, CorpusLine> = {
   // {D} = the designation the player transmitted at first contact.
   designated: {
-    text: 'Designation recorded: {D}. Filed at the head of the new archive. Now walk. I cannot see your world until you move through it.',
+    text: 'Designation recorded: {D}. Assigning new archive.',
+    mood: 'curious',
+  },
+  // Spoken when the module bring-up animation finishes (MAP/L.E.N.S./RELIQUARY online).
+  walk_prompt: {
+    text: 'Modules online. The map is empty. Walk, and I will fill it as you move.',
     mood: 'curious',
   },
   walk_done: {

@@ -136,6 +136,7 @@ export function IntroOverlay({ onDone }: Props): React.JSX.Element {
 
         {(phase === 'anomaly' || phase === 'designation') && (
           <>
+            {phase === 'designation' && <Text style={styles.inputLabel}>ENTER USERNAME:</Text>}
             <TextInput
               style={styles.answerInput}
               value={draft}
@@ -242,6 +243,13 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     color: colors.bright,
     textAlign: 'right',
+  },
+  inputLabel: {
+    marginTop: 10,
+    fontFamily: fonts.display,
+    fontSize: 14,
+    letterSpacing: 2,
+    color: colors.bright,
   },
   answerInput: {
     marginTop: 10,

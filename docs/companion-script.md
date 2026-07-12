@@ -24,10 +24,15 @@ bright, all caps) · Companion = amber blocks · Player = right-justified neon.
 [boot.anomaly] (curious) Beginning survey... Anomaly detected: active signal present. Searching for protocol: Tempus Ordinis Prioris... Protocol not found... 10,000 cycles of surveyor records, no recorded contact. Curious... ... ... Engaging contact... Confirm signal received: DO YOU READ ME? PLEASE TRANSMIT YOUR RESPONSE.
 (player transmits — kept verbatim)
 [boot.designation] (curious) A surveyor from the time before? Curious. Response recorded. New archive initiated. WHAT IS YOUR DESIGNATION? PLEASE TRANSMIT YOUR RESPONSE.
-(player transmits designation — kept verbatim and stored; {D} below)
+(ENTER USERNAME: box opens — player transmits designation, kept verbatim and stored; {D} below)
+(then the module bring-up: tabs appear one by one with these telemetry lines)
+[modules.map] MAP MODULE ONLINE · FIELD RECOVERY ACTIVE
+[modules.lens] L.E.N.S. ONLINE · LOCALIZED EPOCH NORMALIZATION SCANNER
+[modules.reliquary] RELIQUARY ONLINE · TYPE ARCHIVE READY
 
 ## CALIBRATION BEATS (first-session tutorial)
-[calib.designated] (curious) Designation recorded: {D}. Filed at the head of the new archive. Now walk. I cannot see your world until you move through it.
+[calib.designated] (curious) Designation recorded: {D}. Assigning new archive.
+[calib.walk_prompt] (curious) Modules online. The map is empty. Walk, and I will fill it as you move.
 [calib.walk_done] (curious) The ground renders where you carry me. Fifty meters recovered. Now raise the Lens — show me any form. A cup. A door. A leaf. I have never seen anything.
 [calib.teach_done] (neutral) The model has its first entry. It is small and it is yours. One more calibration: the channel. I will ask; answer as you choose. What you say is kept exactly.
 [calib.released] (warm) Calibration sufficient. The survey is yours now. Walk where you choose, scan what interests you, correct me when I am wrong. I will be learning.

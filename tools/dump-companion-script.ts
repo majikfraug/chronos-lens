@@ -63,7 +63,11 @@ bright, all caps) · Companion = amber blocks · Player = right-justified neon.
 [boot.anomaly] (curious) Beginning survey... Anomaly detected: active signal present. Searching for protocol: Tempus Ordinis Prioris... Protocol not found... 10,000 cycles of surveyor records, no recorded contact. Curious... ... ... Engaging contact... Confirm signal received: DO YOU READ ME? PLEASE TRANSMIT YOUR RESPONSE.
 (player transmits — kept verbatim)
 [boot.designation] (curious) A surveyor from the time before? Curious. Response recorded. New archive initiated. WHAT IS YOUR DESIGNATION? PLEASE TRANSMIT YOUR RESPONSE.
-(player transmits designation — kept verbatim and stored; {D} below)
+(ENTER USERNAME: box opens — player transmits designation, kept verbatim and stored; {D} below)
+(then the module bring-up: tabs appear one by one with these telemetry lines)
+[modules.map] MAP MODULE ONLINE · FIELD RECOVERY ACTIVE
+[modules.lens] L.E.N.S. ONLINE · LOCALIZED EPOCH NORMALIZATION SCANNER
+[modules.reliquary] RELIQUARY ONLINE · TYPE ARCHIVE READY
 `);
 
 sections.push('## CALIBRATION BEATS (first-session tutorial)');
