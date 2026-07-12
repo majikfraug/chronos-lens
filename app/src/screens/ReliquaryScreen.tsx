@@ -199,7 +199,7 @@ function SlotDetail({ type, onClose }: { type: TypeName; onClose: () => void }):
             </Text>
             <View style={styles.itemActions}>
               <Pressable onPress={() => startRename(it)}>
-                <Text style={styles.itemAction}>NAME</Text>
+                <Text style={styles.itemAction}>RENAME</Text>
               </Pressable>
               <Pressable
                 onPress={() => {

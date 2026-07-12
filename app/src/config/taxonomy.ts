@@ -10,18 +10,19 @@ export type Scale = 'ARTIFACT' | 'FEATURE';
 
 /**
  * Broad enough that any walked-past object has a home: shoes → ATTIRE,
- * a 3D printer → MECHANISM, a bicycle → CONVEYANCE, a street sign → SIGNAL,
- * a flower → NATURAL (all growth and ground-kept things).
+ * a 3D printer → MECHANISM, a bicycle → CONVEYANCE, a bottle → VESSEL,
+ * a hammer → TOOL, a flower → NATURAL (all growth and ground-kept things).
+ * (SIGNAL and LABOR retired 2026-07-11 — director: not applicable as relics.)
  */
 export const ARTIFACT_TYPES = [
   'DOMESTIC',
   'ATTIRE',
   'MECHANISM',
   'CONVEYANCE',
-  'SIGNAL',
+  'VESSEL',
   'STRUCTURAL',
   'RITUAL',
-  'LABOR',
+  'TOOL',
   'NATURAL',
   'ENTERTAINMENT',
 ] as const;
@@ -81,10 +82,6 @@ export const TYPE_FIRST: Partial<Record<TypeName, CompanionLine>> = {
     text: 'Entertainment: first attested. Your kind made objects whose sole function was delight. Query, held open: why did a species under pressure spend effort on delight?',
     mood: 'curious',
   },
-  LABOR: {
-    text: 'Labor: first attested. Implements of work. The records preserve the implements in detail and the workers as quantities. Observed.',
-    mood: 'somber',
-  },
   STRUCTURAL: {
     text: 'Structural: first attested. That which bore weight. Every structure in the record outlived its builders, then failed regardless.',
     mood: 'neutral',
@@ -105,9 +102,13 @@ export const TYPE_FIRST: Partial<Record<TypeName, CompanionLine>> = {
     text: 'Conveyance: first attested. Built to be elsewhere. Your kind expended more on moving than on staying. The reason is not yet in the record.',
     mood: 'neutral',
   },
-  SIGNAL: {
-    text: 'Signal: first attested. A form whose function was to be read. It addressed persons not yet present. I am a person not yet present. Noted.',
+  VESSEL: {
+    text: 'Vessel: first attested. Your kind made containers beyond counting. What required so much carrying?',
     mood: 'curious',
+  },
+  TOOL: {
+    text: 'Tool: first attested. An extension of the hand, kept after the hand was gone. The record preserves tools in great numbers. The hands, less so.',
+    mood: 'somber',
   },
   'HOLY SITE': {
     text: 'Holy site: first attested. Ground set apart. Approaching such positions at reduced intensity, as a precaution. The precaution is mine.',
@@ -137,10 +138,10 @@ export const SIMULATED_PUBLIC_COUNTS: Partial<Record<TypeName, number>> = {
   ATTIRE: 31,
   MECHANISM: 18,
   CONVEYANCE: 40,
-  SIGNAL: 52,
+  VESSEL: 48,
   STRUCTURAL: 26,
   RITUAL: 37,
-  LABOR: 29,
+  TOOL: 33,
   NATURAL: 61,
   ENTERTAINMENT: 22,
   'DWELLING SITE': 14,

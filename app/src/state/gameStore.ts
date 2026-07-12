@@ -160,6 +160,8 @@ type GameStore = {
     taught: boolean;
     corrected: boolean;
     thumbPng: Uint8Array;
+    /** Player-assigned name at capture time (director: relics arrive named). */
+    relicName?: string | null;
   }) => Promise<void>;
   markIntroSeen: () => void;
   hydrate: () => Promise<void>;
@@ -510,7 +512,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     audio.play('discard');
   },
 
-  confirmScan: async ({ scale, type, taught, corrected, thumbPng }) => {
+  confirmScan: async ({ scale, type, taught, corrected, thumbPng, relicName }) => {
     const thumbUri = saveThumbnail(thumbPng);
     const firstOfType = !get().reliquary[type];
 
@@ -530,7 +532,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         reliquary,
       };
     });
-    void recordScan({ scale, type, taught, corrected, thumbUri });
+    void recordScan({ scale, type, taught, corrected, thumbUri, name: relicName ?? null });
 
     get().appendLog(
       'sys',

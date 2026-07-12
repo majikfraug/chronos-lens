@@ -94,11 +94,20 @@ export async function recordScan(args: {
   taught: boolean;
   corrected: boolean;
   thumbUri: string;
+  name?: string | null;
 }): Promise<void> {
   const db = await getDb();
   await db.runAsync(
-    'INSERT INTO scans (ts, scale, type, taught, corrected, thumb_path) VALUES (?, ?, ?, ?, ?, ?)',
-    [Date.now(), args.scale, args.type, args.taught ? 1 : 0, args.corrected ? 1 : 0, args.thumbUri]
+    'INSERT INTO scans (ts, scale, type, taught, corrected, thumb_path, name) VALUES (?, ?, ?, ?, ?, ?, ?)',
+    [
+      Date.now(),
+      args.scale,
+      args.type,
+      args.taught ? 1 : 0,
+      args.corrected ? 1 : 0,
+      args.thumbUri,
+      args.name ?? null,
+    ]
   );
   await db.runAsync(
     `INSERT INTO ai_model (type, taught_count) VALUES (?, 1)

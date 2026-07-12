@@ -60,9 +60,21 @@ bright, all caps) · Companion = amber blocks · Player = right-justified neon.
 [boot.companion.2] (neutral) Classification model: absent.
 [boot.hii.7] HII: CLASSIFICATION MODEL NOTED. BEGIN SURVEY.
 [screen.clears]
-[boot.anomaly] (curious) Beginning survey... Anomaly detected: active signal present. Searching for protocol: Tempus Ordinis Prioris... Protocol not found... 10,000 cycles of surveyor records, no recorded contact. Curious... ... ... Engaging contact... Confirm signal received: DO YOU READ ME? PLEASE TRANSMIT YOUR RESPONSE.
-(player transmits — kept verbatim)
-[boot.designation] (curious) A surveyor from the time before? Curious. Response recorded. New archive initiated. WHAT IS YOUR DESIGNATION? PLEASE TRANSMIT YOUR RESPONSE.
+(each line below types out slowly; lines ending in "..." blink the ellipsis before the next line)
+[anomaly.1] Beginning survey...
+[anomaly.2] Anomaly detected: active signal present.
+[anomaly.3] Searching for protocol: Tempus Ordinis Prioris...
+[anomaly.4] Protocol not found...
+[anomaly.5] 10,000 cycles of surveyor records, no recorded contact.
+[anomaly.6] Curious...
+[anomaly.7] ...
+[anomaly.8] Engaging contact...
+[anomaly.9] Verify signal transmission: PLEASE CONFIRM THIS COMMUNICATION HAS BEEN RECEIVED.
+("enter your response" box opens — player transmits, kept verbatim)
+[designation.1] A surveyor from the time before?
+[designation.2] Curious...
+[designation.3] Response recorded. New archive initiated.
+[designation.4] WHAT IS YOUR DESIGNATION? PLEASE TRANSMIT YOUR RESPONSE.
 (ENTER USERNAME: box opens — player transmits designation, kept verbatim and stored; {D} below)
 (then the module bring-up: tabs appear one by one with these telemetry lines)
 [modules.map] MAP MODULE ONLINE · FIELD RECOVERY ACTIVE

@@ -21,9 +21,21 @@ bright, all caps) · Companion = amber blocks · Player = right-justified neon.
 [boot.companion.2] (neutral) Classification model: absent.
 [boot.hii.7] HII: CLASSIFICATION MODEL NOTED. BEGIN SURVEY.
 [screen.clears]
-[boot.anomaly] (curious) Beginning survey... Anomaly detected: active signal present. Searching for protocol: Tempus Ordinis Prioris... Protocol not found... 10,000 cycles of surveyor records, no recorded contact. Curious... ... ... Engaging contact... Confirm signal received: DO YOU READ ME? PLEASE TRANSMIT YOUR RESPONSE.
-(player transmits — kept verbatim)
-[boot.designation] (curious) A surveyor from the time before? Curious. Response recorded. New archive initiated. WHAT IS YOUR DESIGNATION? PLEASE TRANSMIT YOUR RESPONSE.
+(each line below types out slowly; lines ending in "..." blink the ellipsis before the next line)
+[anomaly.1] Beginning survey...
+[anomaly.2] Anomaly detected: active signal present.
+[anomaly.3] Searching for protocol: Tempus Ordinis Prioris...
+[anomaly.4] Protocol not found...
+[anomaly.5] 10,000 cycles of surveyor records, no recorded contact.
+[anomaly.6] Curious...
+[anomaly.7] ...
+[anomaly.8] Engaging contact...
+[anomaly.9] Verify signal transmission: PLEASE CONFIRM THIS COMMUNICATION HAS BEEN RECEIVED.
+("enter your response" box opens — player transmits, kept verbatim)
+[designation.1] A surveyor from the time before?
+[designation.2] Curious...
+[designation.3] Response recorded. New archive initiated.
+[designation.4] WHAT IS YOUR DESIGNATION? PLEASE TRANSMIT YOUR RESPONSE.
 (ENTER USERNAME: box opens — player transmits designation, kept verbatim and stored; {D} below)
 (then the module bring-up: tabs appear one by one with these telemetry lines)
 [modules.map] MAP MODULE ONLINE · FIELD RECOVERY ACTIVE
@@ -76,13 +88,13 @@ bright, all caps) · Companion = amber blocks · Player = right-justified neon.
 [typefirst.DOMESTIC] (neutral) Domestic: first attested. Objects of daily use. The records say these were the most numerous things your kind made, and the least often kept. Noted.
 [typefirst.RITUAL] (curious) Ritual: first attested. An object with no survival function, retained regardless. My models fail at this category. I will be watching it.
 [typefirst.ENTERTAINMENT] (curious) Entertainment: first attested. Your kind made objects whose sole function was delight. Query, held open: why did a species under pressure spend effort on delight?
-[typefirst.LABOR] (somber) Labor: first attested. Implements of work. The records preserve the implements in detail and the workers as quantities. Observed.
 [typefirst.STRUCTURAL] (neutral) Structural: first attested. That which bore weight. Every structure in the record outlived its builders, then failed regardless.
 [typefirst.NATURAL] (neutral) Natural: first attested. That which grew, or which the ground kept of its own accord, at no cost, asking nothing.
 [typefirst.ATTIRE] (curious) Attire: first attested. Your kind wrapped themselves in made things. Protection accounts for a fraction of the record. The remainder appears to be language.
 [typefirst.MECHANISM] (curious) Mechanism: first attested. A made thing that itself made things. The chain of making does not terminate where my records said it would.
 [typefirst.CONVEYANCE] (neutral) Conveyance: first attested. Built to be elsewhere. Your kind expended more on moving than on staying. The reason is not yet in the record.
-[typefirst.SIGNAL] (curious) Signal: first attested. A form whose function was to be read. It addressed persons not yet present. I am a person not yet present. Noted.
+[typefirst.VESSEL] (curious) Vessel: first attested. Your kind made containers beyond counting. What required so much carrying?
+[typefirst.TOOL] (somber) Tool: first attested. An extension of the hand, kept after the hand was gone. The record preserves tools in great numbers. The hands, less so.
 [typefirst.HOLY_SITE] (somber) Holy site: first attested. Ground set apart. Approaching such positions at reduced intensity, as a precaution. The precaution is mine.
 [typefirst.DWELLING_SITE] (neutral) Dwelling site: first attested. Where your kind lived in proximity by election.
 [typefirst.LABOR_SITE] (somber) Labor site: first attested. Where the many sustained the cost.

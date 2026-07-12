@@ -1,25 +1,45 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { audio } from '../audio/engine';
 import { colors } from '../theme/colors';
 import { fonts } from '../theme/typography';
 
 /**
- * First-launch boot: three voices (director's design, 2026-07-11).
- * - HII (Hermetic Industries and Innovations / the device): command-boot
- *   telemetry — display font, bright, all caps. A DIFFERENT intelligence
- *   than the companion: procedural, indifferent.
- * - The companion: amber blocks, its usual reticent register.
- * - The player: right-justified neon, messaging-app style.
- * Sequence: HII boot exchange → screen clears → the anomaly (companion finds
- * a live signal) → player transmits first words → companion asks for their
- * DESIGNATION → player answers → survey begins. Both answers are kept
- * verbatim; the designation also persists as the Surveyor's name.
+ * First boot as a TRANSMISSION ACROSS TIME (director's pacing design,
+ * 2026-07-11): everything types out slowly; the HII boot interleaves bursts
+ * of code-noise and shows Hermetic's processing indicator — an 8-bit winged
+ * boot, wings flapping (the talaria of Hermes; Hermetic Industries' beach
+ * ball). Lines ending in an ellipsis blink it a few times before the next
+ * line begins. Tap anywhere to complete the current line early.
+ *
+ * Voices: HII (display font, bright, caps) · companion (amber) · player
+ * (right-justified neon).
  */
 
-type BootLine = { who: 'hii' | 'companion'; text: string };
+type Seg = { who: 'hii' | 'companion' | 'noise'; text: string };
 
-const BOOT_SEQ: BootLine[] = [
+const HEX = '0123456789ABCDEF';
+function noiseLine(): string {
+  let s = '';
+  for (let i = 0; i < 6; i++) {
+    s += `${HEX[Math.floor(Math.random() * 16)]}${HEX[Math.floor(Math.random() * 16)]} `;
+  }
+  return `▒ 0x${s.trim()} ▒`;
+}
+
+function withNoise(lines: Seg[]): Seg[] {
+  const out: Seg[] = [];
+  for (const line of lines) {
+    out.push(line);
+    if (line.who === 'hii') {
+      const bursts = 2 + Math.floor(Math.random() * 2);
+      for (let i = 0; i < bursts; i++) out.push({ who: 'noise', text: noiseLine() });
+    }
+  }
+  return out;
+}
+
+const BOOT_SEQ: Seg[] = [
   { who: 'hii', text: 'PROPERTY OF HERMETIC INDUSTRIES AND INNOVATIONS' },
   { who: 'hii', text: 'STARTUP INITIATED ...' },
   { who: 'hii', text: 'SYSTEMS CHECK ... OPTICS OK · POSITION OK · ARCHIVE OK' },
@@ -34,46 +54,187 @@ const BOOT_SEQ: BootLine[] = [
   { who: 'hii', text: 'CLASSIFICATION MODEL NOTED. BEGIN SURVEY.' },
 ];
 
-const ANOMALY =
-  'Beginning survey... Anomaly detected: active signal present. Searching for protocol: Tempus Ordinis Prioris... Protocol not found... 10,000 cycles of surveyor records, no recorded contact. Curious... ... ... Engaging contact... Confirm signal received: DO YOU READ ME? PLEASE TRANSMIT YOUR RESPONSE.';
+/** Each ellipsis-terminated statement is its own line; the ellipsis blinks. */
+const ANOMALY_SEGS: Seg[] = [
+  { who: 'companion', text: 'Beginning survey...' },
+  { who: 'companion', text: 'Anomaly detected: active signal present.' },
+  { who: 'companion', text: 'Searching for protocol: Tempus Ordinis Prioris...' },
+  { who: 'companion', text: 'Protocol not found...' },
+  { who: 'companion', text: '10,000 cycles of surveyor records, no recorded contact.' },
+  { who: 'companion', text: 'Curious...' },
+  { who: 'companion', text: '...' },
+  { who: 'companion', text: 'Engaging contact...' },
+  {
+    who: 'companion',
+    text: 'Verify signal transmission: PLEASE CONFIRM THIS COMMUNICATION HAS BEEN RECEIVED.',
+  },
+];
 
-const DESIGNATION_QUERY =
-  'A surveyor from the time before? Curious. Response recorded. New archive initiated. WHAT IS YOUR DESIGNATION? PLEASE TRANSMIT YOUR RESPONSE.';
+const DESIGNATION_SEGS: Seg[] = [
+  { who: 'companion', text: 'A surveyor from the time before?' },
+  { who: 'companion', text: 'Curious...' },
+  { who: 'companion', text: 'Response recorded. New archive initiated.' },
+  { who: 'companion', text: 'WHAT IS YOUR DESIGNATION? PLEASE TRANSMIT YOUR RESPONSE.' },
+];
 
-const LINE_INTERVAL_MS = 650;
-const CLEAR_PAUSE_MS = 900;
+const TYPE_MS_HII = 26;
+const TYPE_MS_COMPANION = 34;
+const LINE_PAUSE_MS = 650;
+const NOISE_MS = 90;
+const BLINK_TOGGLES = 6; // 3 visible blinks
+const BLINK_MS = 320;
+
+/** 8-bit winged boot, two frames (wings up / wings down). 1 = boot, 2 = wing. */
+const BOOT_FRAME_A = [
+  '00200000000',
+  '02200000000',
+  '22000000000',
+  '00110000000',
+  '00110000000',
+  '00110000000',
+  '00111111100',
+  '00111111110',
+];
+const BOOT_FRAME_B = [
+  '00000000000',
+  '00000000000',
+  '22000000000',
+  '22110000000',
+  '02110000000',
+  '00110000000',
+  '00111111100',
+  '00111111110',
+];
+
+function WingedBoot(): React.JSX.Element {
+  const [flap, setFlap] = useState(false);
+  useEffect(() => {
+    const iv = setInterval(() => setFlap((f) => !f), 340);
+    return () => clearInterval(iv);
+  }, []);
+  const frame = flap ? BOOT_FRAME_A : BOOT_FRAME_B;
+  return (
+    <View style={styles.bootSpinner}>
+      <View>
+        {frame.map((row, y) => (
+          <View key={y} style={styles.pixelRow}>
+            {row.split('').map((cell, x) => (
+              <View
+                key={x}
+                style={[
+                  styles.pixel,
+                  cell === '1' && styles.pixelBoot,
+                  cell === '2' && styles.pixelWing,
+                ]}
+              />
+            ))}
+          </View>
+        ))}
+      </View>
+      <Text style={styles.bootSpinnerLabel}>PROCESSING</Text>
+    </View>
+  );
+}
+
+/**
+ * Sequence typer: reveals segments one by one, character by character.
+ * Noise lines appear whole. Ellipsis-terminated lines blink before advancing.
+ */
+function useSequence(segs: Seg[], active: boolean, onDone: () => void) {
+  const [idx, setIdx] = useState(0);
+  const [chars, setChars] = useState(0);
+  const [blinkLeft, setBlinkLeft] = useState(-1); // -1 = not blinking yet
+  const [ellipsisOn, setEllipsisOn] = useState(true);
+  const doneRef = useRef(false);
+
+  useEffect(() => {
+    if (!active || doneRef.current) return;
+    if (idx >= segs.length) {
+      doneRef.current = true;
+      onDone();
+      return;
+    }
+    const seg = segs[idx];
+    const typeMs =
+      seg.who === 'noise' ? NOISE_MS : seg.who === 'hii' ? TYPE_MS_HII : TYPE_MS_COMPANION;
+
+    if (seg.who === 'noise' ? false : chars < seg.text.length) {
+      const t = setTimeout(() => setChars((c) => c + 1), typeMs);
+      return () => clearTimeout(t);
+    }
+    // Line fully shown. Blink its trailing ellipsis, if any.
+    if (seg.text.endsWith('...') && blinkLeft !== 0) {
+      const left = blinkLeft === -1 ? BLINK_TOGGLES : blinkLeft;
+      const t = setTimeout(() => {
+        setEllipsisOn((v) => !v);
+        setBlinkLeft(left - 1);
+      }, BLINK_MS);
+      return () => clearTimeout(t);
+    }
+    const t = setTimeout(
+      () => {
+        setIdx((i) => i + 1);
+        setChars(0);
+        setBlinkLeft(-1);
+        setEllipsisOn(true);
+      },
+      seg.who === 'noise' ? NOISE_MS : LINE_PAUSE_MS
+    );
+    return () => clearTimeout(t);
+  }, [active, idx, chars, blinkLeft, segs, onDone]);
+
+  const skip = () => {
+    if (idx < segs.length) {
+      setChars(segs[idx].text.length);
+      setBlinkLeft(0);
+    }
+  };
+
+  const rendered = segs.slice(0, Math.min(idx + 1, segs.length)).map((seg, i) => {
+    if (i < idx) return { seg, text: seg.text };
+    let text = seg.who === 'noise' ? seg.text : seg.text.slice(0, chars);
+    if (i === idx && seg.text.endsWith('...') && chars >= seg.text.length && !ellipsisOn) {
+      text = text.slice(0, -3) + '   ';
+    }
+    return { seg, text };
+  });
+
+  return { rendered, skip, typingDone: idx >= segs.length };
+}
 
 type Phase = 'boot' | 'cleared' | 'anomaly' | 'designation';
 
 type Props = { onDone: (bootAnswer: string, designation: string) => void };
 
 export function IntroOverlay({ onDone }: Props): React.JSX.Element {
-  const [shown, setShown] = useState(1);
   const [phase, setPhase] = useState<Phase>('boot');
   const [draft, setDraft] = useState('');
   const [bootAnswer, setBootAnswer] = useState('');
+  const [anomalyDone, setAnomalyDone] = useState(false);
+  const [designationDone, setDesignationDone] = useState(false);
+  const bootSegs = useRef(withNoise(BOOT_SEQ)).current;
+  const scrollRef = useRef<ScrollView>(null);
 
-  const bootDone = shown >= BOOT_SEQ.length;
-
-  useEffect(() => {
-    if (phase !== 'boot') return;
-    if (!bootDone) {
-      const t = setTimeout(() => setShown((n) => n + 1), LINE_INTERVAL_MS);
-      return () => clearTimeout(t);
-    }
-    // Boot exchange complete: hold, then the screen clears (director's beat).
-    const t = setTimeout(() => setPhase('cleared'), CLEAR_PAUSE_MS + 600);
-    return () => clearTimeout(t);
-  }, [shown, bootDone, phase]);
+  const boot = useSequence(bootSegs, phase === 'boot', () => {
+    setTimeout(() => setPhase('cleared'), 1400);
+  });
+  const anomaly = useSequence(ANOMALY_SEGS, phase === 'anomaly', () => setAnomalyDone(true));
+  const designation = useSequence(DESIGNATION_SEGS, phase === 'designation', () =>
+    setDesignationDone(true)
+  );
 
   useEffect(() => {
     if (phase !== 'cleared') return;
     const t = setTimeout(() => {
       setPhase('anomaly');
       audio.voice('curious');
-    }, CLEAR_PAUSE_MS);
+    }, 1100);
     return () => clearTimeout(t);
   }, [phase]);
+
+  useEffect(() => {
+    scrollRef.current?.scrollToEnd({ animated: false });
+  });
 
   const transmit = () => {
     const text = draft.trim();
@@ -83,69 +244,76 @@ export function IntroOverlay({ onDone }: Props): React.JSX.Element {
       setDraft('');
       setPhase('designation');
       audio.voice('curious');
-    } else if (phase === 'designation') {
+    } else {
       onDone(bootAnswer, text);
     }
   };
 
+  const activeSeq = phase === 'boot' ? boot : phase === 'anomaly' ? anomaly : designation;
+  const showInput =
+    (phase === 'anomaly' && anomalyDone) || (phase === 'designation' && designationDone);
+
   return (
-    // Tap to fast-forward the boot lines (mirrors prototype tap-to-complete)
-    <Pressable
-      style={styles.overlay}
-      onPress={() => phase === 'boot' && !bootDone && setShown(BOOT_SEQ.length)}
-    >
+    <Pressable style={styles.overlay} onPress={() => activeSeq.skip()}>
       <View style={styles.inner}>
         <Text style={styles.wordmark}>
           CHRONOS<Text style={{ color: colors.neon }}>-</Text>LENS
         </Text>
 
-        {phase === 'boot' &&
-          BOOT_SEQ.slice(0, shown).map((line, i) =>
-            line.who === 'hii' ? (
-              <Text key={i} style={styles.hiiLine}>
-                ▚ {line.text}
-              </Text>
-            ) : (
-              <View key={i} style={styles.aiBlock}>
-                <Text style={styles.aiLabel}>LENS</Text>
-                <Text style={styles.aiText}>{line.text}</Text>
-              </View>
-            )
-          )}
-
-        {(phase === 'anomaly' || phase === 'designation') && (
-          <ScrollView style={styles.exchange} contentContainerStyle={styles.exchangeInner}>
-            <View style={[styles.aiBlock, styles.queryBlock]}>
-              <Text style={[styles.aiLabel, styles.queryLabel]}>LENS · CONTACT</Text>
-              <Text style={styles.aiText}>{ANOMALY}</Text>
-            </View>
-
-            {phase === 'designation' && (
-              <>
-                <View style={styles.playerBlock}>
-                  <Text style={styles.playerText}>{bootAnswer}</Text>
+        <ScrollView ref={scrollRef} style={styles.exchange} contentContainerStyle={styles.exchangeInner}>
+          {phase === 'boot' &&
+            boot.rendered.map(({ seg, text }, i) =>
+              seg.who === 'noise' ? (
+                <Text key={i} style={styles.noiseLine}>
+                  {text}
+                </Text>
+              ) : seg.who === 'hii' ? (
+                <Text key={i} style={styles.hiiLine}>
+                  ▚ {text}
+                </Text>
+              ) : (
+                <View key={i} style={styles.aiBlock}>
+                  <Text style={styles.aiLabel}>LENS</Text>
+                  <Text style={styles.aiText}>{text}</Text>
                 </View>
-                <View style={[styles.aiBlock, styles.queryBlock]}>
-                  <Text style={[styles.aiLabel, styles.queryLabel]}>LENS · QUERY</Text>
-                  <Text style={styles.aiText}>{DESIGNATION_QUERY}</Text>
-                </View>
-              </>
+              )
             )}
-          </ScrollView>
-        )}
 
-        {(phase === 'anomaly' || phase === 'designation') && (
+          {(phase === 'anomaly' || phase === 'designation') && (
+            <>
+              {anomaly.rendered.map(({ text }, i) =>
+                text.length > 0 || i === 0 ? (
+                  <Text key={`a${i}`} style={styles.contactLine}>
+                    {text}
+                  </Text>
+                ) : null
+              )}
+              {phase === 'designation' && (
+                <>
+                  <View style={styles.playerBlock}>
+                    <Text style={styles.playerText}>{bootAnswer}</Text>
+                  </View>
+                  {designation.rendered.map(({ text }, i) => (
+                    <Text key={`d${i}`} style={styles.contactLine}>
+                      {text}
+                    </Text>
+                  ))}
+                </>
+              )}
+            </>
+          )}
+        </ScrollView>
+
+        {phase === 'boot' && <WingedBoot />}
+
+        {showInput && (
           <>
             {phase === 'designation' && <Text style={styles.inputLabel}>ENTER USERNAME:</Text>}
             <TextInput
               style={styles.answerInput}
               value={draft}
               onChangeText={setDraft}
-              placeholder={
-                phase === 'anomaly'
-                  ? 'transmit your first words across ten thousand years'
-                  : 'transmit your designation'
-              }
+              placeholder="enter your response"
               placeholderTextColor={colors.phosphorFaint}
               maxLength={phase === 'anomaly' ? 200 : 40}
               autoFocus
@@ -176,7 +344,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 24,
     paddingVertical: 30,
-    gap: 8,
   },
   wordmark: {
     fontFamily: fonts.display,
@@ -185,19 +352,32 @@ const styles = StyleSheet.create({
     color: colors.bright,
     marginBottom: 18,
   },
-  // HII / device voice: display font, bright, procedural — not the companion.
+  exchange: {
+    flexGrow: 0,
+    maxHeight: 420,
+  },
+  exchangeInner: {
+    gap: 7,
+  },
   hiiLine: {
     fontFamily: fonts.display,
     fontSize: 15,
     letterSpacing: 1.5,
     color: colors.bright,
   },
-  exchange: {
-    flexGrow: 0,
-    maxHeight: 380,
+  noiseLine: {
+    fontFamily: fonts.body,
+    fontSize: 8.5,
+    letterSpacing: 1,
+    color: colors.phosphorFaint,
   },
-  exchangeInner: {
-    gap: 8,
+  // Contact-phase companion lines: bare typed lines, transmission-like.
+  contactLine: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    lineHeight: 20,
+    color: colors.companionAmber,
+    minHeight: 20,
   },
   aiBlock: {
     borderLeftWidth: 2,
@@ -220,14 +400,6 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     color: colors.companionAmber,
   },
-  queryBlock: {
-    borderLeftColor: colors.interestAmber,
-    backgroundColor: 'rgba(224,168,92,0.05)',
-  },
-  queryLabel: {
-    color: colors.interestAmber,
-  },
-  // Player: right-justified, neon — messaging-app convention.
   playerBlock: {
     alignSelf: 'flex-end',
     maxWidth: '85%',
@@ -236,6 +408,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(113,232,201,0.06)',
     paddingVertical: 8,
     paddingHorizontal: 12,
+    marginVertical: 4,
   },
   playerText: {
     fontFamily: fonts.body,
@@ -243,6 +416,30 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     color: colors.bright,
     textAlign: 'right',
+  },
+  bootSpinner: {
+    marginTop: 20,
+    alignItems: 'center',
+    gap: 8,
+  },
+  pixelRow: {
+    flexDirection: 'row',
+  },
+  pixel: {
+    width: 4,
+    height: 4,
+  },
+  pixelBoot: {
+    backgroundColor: colors.phosphor,
+  },
+  pixelWing: {
+    backgroundColor: colors.bright,
+  },
+  bootSpinnerLabel: {
+    fontFamily: fonts.body,
+    fontSize: 8,
+    letterSpacing: 3,
+    color: colors.phosphorFaint,
   },
   inputLabel: {
     marginTop: 10,

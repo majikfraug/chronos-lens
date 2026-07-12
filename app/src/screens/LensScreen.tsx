@@ -43,6 +43,36 @@ type Proposal = { scale: Scale; type: TypeName | null; confidence: number };
 type Chosen = { scale: Scale; type: TypeName | null };
 
 /**
+ * 8-bit scale glyphs (director's design): ARTIFACT = human figure larger than
+ * the object square; FEATURE = large square dwarfing the human. 1 = figure,
+ * 2 = square.
+ */
+const GLYPH_ARTIFACT = ['0100000', '1110000', '0100000', '0100022', '1010022'];
+const GLYPH_FEATURE = ['0002222', '0002222', '0102222', '1112222', '0102222'];
+
+function ScaleGlyph({ kind }: { kind: Scale }): React.JSX.Element {
+  const rows = kind === 'ARTIFACT' ? GLYPH_ARTIFACT : GLYPH_FEATURE;
+  return (
+    <View style={styles.glyph}>
+      {rows.map((row, y) => (
+        <View key={y} style={styles.glyphRow}>
+          {row.split('').map((cell, x) => (
+            <View
+              key={x}
+              style={[
+                styles.glyphPixel,
+                cell === '1' && styles.glyphFigure,
+                cell === '2' && styles.glyphSquare,
+              ]}
+            />
+          ))}
+        </View>
+      ))}
+    </View>
+  );
+}
+
+/**
  * M2/M3 Lens: live camera behind phosphor tint, temporal-density meter,
  * hold-to-stabilize scan into the training-first classification flow
  * (brief §2.3): first TEACH_PHASE scans the player identifies; thereafter the
@@ -75,6 +105,7 @@ export function LensScreen(): React.JSX.Element {
   const [teachMode, setTeachMode] = useState(false);
   const [defineOpen, setDefineOpen] = useState(false);
   const [defineName, setDefineName] = useState('');
+  const [relicName, setRelicName] = useState('');
   const holdStart = useRef(0);
   const holdTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -130,12 +161,8 @@ export function LensScreen(): React.JSX.Element {
   const onScanPressIn = () => {
     audio.kick();
     if (still || scanning) return;
-    if (!scaleRead) {
-      audio.play('deplete');
-      setMessage('NO SUBJECT ACQUIRED · AWAIT DENSITY');
-      setTimeout(() => setMessage(''), 1000);
-      return;
-    }
+    // Scanning is never blocked (density gating was a field-test annoyance);
+    // density/scale-read is flavor telemetry, and scale defaults to ARTIFACT.
     setScanning(true);
     audio.scanStart();
     setMessage('STABILIZING');
@@ -202,6 +229,7 @@ export function LensScreen(): React.JSX.Element {
     setChosen(null);
     setDefineOpen(false);
     setDefineName('');
+    setRelicName('');
   };
 
   const onDefineType = async () => {
@@ -218,6 +246,7 @@ export function LensScreen(): React.JSX.Element {
     const corrected =
       !teachMode && (chosen.type !== proposal.type || chosen.scale !== proposal.scale);
     const thumbPng = still.encodeToBytes();
+    const name = relicName.trim() || null;
     closeResolve();
     await confirmScan({
       scale: chosen.scale,
@@ -225,6 +254,7 @@ export function LensScreen(): React.JSX.Element {
       taught: teachMode,
       corrected,
       thumbPng,
+      relicName: name,
     });
   };
 
@@ -360,11 +390,13 @@ export function LensScreen(): React.JSX.Element {
                   key={s}
                   style={[
                     styles.chip,
+                    styles.scaleChip,
                     s === proposal.scale && styles.chipProposed,
                     s === chosen.scale && styles.chipSelected,
                   ]}
                   onPress={() => pickScale(s)}
                 >
+                  <ScaleGlyph kind={s} />
                   <Text
                     style={[
                       styles.chipText,
@@ -413,7 +445,7 @@ export function LensScreen(): React.JSX.Element {
                 </Pressable>
               ))}
               <Pressable style={[styles.chip, styles.chipDefine]} onPress={() => setDefineOpen((v) => !v)}>
-                <Text style={[styles.chipText, { color: colors.interestAmber }]}>+ DEFINE</Text>
+                <Text style={[styles.chipText, { color: colors.interestAmber }]}>+ NEW CATEGORY</Text>
               </Pressable>
             </View>
 
@@ -439,6 +471,16 @@ export function LensScreen(): React.JSX.Element {
                 </Pressable>
               </View>
             )}
+
+            <Text style={styles.propLine}>ASSIGN RELIC NAME</Text>
+            <TextInput
+              style={styles.relicNameInput}
+              value={relicName}
+              onChangeText={setRelicName}
+              placeholder="optional · how this one will be remembered"
+              placeholderTextColor={colors.phosphorFaint}
+              maxLength={40}
+            />
 
             <View style={styles.confirmRow}>
               <Pressable
@@ -580,6 +622,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: 9,
   },
   chipProposed: { borderColor: 'rgba(113,232,201,0.5)' },
+  scaleChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+  },
+  glyph: {},
+  glyphRow: { flexDirection: 'row' },
+  glyphPixel: { width: 3, height: 3 },
+  glyphFigure: { backgroundColor: colors.bright },
+  glyphSquare: { backgroundColor: colors.phosphorDim },
+  relicNameInput: {
+    alignSelf: 'stretch',
+    fontFamily: fonts.body,
+    fontSize: 12,
+    color: colors.bright,
+    borderWidth: 1,
+    borderColor: colors.line,
+    backgroundColor: colors.panel2,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+  },
   chipDefine: { borderColor: 'rgba(224,168,92,0.45)', borderStyle: 'dashed' },
   defineRow: {
     alignSelf: 'stretch',
