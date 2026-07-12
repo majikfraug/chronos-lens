@@ -2,6 +2,12 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "chronos-lens-dev",
+      "runtimeExecutable": "C:\\Program Files\\nodejs\\node.exe",
+      "runtimeArgs": ["app/node_modules/expo/bin/cli", "start", "app"],
+      "port": 8081
+    },
+    {
       "name": "chronos-lens-web",
       "runtimeExecutable": "C:\\Program Files\\nodejs\\node.exe",
       "runtimeArgs": ["app/node_modules/expo/bin/cli", "start", "app", "--web", "--port", "8081"],

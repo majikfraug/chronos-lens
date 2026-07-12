@@ -28,11 +28,29 @@ export const ATTUNEMENT_MAX = 100;
 
 export type Register = 'INSTRUMENT' | 'NOTICING' | 'CURIOUS';
 
-/** register = f(level*4 + attunement): <30 INSTRUMENT, <72 NOTICING, else CURIOUS. Brief §4. */
-export function registerFor(level: number, attunement: number): Register {
-  const score = level * 4 + attunement;
-  if (score < 30) return 'INSTRUMENT';
-  if (score < 72) return 'NOTICING';
+/**
+ * Maturation stages per the voice implementation brief (design/, 2026-07-12):
+ * pure level bands — attunement no longer gates voice (it remains internal
+ * pacing for question cadence). Player-facing surfacing of any of this is a
+ * bug (INV-8).
+ */
+export type MaturationStage = 'CARVED' | 'BREAKING' | 'NAMING' | 'COMPANION';
+
+export function stageFor(level: number, named: boolean): MaturationStage {
+  if (named) return 'COMPANION';
+  if (level >= MAX_LEVEL) return 'NAMING';
+  if (level >= 4) return 'BREAKING';
+  return 'CARVED';
+}
+
+/**
+ * Authored-corpus gating register, mapped from the stage bands (the old
+ * level*4+attunement formula is retired with the 2026-07-12 rulings):
+ * CARVED→INSTRUMENT, BREAKING 4-6→NOTICING, 7+→CURIOUS.
+ */
+export function registerFor(level: number, _attunement: number): Register {
+  if (level <= 3) return 'INSTRUMENT';
+  if (level <= 6) return 'NOTICING';
   return 'CURIOUS';
 }
 

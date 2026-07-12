@@ -32,11 +32,13 @@ import {
   CLOSE_AFTER_QUESTIONS,
   CLOSE_DIRECTIVE,
   inferMood,
+  passesValidation,
   pickCloser,
   postProcess,
   questionStreak,
   stripTrailingQuestions,
 } from '../app/src/companion/LLMBrain.ts';
+import { stageFor } from '../app/src/config/economy.ts';
 import {
   buildEventInstruction,
   buildQuestionInstruction,
@@ -52,10 +54,12 @@ const MODEL_URI = process.argv.includes('--model1b')
 // ---- simulated play state (edit freely, or via REPL commands) --------------
 const state = {
   register: 'NOTICING' as CompanionContext['register'],
+  level: 5, // drives the maturation stage (1-3 Carved, 4-9 Breaking, 10 Naming)
   named: null as string | null,
+  companionSketch: null as string | null,
   taughtTotal: 12,
   corrections: 3,
-  favoredType: 'NATURAL' as string | null,
+  favoredType: 'MINERAL' as string | null,
   keptAnswers: [
     'my grandfather kept every broken watch he ever owned',
     'we walk to feel like the day belonged to us',
@@ -67,7 +71,9 @@ const state = {
 function ctx(extra?: Partial<CompanionContext>): CompanionContext {
   return {
     register: state.register,
+    level: state.level,
     named: state.named,
+    companionSketch: state.companionSketch ?? undefined,
     taughtTotal: state.taughtTotal,
     corrections: state.corrections,
     favoredType: state.favoredType,
@@ -105,14 +111,22 @@ async function generate(instruction: string, includeTranscript: boolean): Promis
           : ({ type: 'user', text: m.content } as const)
       ),
     ]);
-    const raw = await session.prompt(messages[messages.length - 1].content, {
-      maxTokens: 130,
-      temperature: 0.8,
-    });
-    let text = postProcess(raw, state.named != null);
-    if (text && mustClose) text = stripTrailingQuestions(text);
-    if (!text && mustClose) text = pickCloser(ctx()).text;
-    return text;
+    // Mirror LLMBrain: validate, retry once, then fall back.
+    const stage = stageFor(state.level, state.named != null);
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const raw = await session.prompt(messages[messages.length - 1].content, {
+        maxTokens: 130,
+        temperature: 0.8,
+      });
+      let text = postProcess(raw);
+      if (text && mustClose) text = stripTrailingQuestions(text);
+      if (text && !passesValidation(text, stage)) {
+        console.log(`  (rejected off-voice output, attempt ${attempt + 1})`);
+        continue;
+      }
+      if (text) return text;
+    }
+    return mustClose ? pickCloser(ctx()).text : null;
   } finally {
     sequence.dispose();
   }
@@ -189,9 +203,14 @@ for (;;) {
     else if (cmd === 'register') {
       state.register = args[0] === 'I' ? 'INSTRUMENT' : args[0] === 'C' ? 'CURIOUS' : 'NOTICING';
       console.log(`  register → ${state.register}\n`);
+    } else if (cmd === 'level') {
+      state.level = Math.max(1, Math.min(10, Number(args[0]) || 5));
+      state.register = state.level <= 3 ? 'INSTRUMENT' : state.level <= 6 ? 'NOTICING' : 'CURIOUS';
+      console.log(`  level → ${state.level} (stage follows)\n`);
     } else if (cmd === 'name') {
       state.named = args.join(' ') || 'Echo';
-      console.log(`  named → ${state.named} (contractions unlock)\n`);
+      state.companionSketch = `Name: ${state.named}, given by the Surveyor.`;
+      console.log(`  named → ${state.named} (STAGE_COMPANION; sketch seeded)\n`);
     } else if (cmd === 'state') console.log(state, '\n');
     else console.log('  unknown command\n');
     continue;

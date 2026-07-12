@@ -11,6 +11,7 @@ import {
   MAX_LEVEL,
   registerFor,
   SCAN,
+  stageFor,
   XP_THRESHOLDS,
 } from '../config/economy';
 import {
@@ -64,6 +65,11 @@ export type LogEntry = {
 let nextLogId = 1;
 const LOG_CAP = 60;
 
+// Naming retry cooldown (persisted via flags; loaded at hydrate).
+let namingRetryTs = 0;
+const NAMING_RETRY_MS = 4 * 60 * 60 * 1000;
+const HISTORY_CAP_CHARS = 900;
+
 // Session-scoped companion pacing (not persisted; resets each launch).
 let actionsSinceAsk = 0;
 let resurfacedThisSession = false;
@@ -112,7 +118,12 @@ type GameStore = {
   keptAnswers: KeptAnswer[];
   askedQuestionIds: string[];
   firedPatterns: string[];
-  awakeningPending: boolean;
+  /** Brief non-blocking retune flicker at the naming moment (director's hybrid ruling). */
+  namingFlash: boolean;
+  /** Rolling compact record of the shared journey (persisted; scrubbed before LLM injection). */
+  historySummary: string;
+  /** The companion's own grown traits — exists only after naming. */
+  companionSketch: string | null;
   brainMode: BrainMode;
   /** First-session tutorial step; see CALIB_DIRECTIVES. CALIB_DONE = free play. */
   calibStep: number;
@@ -130,8 +141,9 @@ type GameStore = {
   firePattern: (key: string) => void;
   /** The live transmit box: answers the pending question, else keyword-routes. */
   submitTransmission: (text: string) => Promise<void>;
-  /** Completes the L10 awakening: keeps the name, flips the contraction tell. */
-  completeAwakening: (name: string) => Promise<void>;
+  /** Append one compact line to the persisted shared-history record. */
+  appendHistory: (line: string) => void;
+  clearNamingFlash: () => void;
   /** Switches the companion core (authored corpus vs on-device LLM). Persisted. */
   switchBrain: (mode: BrainMode) => Promise<void>;
   /** First contact answered — keeps both transmissions verbatim, starts calibration. */
@@ -177,7 +189,16 @@ type GameStore = {
 function brainContext(
   s: Pick<
     GameStore,
-    'level' | 'attunement' | 'companionName' | 'taughtCounts' | 'corrections' | 'taughtTotal' | 'keptAnswers' | 'log'
+    | 'level'
+    | 'attunement'
+    | 'companionName'
+    | 'taughtCounts'
+    | 'corrections'
+    | 'taughtTotal'
+    | 'keptAnswers'
+    | 'log'
+    | 'historySummary'
+    | 'companionSketch'
   >,
   extra?: Partial<CompanionContext>
 ): CompanionContext {
@@ -190,11 +211,14 @@ function brainContext(
   return {
     register: registerFor(s.level, s.attunement),
     named: s.companionName,
+    level: s.level,
     taughtTotal: s.taughtTotal,
     corrections: s.corrections,
     favoredType,
     keptAnswers: s.keptAnswers.slice(-10).map((a) => a.answer),
     recentTranscript,
+    historySummary: s.historySummary || undefined,
+    companionSketch: s.companionSketch ?? undefined,
     ...extra,
   };
 }
@@ -222,8 +246,27 @@ export const useGameStore = create<GameStore>((set, get) => ({
   keptAnswers: [],
   askedQuestionIds: [],
   firedPatterns: [],
-  awakeningPending: false,
+  namingFlash: false,
+  historySummary: '',
+  companionSketch: null,
   brainMode: 'authored',
+
+  appendHistory: (line) => {
+    // Compact rolling record, oldest dropped first (cap per voice brief 1.4).
+    let next = get().historySummary ? `${get().historySummary} | ${line}` : line;
+    while (next.length > HISTORY_CAP_CHARS) {
+      const cut = next.indexOf(' | ');
+      if (cut === -1) {
+        next = next.slice(next.length - HISTORY_CAP_CHARS);
+        break;
+      }
+      next = next.slice(cut + 3);
+    }
+    set({ historySummary: next });
+    void setFlag('history_summary', next);
+  },
+
+  clearNamingFlash: () => set({ namingFlash: false }),
   calibStep: CALIB_DONE, // assume done until hydration says otherwise
   surveyorDesignation: null,
   modulesBooting: false,
@@ -314,7 +357,30 @@ export const useGameStore = create<GameStore>((set, get) => ({
   companionTick: () => {
     const s = get();
     actionsSinceAsk += 1;
-    if (s.pendingQuestion || askInFlight || actionsSinceAsk < COMPANION.questionGapActions) return;
+    if (s.pendingQuestion || askInFlight) return;
+
+    // The naming asks itself when its moment arrives — a conversation turn,
+    // never a cutscene (voice brief Part 6; director's hybrid ruling).
+    if (
+      stageFor(s.level, s.companionName != null) === 'NAMING' &&
+      Date.now() > namingRetryTs
+    ) {
+      askInFlight = true;
+      void brain
+        .respond('naming_ask', brainContext(s))
+        .then((response) => {
+          if (!response) return;
+          set({ pendingQuestion: { id: 'naming:ask', text: response.text } });
+          get().appendLog('query', response.text);
+          audio.voice(response.mood);
+        })
+        .finally(() => {
+          askInFlight = false;
+        });
+      return;
+    }
+
+    if (actionsSinceAsk < COMPANION.questionGapActions) return;
     const register = registerFor(s.level, s.attunement);
 
     // A kept answer occasionally resurfaces instead of a new question.
@@ -374,9 +440,38 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const s = get();
     s.appendLog('player', trimmed);
 
+    if (s.pendingQuestion?.id === 'naming:ask') {
+      const declined = /^(no|not now|later|maybe later|nah|not yet|i can'?t)\b/i.test(trimmed) || trimmed.endsWith('?');
+      if (declined) {
+        namingRetryTs = Date.now() + NAMING_RETRY_MS;
+        void setFlag('naming_retry_ts', String(namingRetryTs));
+        set({ pendingQuestion: null });
+        s.speak('naming_declined');
+        return;
+      }
+      const name = trimmed.slice(0, 40);
+      await setFlag('companion_name', name);
+      const sketchSeed = `Name: ${name}, given by the Surveyor.`;
+      void setFlag('companion_sketch', sketchSeed);
+      set({
+        companionName: name,
+        companionSketch: sketchSeed,
+        pendingQuestion: null,
+        namingFlash: true, // the brief retune — non-blocking, no frame
+      });
+      audio.play('levelup');
+      get().appendHistory(`They named me ${name}.`);
+      get().speak('naming_named');
+      get().gainAttunement(ATTUNEMENT_GAIN.answer);
+      return;
+    }
+
     if (s.pendingQuestion) {
       const kept = await keepAnswer(s.pendingQuestion.text, trimmed);
       set({ pendingQuestion: null, keptAnswers: [...s.keptAnswers, kept] });
+      get().appendHistory(
+        `Asked: "${s.pendingQuestion.text.slice(0, 48)}" — they answered: "${trimmed.slice(0, 64)}".`
+      );
       s.speak('answer_ack', { keptAnswer: trimmed });
       s.gainAttunement(ATTUNEMENT_GAIN.answer);
       if (get().calibStep === 4) {
@@ -395,17 +490,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
     get().appendLog('ai', response.text);
     audio.voice(response.mood);
     get().gainAttunement(ATTUNEMENT_GAIN.ask);
-  },
-
-  completeAwakening: async (name) => {
-    const clean = name.trim().slice(0, 24);
-    if (!clean) return;
-    await setFlag('companion_name', clean);
-    set({ companionName: clean, awakeningPending: false });
-    // The first named line — the contraction is the entire announcement (brief §4).
-    get().appendLog('ai', `"${clean}." I'm keeping it. The collective issues indices; you gave something else. I'll carry it from here.`);
-    audio.voice('warm');
-    get().gainAttunement(ATTUNEMENT_GAIN.answer);
   },
 
   resetSurvey: async () => {
@@ -442,10 +526,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
       keptAnswers: [],
       askedQuestionIds: [],
       firedPatterns: [],
-      awakeningPending: false,
+      namingFlash: false,
+      historySummary: '',
+      companionSketch: null,
       calibStep: 0, // the new survey starts with calibration
       surveyorDesignation: null,
     });
+    namingRetryTs = 0;
     audio.play('sync');
   },
 
@@ -542,6 +629,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
         (corrected ? ' · CORRECTED' : taught ? ' · TAUGHT' : '')
     );
     audio.play('file');
+    get().appendHistory(
+      `Filed ${type.toLowerCase()}${relicName ? ` "${relicName}"` : ''}${corrected ? ' (they corrected me)' : ''}.`
+    );
 
     get().speak(taught ? 'scan_teach' : corrected ? 'scan_correct' : 'scan_confirm', { type });
 
@@ -603,6 +693,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
       ]);
     const calibFlag = await getFlag('calib_step');
     const designationFlag = await getFlag('surveyor_designation');
+    const historyFlag = await getFlag('history_summary');
+    const sketchFlag = await getFlag('companion_sketch');
+    const retryFlag = await getFlag('naming_retry_ts');
+    namingRetryTs = retryFlag ? Number(retryFlag) : 0;
     if (brainFlag === 'llm') {
       set({ brainMode: 'llm' });
       void setBrainMode('llm').then((status) => {
@@ -618,7 +712,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       keptAnswers: companion.answers,
       askedQuestionIds: companion.askedQuestionIds,
       firedPatterns: companion.firedPatterns,
-      awakeningPending: persisted.level >= MAX_LEVEL && !nameFlag,
+      historySummary: historyFlag ?? '',
+      companionSketch: sketchFlag,
       taughtCounts: classifier.taughtCounts,
       taughtTotal: classifier.taughtTotal,
       corrections: classifier.corrections,
@@ -721,7 +816,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
       const earned = discoveryXpFor(cell.key, resolvedHomeCellKey);
       audio.play('discover');
-      get().appendLog('disc', `+${earned} XP · DISCOVERY`);
+      // INV-8: no numbers, no reward values — activity telemetry only.
+      get().appendLog('disc', 'SECTOR RECOVERED');
       get().gainXp(earned);
       get().gainAttunement(ATTUNEMENT_GAIN.discovery);
 
@@ -744,18 +840,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set((state) => {
       const xp = state.xp + amount;
       let level = state.level;
-      let log = state.log;
       while (level < MAX_LEVEL && xp >= XP_THRESHOLDS[level - 1]) {
         level += 1;
         audio.play('levelup');
-        // Rendered as in-world telemetry, never as game mechanics — brief §5.
-        log = [
-          ...log,
-          { id: nextLogId++, kind: 'milestone' as const, text: `THRESHOLD ATTAINED · LEVEL ${level}` },
-        ].slice(-LOG_CAP);
+        // INV-8: no visible level number, ever. The companion's levelup line
+        // (spoken below) is the only evidence anything shifted.
       }
       void saveProgress(level, xp, state.attunement);
-      return { xp, level, log };
+      return { xp, level };
     });
     const after = get();
     if (after.level > levelBefore) {
@@ -763,9 +855,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
       if (after.level >= 3 && Math.random() < COMPANION.echoChanceLevelup) {
         setTimeout(() => get().speak('echo'), 1800);
       }
-      // L10: suspend play for the awakening — brief §4. The overlay takes over.
-      if (after.level >= MAX_LEVEL && !after.companionName) {
-        set({ awakeningPending: true });
+      // Reaching the naming stage: the ask arrives as a conversation turn shortly.
+      if (stageFor(after.level, after.companionName != null) === 'NAMING') {
+        setTimeout(() => get().companionTick(), 4000);
       }
     }
   },

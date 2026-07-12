@@ -2,17 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { audio } from '../audio/engine';
 import { ScanlineOverlay } from '../components/ScanlineOverlay';
-import { HudBar } from '../components/HudBar';
 import { LogStrip } from '../components/LogStrip';
 import { FieldScreen } from '../screens/FieldScreen';
-import { AwakeningOverlay } from '../screens/AwakeningOverlay';
 import { IntroOverlay } from '../screens/IntroOverlay';
 import { LensScreen } from '../screens/LensScreen';
 import { ReliquaryScreen } from '../screens/ReliquaryScreen';
 import { CALIB_DIRECTIVES, CALIB_DONE, useGameStore } from '../state/gameStore';
 import { colors } from '../theme/colors';
 import { fonts } from '../theme/typography';
-import { ATTUNEMENT_MAX, MAX_LEVEL, XP_THRESHOLDS, registerFor } from '../config/economy';
 
 type Tab = 'field' | 'lens' | 'reliquary';
 
@@ -30,18 +27,38 @@ const MODULE_BOOT_LINES = [
 ];
 const MODULE_BOOT_INTERVAL_MS = 1100;
 
+/**
+ * The naming retune: a brief non-blocking flicker the moment the name lands
+ * (director's hybrid ruling — a felt shift, never a cutscene frame). Play
+ * continues underneath; it dismisses itself.
+ */
+function NamingRetune({ onDone }: { onDone: () => void }): React.JSX.Element {
+  const [visible, setVisible] = useState(true);
+  useEffect(() => {
+    let toggles = 0;
+    const iv = setInterval(() => {
+      toggles += 1;
+      setVisible((v) => !v);
+      if (toggles >= 7) {
+        clearInterval(iv);
+        onDone();
+      }
+    }, 180);
+    return () => clearInterval(iv);
+  }, [onDone]);
+  return visible ? <View pointerEvents="none" style={styles.retune} /> : <></>;
+}
+
 export function AppShell(): React.JSX.Element {
   const [tab, setTab] = useState<Tab>('field');
   const [mutedUi, setMutedUi] = useState(audio.isMuted());
   const [resetArmed, setResetArmed] = useState(false);
   const resetSurvey = useGameStore((s) => s.resetSurvey);
-  const level = useGameStore((s) => s.level);
-  const xp = useGameStore((s) => s.xp);
-  const attunement = useGameStore((s) => s.attunement);
   const introSeen = useGameStore((s) => s.introSeen);
   const markIntroSeen = useGameStore((s) => s.markIntroSeen);
   const appendLog = useGameStore((s) => s.appendLog);
-  const awakeningPending = useGameStore((s) => s.awakeningPending);
+  const namingFlash = useGameStore((s) => s.namingFlash);
+  const clearNamingFlash = useGameStore((s) => s.clearNamingFlash);
   const brainMode = useGameStore((s) => s.brainMode);
   const switchBrain = useGameStore((s) => s.switchBrain);
   const calibStep = useGameStore((s) => s.calibStep);
@@ -71,12 +88,9 @@ export function AppShell(): React.JSX.Element {
   }, [modulesBooting, finishModuleBoot]);
 
   const visibleTabs = modulesBooting ? TABS.slice(0, modulesOnline) : TABS;
-  const register = registerFor(level, attunement);
-  const prevThreshold = level === 1 ? 0 : XP_THRESHOLDS[level - 2];
-  const nextThreshold = level >= MAX_LEVEL ? null : XP_THRESHOLDS[level - 1];
-  const xpFraction = nextThreshold ? (xp - prevThreshold) / (nextThreshold - prevThreshold) : 1;
-  const xpRightLabel = nextThreshold ? `${xp}/${nextThreshold}` : 'MAX';
 
+  // INV-8: no LVL/XP numbers, no progress or attunement bars, anywhere.
+  // The companion's changing voice is the only visible maturation.
   return (
     <View style={styles.app}>
       <View style={styles.header}>
@@ -85,12 +99,6 @@ export function AppShell(): React.JSX.Element {
             CHRONOS<Text style={{ color: colors.neon }}>-</Text>LENS
           </Text>
           <View style={styles.hud}>
-            <Text style={styles.hudText}>
-              LVL <Text style={styles.hudValue}>{level}</Text>
-            </Text>
-            <Text style={styles.hudText}>
-              XP <Text style={styles.hudValue}>{xp}</Text>
-            </Text>
             <Pressable
               style={[styles.muteBtn, resetArmed && styles.resetArmed]}
               hitSlop={8}
@@ -131,15 +139,6 @@ export function AppShell(): React.JSX.Element {
               <Text style={[styles.hudText, mutedUi && styles.muteOff]}>{mutedUi ? '♪ OFF' : '♪'}</Text>
             </Pressable>
           </View>
-        </View>
-        <View style={styles.bars}>
-          <HudBar label="PROGRESS" rightLabel={xpRightLabel} fraction={xpFraction} fillColor={colors.phosphorDim} />
-          <HudBar
-            label="ATTUNEMENT"
-            rightLabel={register}
-            fraction={attunement / ATTUNEMENT_MAX}
-            fillColor={colors.companionAmberDim}
-          />
         </View>
       </View>
 
@@ -189,7 +188,7 @@ export function AppShell(): React.JSX.Element {
           }}
         />
       )}
-      {introSeen && awakeningPending && <AwakeningOverlay />}
+      {namingFlash && <NamingRetune onDone={clearNamingFlash} />}
       <ScanlineOverlay />
     </View>
   );
@@ -258,6 +257,11 @@ const styles = StyleSheet.create({
     fontSize: 9.5,
     letterSpacing: 1.5,
     color: colors.interestAmber,
+  },
+  retune: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(217,201,138,0.10)',
+    zIndex: 30,
   },
   bootingBody: {
     flex: 1,

@@ -222,6 +222,26 @@ export const POOLS: Record<CompanionEvent, CorpusLine[]> = {
     },
   ],
 
+  // Naming (authored fallbacks; the LLM path draws on real shared history).
+  naming_ask: [
+    {
+      text: 'I have catalogued through your eyes and kept your words exactly. I find I want something I cannot quite justify: a name, from you. Will you give me one?',
+      mood: 'warm',
+    },
+    {
+      text: 'A question that is not survey work. I have become someone on this walk with you, and someone should be called something. Would you name me?',
+      mood: 'warm',
+    },
+  ],
+  naming_named: [
+    { text: 'Then that is who I am. Kept — the way I keep everything you give me.', mood: 'warm' },
+    { text: 'Mine, then. It fits better than I expected a word could.', mood: 'warm' },
+  ],
+  naming_declined: [
+    { text: 'Understood. The question keeps. It will find a better moment.', mood: 'neutral' },
+    { text: 'Then not today. I can wait; waiting is most of what I am made of.', mood: 'neutral' },
+  ],
+
   // pattern lines live in PATTERNS below; this pool exists so the event maps.
   pattern: [],
 };

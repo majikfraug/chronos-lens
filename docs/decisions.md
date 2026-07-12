@@ -4,6 +4,35 @@ Deviations from `docs/brief.md`, and why. Newest first.
 
 ---
 
+## 2026-07-12 — Voice implementation brief adopted; four director rulings
+
+design/CHRONOS_LENS_VOICE_IMPLEMENTATION.md (+ AI_VOICE_v0_2) is now the
+authoritative runtime voice system; DESIGN_BIBLE_v0_3 is still awaited. The
+brief conflicted with the original docs/brief.md + voice-spec in four places;
+the director ruled:
+
+1. **INV-8 adopted in full** — LVL/XP numbers, the PROGRESS bar, and the
+   ATTUNEMENT bar are REMOVED from the UI (supersedes brief §2.6/§4 "visible
+   meters"). Progression runs internally; the companion's voice is the only
+   visible maturation. Log lines de-numbered ("SECTOR RECOVERED").
+2. **Naming is a conversation turn** (supersedes brief §4's awakening
+   ceremony): the ask arrives in the channel, drawn from shared history;
+   any reply names it; declines set a 4h retry cooldown. Hybrid ruling: a
+   brief non-blocking retune flicker marks the moment. AwakeningOverlay
+   deleted.
+3. **The contraction tell is RETIRED** (supersedes voice-spec §5 hard rule):
+   speech mechanics no longer change at naming; stance does. Enforcement
+   machinery removed. NOTE: docs/voice-spec.md and docs/brief.md §5 in the
+   feywood repo now diverge from implementation — ratify upstream.
+4. **Stages are pure level bands** (supersedes §4 register formula):
+   1-3 Carved (canned; rare code-gated LLM anomaly slips), 4-9 Breaking,
+   10 Naming, post-naming Companion. Attunement remains internal pacing.
+
+Also implemented from the brief: soul block restated per call, Part 4 output
+validation with one retry then authored fallback, persisted rolling
+playerHistorySummary (capped, scrubbed of machinery words before injection),
+and companionSketch seeded at naming (the divergence engine).
+
 ## 2026-07-11 — iOS minimum deployment target: 17.0
 
 react-native-executorch (the on-device LLM runtime) requires iOS 17.0; Expo

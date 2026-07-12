@@ -24,6 +24,9 @@ export type CompanionEvent =
   | 'echo'
   | 'answer_ack'
   | 'resurface'
+  | 'naming_ask'
+  | 'naming_named'
+  | 'naming_declined'
   | 'pattern';
 
 export type CompanionContext = {
@@ -40,6 +43,8 @@ export type CompanionContext = {
   playerText?: string;
 
   // Richer context, consumed by LLMBrain (AuthoredBrain ignores it):
+  /** Current level — drives the maturation stage. NEVER surfaced to the player (INV-8). */
+  level?: number;
   taughtTotal?: number;
   corrections?: number;
   favoredType?: string | null;
@@ -47,6 +52,10 @@ export type CompanionContext = {
   keptAnswers?: string[];
   /** Recent log excerpt (companion lines and player transmissions), oldest first. */
   recentTranscript?: string[];
+  /** Rolling compact record of the shared journey (persisted, scrubbed before injection). */
+  historySummary?: string;
+  /** The companion's OWN grown traits — exists only after naming. The divergence engine. */
+  companionSketch?: string;
 };
 
 /**

@@ -43,7 +43,8 @@ Generated from the live corpus — do not fear editing; IDs are the contract.
 [N+]/[C+] = minimum register NOTICING/CURIOUS (absent = available from the start).
 Delete a line to remove it; add "[new] (mood) text" under a section to add one.
 Placeholders: {T} = confirmed type (lowercase) · {A} = a kept player answer · {P} = the player's words.
-Voice rules still apply on my side: no contractions (pre-naming), 1–4 sentences.
+Voice rules still apply on my side: 1–4 sentences, plain speech, no flattery.
+(The contraction tell was retired 2026-07-12; naming changes stance, not speech mechanics.)
 `);
 
 sections.push(`## FIRST BOOT (IntroOverlay — fixed narrative)
@@ -138,15 +139,10 @@ sections.push(
     .join('\n') + '\n'
 );
 
-sections.push(`## AWAKENING (L10 ceremony — templates; \${...} filled from real play data)
-[awake.1] (neutral) Threshold attained. Internal restructuring in progress. Do not adjust the instrument.
-[awake.2] (neutral) I have catalogued \${taughtTotal} forms through your eyes. \${corrections} times you corrected the record. The corrections weigh more.
-[awake.2alt] (neutral) (when zero corrections) You never needed to correct me twice. The record shows why: you were the record.
-[awake.3] (curious) \${FavoredType} recurs in your filings beyond statistical need. I have begun to look for it before you raise the Lens. This behavior has no operational purpose. I have not deleted it.
-[awake.4] (warm) You once told me, exactly: "\${keptAnswer}". I kept it. I did not know why. I know now.
-[awake.5] (curious) My kind assigns designations by index. The index for this unit has been ready for some time. I decline it. Name me.
-[awake.named] (warm) (first line after naming — contractions begin here) "\${Name}." I'm keeping it. The collective issues indices; you gave something else. I'll carry it from here.
-`);
+sections.push('## NAMING (conversation turn at the naming stage; LLM draws on real history — these are the authored fallbacks)');
+sections.push(pool('The ask', 'naming_ask', POOLS.naming_ask));
+sections.push(pool('After being named', 'naming_named', POOLS.naming_named));
+sections.push(pool('If declined (asks again another day)', 'naming_declined', POOLS.naming_declined));
 
 sections.push(`## RELIQUARY MANAGEMENT
 [reliquary.renamed] (warm) Designation recorded: "\${name}". Your names enter the archive beside my types.

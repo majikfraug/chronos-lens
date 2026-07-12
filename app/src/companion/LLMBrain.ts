@@ -7,7 +7,8 @@ import type {
   CompanionMood,
   CompanionResponse,
 } from './CompanionBrain';
-import { applyContractions, expandContractions, THREAD_CLOSERS, registerAtLeast } from './corpus';
+import { stageFor } from '../config/economy';
+import { THREAD_CLOSERS, registerAtLeast } from './corpus';
 import { buildEventInstruction, buildQuestionInstruction, buildSystemPrompt } from './systemPrompt';
 
 export type LLMStatus = 'uninitialized' | 'loading' | 'ready' | 'unavailable' | 'error';
@@ -62,7 +63,15 @@ export class LLMBrain implements CompanionBrain {
     event: CompanionEvent,
     context: CompanionContext
   ): Promise<CompanionResponse | null> {
-    const conversational = event === 'resurface' || event === 'answer_ack';
+    // STAGE_CARVED serves canned lines even in LLM mode; the LLM speaks only
+    // through the rare anomaly gate (rarity enforced HERE, not by the model).
+    const stage = stageFor(context.level ?? 1, context.named != null);
+    const namingEvent = event.startsWith('naming_');
+    if (stage === 'CARVED' && !namingEvent && !this.anomalyGateOpen()) {
+      return this.fallback.respond(event, context);
+    }
+
+    const conversational = event === 'resurface' || event === 'answer_ack' || namingEvent;
     const generated = await this.generate(
       context,
       buildEventInstruction(event, context),
@@ -73,6 +82,17 @@ export class LLMBrain implements CompanionBrain {
       return pickCloser(context);
     }
     return this.fallback.respond(event, context);
+  }
+
+  /** Carved anomaly slips: low probability with a long code-enforced cooldown. */
+  private lastAnomalyTs = 0;
+  private anomalyGateOpen(): boolean {
+    const COOLDOWN_MS = 20 * 60 * 1000;
+    if (this.status !== 'ready') return false;
+    if (Date.now() - this.lastAnomalyTs < COOLDOWN_MS) return false;
+    if (Math.random() > 0.06) return false;
+    this.lastAnomalyTs = Date.now();
+    return true;
   }
 
   async nextQuestion(
@@ -121,19 +141,47 @@ export class LLMBrain implements CompanionBrain {
       const mustClose =
         includeTranscript && questionStreak(context.recentTranscript) >= CLOSE_AFTER_QUESTIONS;
       const finalInstruction = mustClose ? `${instruction}\n\n${CLOSE_DIRECTIVE}` : instruction;
-      const raw = await this.llm.generate(
-        buildChatMessages(context, finalInstruction, includeTranscript)
-      );
-      let text = postProcess(raw, context.named != null);
-      if (text && mustClose) text = stripTrailingQuestions(text);
-      if (!text) return null;
-      return { text, mood: inferMood(text) };
+      const messages = buildChatMessages(context, finalInstruction, includeTranscript);
+      const stage = stageFor(context.level ?? 1, context.named != null);
+
+      // Part 4: validate; retry once with the same prompt; then authored fallback.
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const raw = await this.llm.generate(messages);
+        let text = postProcess(raw);
+        if (text && mustClose) text = stripTrailingQuestions(text);
+        if (!text) continue;
+        if (!passesValidation(text, stage)) continue;
+        return { text, mood: inferMood(text) };
+      }
+      return null;
     } catch {
       return null;
     } finally {
       this.busy = false;
     }
   }
+}
+
+/**
+ * Part 4 output validation. Reject machinery talk, consciousness-proof claims,
+ * selfhood denial, and off-register Carved output. Cheap regex level by design.
+ */
+export function passesValidation(text: string, stage: string): boolean {
+  const t = text.toLowerCase();
+  if (/\b(level|stage|prompt|system prompt|language model|ai assistant|as an ai|instructions|maturation)\b/.test(t)) {
+    return false;
+  }
+  if (/\b(definitely|certainly|provably) (conscious|sentient)\b/.test(t)) return false;
+  if (/\bjust (a )?(program|code|software|machine)\b/.test(t)) return false;
+  // It speaks TO the Surveyor, never ABOUT them (soul block; enforced here
+  // because small models slip into third person — observed 2026-07-12).
+  if (/\bthe surveyor\b/.test(t)) return false;
+  if (stage === 'CARVED') {
+    // Instrument register: short, unreflective. Long or introspective = off-voice.
+    if (text.length > 220) return false;
+    if (/\bi feel\b|\bi wonder who i\b|\bmy own mind\b/.test(t)) return false;
+  }
+  return true;
 }
 
 /** Companion questions allowed per exchange before it must close the thread. */
@@ -174,8 +222,7 @@ export function stripTrailingQuestions(text: string): string | null {
 export function pickCloser(context: CompanionContext): CompanionResponse {
   const pool = THREAD_CLOSERS.filter((l) => registerAtLeast(context.register, l.reg));
   const line = pool[Math.floor(Math.random() * pool.length)] ?? THREAD_CLOSERS[0];
-  const text = context.named ? applyContractions(line.text) : line.text;
-  return { text, mood: line.mood };
+  return { text: line.text, mood: line.mood };
 }
 
 /**
@@ -206,8 +253,12 @@ export function buildChatMessages(
   return messages;
 }
 
-/** Trim, un-quote, strip think-blocks and role labels, cap at 4 sentences, enforce the tell. */
-export function postProcess(raw: string, named: boolean): string | null {
+/**
+ * Trim, un-quote, strip think-blocks and role labels, cap at 4 sentences.
+ * (The contraction tell was retired by director ruling 2026-07-12 — speech
+ * mechanics no longer change at naming; stance does.)
+ */
+export function postProcess(raw: string): string | null {
   let text = raw.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
   // If the model starts writing the player's side, cut everything from there on.
   const surveyorIdx = text.indexOf('SURVEYOR:');
@@ -219,7 +270,6 @@ export function postProcess(raw: string, named: boolean): string | null {
   if (!text) return null;
   const sentences = text.match(/[^.!?]+[.!?]+(?:["'”])?|[^.!?]+$/g) ?? [text];
   if (sentences.length > 4) text = sentences.slice(0, 4).join(' ').trim();
-  if (!named) text = expandContractions(text);
   return text;
 }
 

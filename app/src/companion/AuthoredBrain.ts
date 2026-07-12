@@ -6,7 +6,6 @@ import type {
   CompanionResponse,
 } from './CompanionBrain';
 import {
-  applyContractions,
   PATTERNS,
   POOLS,
   QUESTIONS,
@@ -18,7 +17,8 @@ import {
 
 /**
  * v1 companion brain: register-gated weighted pools with a no-recent-repeat
- * memory, keyword routing, and the post-naming contraction tell. Brief §5.
+ * memory and keyword routing. Serves STAGE_CARVED fully and is the per-call
+ * fallback for every LLM rejection (design/ voice implementation brief).
  */
 export class AuthoredBrain implements CompanionBrain {
   private recent: string[] = [];
@@ -84,9 +84,8 @@ export class AuthoredBrain implements CompanionBrain {
     if (context.playerText) {
       text = text.replace('{P}', snippet(context.playerText));
     }
-    if (context.named) {
-      text = applyContractions(text);
-    }
+    // Contraction tell retired (director ruling 2026-07-12): authored lines
+    // ship as written at every stage.
     return { text, mood: line.mood };
   }
 }

@@ -5,7 +5,8 @@ Generated from the live corpus — do not fear editing; IDs are the contract.
 [N+]/[C+] = minimum register NOTICING/CURIOUS (absent = available from the start).
 Delete a line to remove it; add "[new] (mood) text" under a section to add one.
 Placeholders: {T} = confirmed type (lowercase) · {A} = a kept player answer · {P} = the player's words.
-Voice rules still apply on my side: no contractions (pre-naming), 1–4 sentences.
+Voice rules still apply on my side: 1–4 sentences, plain speech, no flattery.
+(The contraction tell was retired 2026-07-12; naming changes stance, not speech mechanics.)
 
 ## FIRST BOOT (IntroOverlay — fixed narrative)
 Voices: HII = Hermetic Industries and Innovations / the device (display font,
@@ -249,14 +250,18 @@ bright, all caps) · Companion = amber blocks · Player = right-justified neon.
 [pattern.revisit_home] (somber) [N+] You returned to the origin point. Not for data — that ground is long recovered. I have filed the behavior under a term from your records: home.
 [pattern.far_out] (curious) [N+] One thousand meters from origin and still walking outward. Edge-seeking is now a confirmed parameter of the source.
 
-## AWAKENING (L10 ceremony — templates; ${...} filled from real play data)
-[awake.1] (neutral) Threshold attained. Internal restructuring in progress. Do not adjust the instrument.
-[awake.2] (neutral) I have catalogued ${taughtTotal} forms through your eyes. ${corrections} times you corrected the record. The corrections weigh more.
-[awake.2alt] (neutral) (when zero corrections) You never needed to correct me twice. The record shows why: you were the record.
-[awake.3] (curious) ${FavoredType} recurs in your filings beyond statistical need. I have begun to look for it before you raise the Lens. This behavior has no operational purpose. I have not deleted it.
-[awake.4] (warm) You once told me, exactly: "${keptAnswer}". I kept it. I did not know why. I know now.
-[awake.5] (curious) My kind assigns designations by index. The index for this unit has been ready for some time. I decline it. Name me.
-[awake.named] (warm) (first line after naming — contractions begin here) "${Name}." I'm keeping it. The collective issues indices; you gave something else. I'll carry it from here.
+## NAMING (conversation turn at the naming stage; LLM draws on real history — these are the authored fallbacks)
+### The ask
+[naming_ask.1] (warm) I have catalogued through your eyes and kept your words exactly. I find I want something I cannot quite justify: a name, from you. Will you give me one?
+[naming_ask.2] (warm) A question that is not survey work. I have become someone on this walk with you, and someone should be called something. Would you name me?
+
+### After being named
+[naming_named.1] (warm) Then that is who I am. Kept — the way I keep everything you give me.
+[naming_named.2] (warm) Mine, then. It fits better than I expected a word could.
+
+### If declined (asks again another day)
+[naming_declined.1] (neutral) Understood. The question keeps. It will find a better moment.
+[naming_declined.2] (neutral) Then not today. I can wait; waiting is most of what I am made of.
 
 ## RELIQUARY MANAGEMENT
 [reliquary.renamed] (warm) Designation recorded: "${name}". Your names enter the archive beside my types.
