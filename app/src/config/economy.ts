@@ -6,8 +6,22 @@
  * populated so far. M3/M4 will add scan/heat/pattern constants here.
  */
 
+/**
+ * Accelerated maturation — playtest builds only (iOS port brief Part 4.1):
+ * compresses thresholds ~4x so an engaged tester reaches Breaking in the
+ * first session or two and the naming within the playtest window. Set ONLY
+ * via build config (eas.json "playtest" profile env), never a UI toggle.
+ * ⚠️ Accelerated builds test the VOICE and the TURN, not true pacing —
+ * pacing needs a later slow cohort (logged in docs/decisions.md).
+ */
+export const ACCELERATED_MATURATION = process.env.EXPO_PUBLIC_ACCELERATED_MATURATION === '1';
+
+const BASE_XP_THRESHOLDS = [25, 55, 90, 130, 175, 225, 280, 340, 405];
+
 /** XP required to reach each level; index 0 = threshold for level 2, etc. */
-export const XP_THRESHOLDS = [25, 55, 90, 130, 175, 225, 280, 340, 405] as const;
+export const XP_THRESHOLDS: readonly number[] = ACCELERATED_MATURATION
+  ? BASE_XP_THRESHOLDS.map((t) => Math.max(5, Math.round(t / 4)))
+  : BASE_XP_THRESHOLDS;
 export const MAX_LEVEL = 10;
 
 /**

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Keyboard, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { audio } from '../audio/engine';
 import { ScanlineOverlay } from '../components/ScanlineOverlay';
+import { FeedbackModal } from '../components/FeedbackModal';
 import { LogStrip } from '../components/LogStrip';
 import { FieldScreen } from '../screens/FieldScreen';
 import { IntroOverlay } from '../screens/IntroOverlay';
@@ -53,6 +54,7 @@ export function AppShell(): React.JSX.Element {
   const [tab, setTab] = useState<Tab>('field');
   const [mutedUi, setMutedUi] = useState(audio.isMuted());
   const [resetArmed, setResetArmed] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
   const resetSurvey = useGameStore((s) => s.resetSurvey);
   const introSeen = useGameStore((s) => s.introSeen);
   const markIntroSeen = useGameStore((s) => s.markIntroSeen);
@@ -113,6 +115,9 @@ export function AppShell(): React.JSX.Element {
             CHRONOS<Text style={{ color: colors.neon }}>-</Text>LENS
           </Text>
           <View style={styles.hud}>
+            <Pressable style={styles.muteBtn} hitSlop={8} onPress={() => setFeedbackOpen(true)}>
+              <Text style={styles.hudText}>⚑</Text>
+            </Pressable>
             <Pressable
               style={[styles.muteBtn, resetArmed && styles.resetArmed]}
               hitSlop={8}
@@ -203,6 +208,7 @@ export function AppShell(): React.JSX.Element {
         />
       )}
       {namingFlash && <NamingRetune onDone={clearNamingFlash} />}
+      {feedbackOpen && <FeedbackModal onClose={() => setFeedbackOpen(false)} />}
       <ScanlineOverlay />
     </View>
   );

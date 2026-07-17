@@ -16,6 +16,12 @@
     },
     "production": {
       "autoIncrement": true
+    },
+    "playtest": {
+      "extends": "production",
+      "env": {
+        "EXPO_PUBLIC_ACCELERATED_MATURATION": "1"
+      }
     }
   },
   "submit": {

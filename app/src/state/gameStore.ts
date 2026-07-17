@@ -458,6 +458,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
       if (declined) {
         namingRetryTs = Date.now() + NAMING_RETRY_MS;
         void setFlag('naming_retry_ts', String(namingRetryTs));
+        void getFlag('naming_declines').then((v) =>
+          setFlag('naming_declines', String((v ? Number(v) : 0) + 1))
+        );
         set({ pendingQuestion: null });
         s.speak('naming_declined');
         return;
@@ -713,6 +716,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const sketchFlag = await getFlag('companion_sketch');
     const retryFlag = await getFlag('naming_retry_ts');
     namingRetryTs = retryFlag ? Number(retryFlag) : 0;
+
+    // Minimal local playtest telemetry (disclosed in the feedback panel):
+    // session count only. Never transmitted without the tester sending it.
+    const sessionsFlag = await getFlag('sessions_count');
+    void setFlag('sessions_count', String((sessionsFlag ? Number(sessionsFlag) : 0) + 1));
     if (brainFlag === 'llm') {
       set({ brainMode: 'llm' });
       void setBrainMode('llm', downloadProgressLogger()).then((status) => {

@@ -4,6 +4,27 @@ Deviations from `docs/brief.md`, and why. Newest first.
 
 ---
 
+## 2026-07-12 — iOS playtest brief: Path C already exists; Part 4 implemented
+
+The port brief (design docs) assumed an HTML prototype and sequenced
+PWA → Capacitor → native. Investigation finding: the project is already the
+full native build (Expo/RN, on-device LLM via ExecuTorch, native geolocation,
+SQLite) with a working dev client and an active Apple Developer account —
+so Paths A/B are regressions and are skipped. A2's hosted-LLM proxy was NOT
+implemented and no ratification was sought: it is unnecessary since on-device
+inference works. Distribution to outside testers = TestFlight internal
+(brief Part 3).
+
+Part 4 implemented: `playtest` EAS profile sets EXPO_PUBLIC_ACCELERATED_
+MATURATION=1 (thresholds ÷4 — reaches Breaking in a session, Naming within
+the window). ⚠️ Logged tradeoff: accelerated builds test the voice and the
+turn, NOT true pacing; a slow cohort must follow. Feedback: header ⚑ opens
+a clearly out-of-fiction panel that mails the note plus disclosed minimal
+telemetry (app version, session count, stage reached, naming outcome —
+nothing else; screenshots attached manually). INV-8 audit: no visible
+numbers/bars remain; validation/fallback layer active per voice brief
+Part 4.
+
 ## 2026-07-12 — Voice implementation brief adopted; four director rulings
 
 design/CHRONOS_LENS_VOICE_IMPLEMENTATION.md (+ AI_VOICE_v0_2) is now the
