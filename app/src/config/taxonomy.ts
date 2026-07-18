@@ -20,14 +20,16 @@ export type Scale = 'ARTIFACT' | 'FEATURE';
 export const ARTIFACT_TYPES = ['ANIMAL', 'VEGETABLE', 'MINERAL'] as const;
 
 /**
- * Features get their own recovered trinity (director 2026-07-18), parallel to
- * animal/vegetable/mineral: places serve three ancient verbs — staying, going,
- * meaning. HEARTH = where they stayed (homes, workplaces, settlements);
- * ROAD = how they moved (paths, bridges, rails); TEMPLE = ground that meant
- * more than it held (sacred, memorial, monumental — carries the reduced-
- * intensity respect behavior). Blurry edges are the conversation.
+ * Feature trinity by ORIGIN (director 2026-07-18): the changed world is as
+ * much the catalogue as the residue, so large features sort in one glance —
+ * WROUGHT = shaped by human hands (buildings, roads, ruins); WILD = the
+ * world's own work (rivers, hills, groves — the majority, 10,000 years on);
+ * OTHER = made by neither (animal architecture, the collective's structures,
+ * the unexplained — rare by design). Replaced the function trinity
+ * HEARTH/ROAD/TEMPLE same-day; the sacred-ground respect stance re-anchors
+ * to OSM POI tags when the interest-point module lands.
  */
-export const FEATURE_TYPES = ['HEARTH', 'ROAD', 'TEMPLE'] as const;
+export const FEATURE_TYPES = ['WROUGHT', 'WILD', 'OTHER'] as const;
 
 export const ALL_TYPES: readonly string[] = [...ARTIFACT_TYPES, ...FEATURE_TYPES];
 
@@ -82,17 +84,17 @@ export const TYPE_FIRST: Partial<Record<TypeName, CompanionLine>> = {
     text: 'Mineral: first attested. That which neither grew nor chose — and yet your kind shaped it into nearly everything else. Most of what remains is this.',
     mood: 'curious',
   },
-  HEARTH: {
-    text: 'Hearth: first attested. Where your kind stayed — slept, worked, kept fire and one another close. Most of the record happened within reach of one.',
+  WROUGHT: {
+    text: 'Wrought: first attested. Your kind rearranged the world at the scale of the world. Ten thousand years have taken most of it back. The outlines remain.',
     mood: 'neutral',
   },
-  ROAD: {
-    text: 'Road: first attested. Your kind built lines across the land to reach one another. Reaching one another appears to have been the majority of the record.',
+  WILD: {
+    text: 'Wild: first attested. The world’s own work — older than the record, indifferent to it. It is the majority now.',
     mood: 'curious',
   },
-  TEMPLE: {
-    text: 'Temple: first attested. Ground that meant more than it held. I will approach such positions at reduced intensity. The precaution is mine.',
-    mood: 'somber',
+  OTHER: {
+    text: 'Other: first attested. Not your kind’s making, and not the world’s. The record has no third column. I have opened one.',
+    mood: 'curious',
   },
 };
 
@@ -105,9 +107,9 @@ export const SIMULATED_PUBLIC_COUNTS: Partial<Record<TypeName, number>> = {
   ANIMAL: 57,
   VEGETABLE: 64,
   MINERAL: 71,
-  HEARTH: 21,
-  ROAD: 34,
-  TEMPLE: 11,
+  WROUGHT: 29,
+  WILD: 47,
+  OTHER: 2,
 };
 
 /** Proposal from taught counts — the model IS the player's teaching (brief §2.3). */

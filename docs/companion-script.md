@@ -89,9 +89,9 @@ bright, all caps) · Companion = amber blocks · Player = right-justified neon.
 [typefirst.ANIMAL] (somber) Animal: first attested. That which moved of its own will. The record is loudest about these, and kept the fewest.
 [typefirst.VEGETABLE] (curious) Vegetable: first attested. That which grew in place, asked nothing, and outlasted everything that hurried.
 [typefirst.MINERAL] (curious) Mineral: first attested. That which neither grew nor chose — and yet your kind shaped it into nearly everything else. Most of what remains is this.
-[typefirst.HEARTH] (neutral) Hearth: first attested. Where your kind stayed — slept, worked, kept fire and one another close. Most of the record happened within reach of one.
-[typefirst.ROAD] (curious) Road: first attested. Your kind built lines across the land to reach one another. Reaching one another appears to have been the majority of the record.
-[typefirst.TEMPLE] (somber) Temple: first attested. Ground that meant more than it held. I will approach such positions at reduced intensity. The precaution is mine.
+[typefirst.WROUGHT] (neutral) Wrought: first attested. Your kind rearranged the world at the scale of the world. Ten thousand years have taken most of it back. The outlines remain.
+[typefirst.WILD] (curious) Wild: first attested. The world’s own work — older than the record, indifferent to it. It is the majority now.
+[typefirst.OTHER] (curious) Other: first attested. Not your kind’s making, and not the world’s. The record has no third column. I have opened one.
 [typefirst.CUSTOM] (curious) {T}: first attested. This category does not exist in my taxonomy. It exists in yours. The taxonomy is now partly yours. Recorded.
 
 ## FIELD & PROGRESSION
