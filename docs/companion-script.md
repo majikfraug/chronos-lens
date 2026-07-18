@@ -89,10 +89,9 @@ bright, all caps) · Companion = amber blocks · Player = right-justified neon.
 [typefirst.ANIMAL] (somber) Animal: first attested. That which moved of its own will. The record is loudest about these, and kept the fewest.
 [typefirst.VEGETABLE] (curious) Vegetable: first attested. That which grew in place, asked nothing, and outlasted everything that hurried.
 [typefirst.MINERAL] (curious) Mineral: first attested. That which neither grew nor chose — and yet your kind shaped it into nearly everything else. Most of what remains is this.
-[typefirst.HOLY_SITE] (somber) Holy site: first attested. Ground set apart. Approaching such positions at reduced intensity, as a precaution. The precaution is mine.
-[typefirst.DWELLING_SITE] (neutral) Dwelling site: first attested. Where your kind lived in proximity by election.
-[typefirst.LABOR_SITE] (somber) Labor site: first attested. Where the many sustained the cost.
-[typefirst.TRANSIT_WAY] (curious) Transit way: first attested. Your kind built lines across the land to reach one another. Reaching one another appears to have been the majority of the record.
+[typefirst.HEARTH] (neutral) Hearth: first attested. Where your kind stayed — slept, worked, kept fire and one another close. Most of the record happened within reach of one.
+[typefirst.ROAD] (curious) Road: first attested. Your kind built lines across the land to reach one another. Reaching one another appears to have been the majority of the record.
+[typefirst.TEMPLE] (somber) Temple: first attested. Ground that meant more than it held. I will approach such positions at reduced intensity. The precaution is mine.
 [typefirst.CUSTOM] (curious) {T}: first attested. This category does not exist in my taxonomy. It exists in yours. The taxonomy is now partly yours. Recorded.
 
 ## FIELD & PROGRESSION

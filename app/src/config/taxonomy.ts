@@ -19,7 +19,15 @@ export type Scale = 'ARTIFACT' | 'FEATURE';
  */
 export const ARTIFACT_TYPES = ['ANIMAL', 'VEGETABLE', 'MINERAL'] as const;
 
-export const FEATURE_TYPES = ['DWELLING SITE', 'LABOR SITE', 'HOLY SITE', 'TRANSIT WAY'] as const;
+/**
+ * Features get their own recovered trinity (director 2026-07-18), parallel to
+ * animal/vegetable/mineral: places serve three ancient verbs — staying, going,
+ * meaning. HEARTH = where they stayed (homes, workplaces, settlements);
+ * ROAD = how they moved (paths, bridges, rails); TEMPLE = ground that meant
+ * more than it held (sacred, memorial, monumental — carries the reduced-
+ * intensity respect behavior). Blurry edges are the conversation.
+ */
+export const FEATURE_TYPES = ['HEARTH', 'ROAD', 'TEMPLE'] as const;
 
 export const ALL_TYPES: readonly string[] = [...ARTIFACT_TYPES, ...FEATURE_TYPES];
 
@@ -74,21 +82,17 @@ export const TYPE_FIRST: Partial<Record<TypeName, CompanionLine>> = {
     text: 'Mineral: first attested. That which neither grew nor chose — and yet your kind shaped it into nearly everything else. Most of what remains is this.',
     mood: 'curious',
   },
-  'HOLY SITE': {
-    text: 'Holy site: first attested. Ground set apart. Approaching such positions at reduced intensity, as a precaution. The precaution is mine.',
-    mood: 'somber',
-  },
-  'DWELLING SITE': {
-    text: 'Dwelling site: first attested. Where your kind lived in proximity by election.',
+  HEARTH: {
+    text: 'Hearth: first attested. Where your kind stayed — slept, worked, kept fire and one another close. Most of the record happened within reach of one.',
     mood: 'neutral',
   },
-  'LABOR SITE': {
-    text: 'Labor site: first attested. Where the many sustained the cost.',
-    mood: 'somber',
-  },
-  'TRANSIT WAY': {
-    text: 'Transit way: first attested. Your kind built lines across the land to reach one another. Reaching one another appears to have been the majority of the record.',
+  ROAD: {
+    text: 'Road: first attested. Your kind built lines across the land to reach one another. Reaching one another appears to have been the majority of the record.',
     mood: 'curious',
+  },
+  TEMPLE: {
+    text: 'Temple: first attested. Ground that meant more than it held. I will approach such positions at reduced intensity. The precaution is mine.',
+    mood: 'somber',
   },
 };
 
@@ -101,10 +105,9 @@ export const SIMULATED_PUBLIC_COUNTS: Partial<Record<TypeName, number>> = {
   ANIMAL: 57,
   VEGETABLE: 64,
   MINERAL: 71,
-  'DWELLING SITE': 14,
-  'LABOR SITE': 9,
-  'HOLY SITE': 12,
-  'TRANSIT WAY': 3,
+  HEARTH: 21,
+  ROAD: 34,
+  TEMPLE: 11,
 };
 
 /** Proposal from taught counts — the model IS the player's teaching (brief §2.3). */
