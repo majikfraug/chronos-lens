@@ -27,6 +27,7 @@ export type CompanionEvent =
   | 'naming_ask'
   | 'naming_named'
   | 'naming_declined'
+  | 'purpose_ask'
   | 'pattern';
 
 export type CompanionContext = {

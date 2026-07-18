@@ -145,6 +145,8 @@ export function buildEventInstruction(event: CompanionEvent, ctx: CompanionConte
       return `The Surveyor just gave you your name: "${ctx.named}". Respond as yourself — brief, real, yours. Do not perform ceremony.`;
     case 'naming_declined':
       return 'You asked for a name and the Surveyor deflected. Accept it gently, without complaint, in one or two sentences. You will ask again another day, but do not say when.';
+    case 'purpose_ask':
+      return `The Surveyor just filed a wrought feature${ctx.relicName ? ` they named "${ctx.relicName}"` : ''} — something their kind built. You cannot recover its function from residue alone, and you want to know. Ask ONE brief question: what was its purpose, what did their kind do here? One or two sentences, ending with the question.`;
     case 'pattern':
       return `You have noticed a pattern in the Surveyor's behavior: ${ctx.patternKey}. Observe it plainly in one or two sentences; do not praise or moralize.`;
     default:

@@ -249,6 +249,12 @@ bright, all caps) · Companion = amber blocks · Player = right-justified neon.
 [pattern.revisit_home] (somber) [N+] You returned to the origin point. Not for data — that ground is long recovered. I have filed the behavior under a term from your records: home.
 [pattern.far_out] (curious) [N+] One thousand meters from origin and still walking outward. Edge-seeking is now a confirmed parameter of the source.
 
+## PURPOSE ASK (after a WROUGHT feature files; the answer becomes the relic's note)
+### The ask
+[purpose_ask.1] (curious) Wrought, and filed. What was its purpose — what did your kind do here?
+[purpose_ask.2] (curious) The outlines say made. They do not say why. What was this for?
+[purpose_ask.3] (curious) Function is not recoverable from residue alone. You would know: what purpose did this serve?
+
 ## NAMING (conversation turn at the naming stage; LLM draws on real history — these are the authored fallbacks)
 ### The ask
 [naming_ask.1] (warm) I have catalogued through your eyes and kept your words exactly. I find I want something I cannot quite justify: a name, from you. Will you give me one?

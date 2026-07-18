@@ -84,6 +84,12 @@ export function getDb(): Promise<SQLiteDatabase> {
       } catch {
         // column already exists
       }
+      // Additive migration: purpose notes from the wrought-feature conversation.
+      try {
+        await db.execAsync('ALTER TABLE scans ADD COLUMN purpose TEXT');
+      } catch {
+        // column already exists
+      }
       return db;
     });
   }

@@ -19,6 +19,8 @@ export type ScanRecord = {
   corrected: boolean;
   thumbUri: string | null;
   name: string | null;
+  /** The player's answer to "what was its purpose?" (wrought features). */
+  purpose: string | null;
 };
 
 export type ClassifierState = {
@@ -90,6 +92,7 @@ export function saveThumbnail(png: Uint8Array): string {
   return file.uri;
 }
 
+/** Returns the new scan's id (used to attach the purpose note later). */
 export async function recordScan(args: {
   scale: Scale;
   type: TypeName;
@@ -97,9 +100,9 @@ export async function recordScan(args: {
   corrected: boolean;
   thumbUri: string;
   name?: string | null;
-}): Promise<void> {
+}): Promise<number> {
   const db = await getDb();
-  await db.runAsync(
+  const result = await db.runAsync(
     'INSERT INTO scans (ts, scale, type, taught, corrected, thumb_path, name) VALUES (?, ?, ?, ?, ?, ?, ?)',
     [
       Date.now(),
@@ -116,6 +119,13 @@ export async function recordScan(args: {
      ON CONFLICT(type) DO UPDATE SET taught_count = taught_count + 1`,
     [args.type]
   );
+  return result.lastInsertRowId;
+}
+
+/** Attaches the purpose note (the player's answer at the channel) to a filed scan. */
+export async function setScanPurpose(id: number, purpose: string): Promise<void> {
+  const db = await getDb();
+  await db.runAsync('UPDATE scans SET purpose = ? WHERE id = ?', [purpose, id]);
 }
 
 export async function addCustomType(name: string, scale: Scale): Promise<void> {
@@ -181,6 +191,7 @@ export async function listScansOfType(type: TypeName): Promise<ScanRecord[]> {
     corrected: number;
     thumb_path: string | null;
     name: string | null;
+    purpose: string | null;
   }>('SELECT * FROM scans WHERE type = ? ORDER BY ts DESC', [type]);
   return rows.map((r) => ({
     id: r.id,
@@ -191,6 +202,7 @@ export async function listScansOfType(type: TypeName): Promise<ScanRecord[]> {
     corrected: r.corrected === 1,
     thumbUri: r.thumb_path,
     name: r.name,
+    purpose: r.purpose,
   }));
 }
 

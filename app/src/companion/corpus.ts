@@ -242,6 +242,16 @@ export const POOLS: Record<CompanionEvent, CorpusLine[]> = {
     { text: 'Then not today. I can wait; waiting is most of what I am made of.', mood: 'neutral' },
   ],
 
+  // A wrought feature was filed: ask its purpose (answer becomes the relic's note).
+  purpose_ask: [
+    { text: 'Wrought, and filed. What was its purpose — what did your kind do here?', mood: 'curious' },
+    { text: 'The outlines say made. They do not say why. What was this for?', mood: 'curious' },
+    {
+      text: 'Function is not recoverable from residue alone. You would know: what purpose did this serve?',
+      mood: 'curious',
+    },
+  ],
+
   // pattern lines live in PATTERNS below; this pool exists so the event maps.
   pattern: [],
 };

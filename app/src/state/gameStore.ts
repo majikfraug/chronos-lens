@@ -44,6 +44,7 @@ import {
   renameCustomType,
   renameScan,
   saveThumbnail,
+  setScanPurpose,
   type ReliquarySlot,
 } from '../persistence/scanRepository';
 import { discoveryXpFor, neighborCoarseCells } from '../terrain/discovery';
@@ -599,7 +600,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
         reliquary,
       };
     });
-    void recordScan({ scale, type, taught, corrected, thumbUri, name: relicName ?? null });
+    const scanIdPromise = recordScan({
+      scale,
+      type,
+      taught,
+      corrected,
+      thumbUri,
+      name: relicName ?? null,
+    });
 
     get().appendLog(
       'sys',
@@ -647,6 +655,29 @@ export const useGameStore = create<GameStore>((set, get) => ({
       setTimeout(() => get().advanceCalibration(4), 2600);
     } else {
       after.companionTick();
+    }
+
+    // Wrought features start the purpose conversation (director 2026-07-18):
+    // deep classification lives in the exchange, not in more categories. The
+    // answer becomes the relic's purpose note.
+    if (scale === 'FEATURE' && type === 'WROUGHT' && after.calibStep === CALIB_DONE) {
+      const scanId = await scanIdPromise;
+      setTimeout(() => {
+        const now = get();
+        if (now.pendingQuestion || askInFlight) return; // channel busy — let it go
+        askInFlight = true;
+        void brain
+          .respond('purpose_ask', brainContext(now, { type, relicName: relicName ?? undefined }))
+          .then((response) => {
+            if (!response) return;
+            set({ pendingQuestion: { id: `purpose:${scanId}`, text: response.text } });
+            get().appendLog('query', response.text);
+            audio.voice(response.mood);
+          })
+          .finally(() => {
+            askInFlight = false;
+          });
+      }, 3200);
     }
   },
 
@@ -899,6 +930,19 @@ async function submitTransmissionInner(trimmed: string): Promise<void> {
     get().appendHistory(`They named me ${name}.`);
     await get().speak('naming_named');
     get().gainAttunement(ATTUNEMENT_GAIN.answer);
+    return;
+  }
+
+  if (s.pendingQuestion?.id.startsWith('purpose:')) {
+    // The answer becomes the relic's purpose note — deep classification by
+    // conversation. Also enters the shared history so the companion recalls it.
+    const scanId = Number(s.pendingQuestion.id.slice('purpose:'.length));
+    await setScanPurpose(scanId, trimmed.slice(0, 120));
+    set({ pendingQuestion: null });
+    get().appendHistory(`A wrought place's purpose, from them: "${trimmed.slice(0, 64)}".`);
+    get().gainAttunement(ATTUNEMENT_GAIN.answer);
+    audio.ambientPulse();
+    await s.speak('answer_ack', { keptAnswer: trimmed });
     return;
   }
 

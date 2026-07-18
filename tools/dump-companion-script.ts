@@ -139,6 +139,9 @@ sections.push(
     .join('\n') + '\n'
 );
 
+sections.push('## PURPOSE ASK (after a WROUGHT feature files; the answer becomes the relic\'s note)');
+sections.push(pool('The ask', 'purpose_ask', POOLS.purpose_ask));
+
 sections.push('## NAMING (conversation turn at the naming stage; LLM draws on real history — these are the authored fallbacks)');
 sections.push(pool('The ask', 'naming_ask', POOLS.naming_ask));
 sections.push(pool('After being named', 'naming_named', POOLS.naming_named));

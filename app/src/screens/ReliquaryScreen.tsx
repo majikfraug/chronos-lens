@@ -268,6 +268,7 @@ function SlotDetail({ type, onClose }: { type: TypeName; onClose: () => void }):
               {new Date(it.ts).toLocaleDateString()} ·{' '}
               {it.taught ? 'TAUGHT' : it.corrected ? 'CORRECTED' : 'CONFIRMED'}
             </Text>
+            {it.purpose && <Text style={styles.itemPurpose}>PURPOSE · {it.purpose}</Text>}
             {actions(it)}
           </View>
         </View>
@@ -357,6 +358,9 @@ function SlotDetail({ type, onClose }: { type: TypeName; onClose: () => void }):
                   {new Date(focused.ts).toLocaleDateString()} ·{' '}
                   {focused.taught ? 'TAUGHT' : focused.corrected ? 'CORRECTED' : 'CONFIRMED'}
                 </Text>
+                {focused.purpose && (
+                  <Text style={styles.itemPurpose}>PURPOSE · {focused.purpose}</Text>
+                )}
                 {actions(focused)}
                 <Pressable style={styles.backBtn} onPress={() => setFocusedId(null)}>
                   <Text style={styles.itemAction}>◂ BACK TO {type}</Text>
@@ -587,6 +591,12 @@ const styles = StyleSheet.create({
     fontSize: 9,
     letterSpacing: 0.5,
     color: colors.phosphorFaint,
+  },
+  itemPurpose: {
+    fontFamily: fonts.body,
+    fontSize: 9.5,
+    lineHeight: 14,
+    color: colors.companionAmberDim,
   },
   itemActions: { flexDirection: 'row', gap: 12, marginTop: 4 },
   itemAction: {
