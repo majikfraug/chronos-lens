@@ -69,6 +69,7 @@ export function AppShell(): React.JSX.Element {
   const finishModuleBoot = useGameStore((s) => s.finishModuleBoot);
   const [modulesOnline, setModulesOnline] = useState(3);
   const [keyboardUp, setKeyboardUp] = useState(false);
+  const uiChatFocus = useGameStore((s) => s.uiChatFocus);
 
   useEffect(() => {
     // While typing, the module viewport folds away so the conversation and
@@ -182,7 +183,10 @@ export function AppShell(): React.JSX.Element {
         </View>
       )}
 
-      <View style={[styles.body, keyboardUp && styles.bodyCollapsed]}>
+      {/* Chat-mode collapse ONLY when the transmit box owns the keyboard —
+          inputs inside the viewport (e.g. relic naming) must not fold their
+          own panel away (bug: 2026-07-18). */}
+      <View style={[styles.body, keyboardUp && uiChatFocus && styles.bodyCollapsed]}>
         {modulesBooting && modulesOnline === 0 ? (
           <View style={styles.bootingBody}>
             <Text style={styles.bootingText}>ASSIGNING NEW ARCHIVE …</Text>

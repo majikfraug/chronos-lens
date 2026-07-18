@@ -9,7 +9,10 @@ import {
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
+  KeyboardAvoidingView,
   LayoutChangeEvent,
+  Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -372,8 +375,18 @@ export function LensScreen(): React.JSX.Element {
       )}
 
       {still && proposal && chosen && (
-        <View style={styles.resolve}>
-          <ScrollView contentContainerStyle={styles.resolveInner}>
+        // Full-screen modal: escapes the square viewport (no scroll-fighting
+        // with the log strip) and survives the keyboard via its own KAV.
+        <Modal transparent animationType="fade" onRequestClose={onDiscard}>
+          <KeyboardAvoidingView
+            style={styles.resolve}
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          >
+            <ScrollView
+              contentContainerStyle={styles.resolveInner}
+              keyboardShouldPersistTaps="handled"
+              keyboardDismissMode="on-drag"
+            >
             <Canvas style={{ width: windowW, height: windowH, borderWidth: 1, borderColor: colors.line }}>
               <SkiaImage image={still} x={0} y={0} width={windowW} height={windowH} fit="fill" />
             </Canvas>
@@ -494,8 +507,9 @@ export function LensScreen(): React.JSX.Element {
                 <Text style={styles.actionTextDim}>DISCARD</Text>
               </Pressable>
             </View>
-          </ScrollView>
-        </View>
+            </ScrollView>
+          </KeyboardAvoidingView>
+        </Modal>
       )}
     </View>
   );
@@ -585,8 +599,8 @@ const styles = StyleSheet.create({
     color: colors.neon,
   },
   resolve: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(11,14,11,0.96)',
+    flex: 1,
+    backgroundColor: 'rgba(11,14,11,0.97)',
   },
   resolveInner: {
     flexGrow: 1,

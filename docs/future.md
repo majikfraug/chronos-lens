@@ -15,13 +15,18 @@ instead.
   UX (progress in the log strip); possibly Apple Foundation Models
   (iOS 26 built-in ~3B) as an alternative backend worth evaluating.
 - Expanded POI storytelling (deeper per-category "what was this" content).
-- **Live reactive ambient engine** (needs the dev-client build and
-  react-native-audio-api): replace the looped ambient stem with real-time
+- **Live reactive ambient engine** (needs react-native-audio-api in the NEXT
+  dev-client build): replace the looped ambient stem with real-time
   synthesis — a mellow evolving pad whose harmonic content, filter motion, and
   texture respond to environmental factors: temporal density, cell heat,
-  register/attunement, terrain (water proximity), time of day. Director's
-  request 2026-07-07; the stem renderer's component table is the starting
-  patch. The §7 bandpassed-noise texture belongs here too (continuous, not
+  register/attunement, terrain (water proximity), time of day, and device
+  sensors (accelerometer via expo-sensors — also a native add for that build;
+  ambient light sensing is Android-only, no iOS API). Director's requests
+  2026-07-07 and 2026-07-18; the stem renderer's component table is the
+  starting patch. BRIDGE SHIPPED 2026-07-18: the current stem bed already
+  reacts subtly — playbackRate drifts with walking speed, volume swells after
+  survey activity and settles when idle (audio/engine.ts glide loop). The §7
+  bandpassed-noise texture belongs in the live engine too (continuous, not
   looped — it reads as repeating static in a short stem, which is why the
   current ambient.wav omits it).
 

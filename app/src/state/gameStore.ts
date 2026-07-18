@@ -133,6 +133,9 @@ type GameStore = {
   firedPatterns: string[];
   /** Brief non-blocking retune flicker at the naming moment (director's hybrid ruling). */
   namingFlash: boolean;
+  /** True while the transmit box is focused — the ONLY input that triggers chat-mode collapse. */
+  uiChatFocus: boolean;
+  setUiChatFocus: (focused: boolean) => void;
   /** Rolling compact record of the shared journey (persisted; scrubbed before LLM injection). */
   historySummary: string;
   /** The companion's own grown traits — exists only after naming. */
@@ -260,6 +263,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   askedQuestionIds: [],
   firedPatterns: [],
   namingFlash: false,
+  uiChatFocus: false,
+  setUiChatFocus: (focused) => set({ uiChatFocus: focused }),
   historySummary: '',
   companionSketch: null,
   brainMode: 'authored',
@@ -490,6 +495,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       );
       s.speak('answer_ack', { keptAnswer: trimmed });
       s.gainAttunement(ATTUNEMENT_GAIN.answer);
+      audio.ambientPulse();
       if (get().calibStep === 4) {
         // First channel answer completes calibration; the release beat lands after the ack.
         setTimeout(() => get().advanceCalibration(CALIB_DONE), 2600);
@@ -645,6 +651,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         (corrected ? ' · CORRECTED' : taught ? ' · TAUGHT' : '')
     );
     audio.play('file');
+    audio.ambientPulse();
     get().appendHistory(
       `Filed ${type.toLowerCase()}${relicName ? ` "${relicName}"` : ''}${corrected ? ' (they corrected me)' : ''}.`
     );
@@ -773,6 +780,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   recordMovement: async (point, speedMs) => {
+    audio.ambientInput({ speedMs }); // the bed breathes with the walk
+
     // Vehicle gate with hysteresis: enter above vehicleSpeedMs, exit below
     // vehicleExitSpeedMs. Fog keeps revealing along the route; rewards and
     // companion chatter suspend (anti-farming, anti-distraction).
@@ -840,6 +849,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
       const earned = discoveryXpFor(cell.key, resolvedHomeCellKey);
       audio.play('discover');
+      audio.ambientPulse();
       // INV-8: no numbers, no reward values — activity telemetry only.
       get().appendLog('disc', 'SECTOR RECOVERED');
       get().gainXp(earned);

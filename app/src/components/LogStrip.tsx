@@ -17,6 +17,7 @@ export function LogStrip(): React.JSX.Element {
   const scrollRef = useRef<ScrollView>(null);
   const [draft, setDraft] = useState('');
   const [inputFocused, setInputFocused] = useState(false);
+  const setUiChatFocus = useGameStore((s) => s.setUiChatFocus);
 
   useEffect(() => {
     // Follow the newest entry, like the prototype's log.scrollTop behavior.
@@ -75,8 +76,14 @@ export function LogStrip(): React.JSX.Element {
           placeholderTextColor={pendingQuestion ? colors.interestAmber : colors.phosphorFaint}
           onSubmitEditing={send}
           returnKeyType="send"
-          onFocus={() => setInputFocused(true)}
-          onBlur={() => setInputFocused(false)}
+          onFocus={() => {
+            setInputFocused(true);
+            setUiChatFocus(true);
+          }}
+          onBlur={() => {
+            setInputFocused(false);
+            setUiChatFocus(false);
+          }}
         />
         {inputFocused && (
           <Pressable style={styles.dismissBtn} onPress={() => Keyboard.dismiss()} hitSlop={6}>
