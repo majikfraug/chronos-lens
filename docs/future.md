@@ -6,6 +6,27 @@ toward the AEGIS mythology (mesh, swarm learning, emergent AI consensus),
 implement the honest, non-mythological v1 version and log the aspiration here
 instead.
 
+## COMMITTED — Citizen-science layer (INV-6; director ruling 2026-07-18)
+
+The design bible makes real ecological value load-bearing ("all-upside
+floor"), not decorative. Committed for the post-beta cycle, before wide
+release:
+
+- **Shape:** scans of NATURAL/living forms can (opt-in, per capture) become
+  genuine biodiversity observations — an iNaturalist-class integration is
+  the leading candidate (also serves the external-verification idea below).
+  The AVM taxonomy bridges naturally: ANIMAL/VEGETABLE captures are exactly
+  what such datasets want; the dithered thumbnail is NOT sufficient — this
+  requires optionally retaining the raw capture for submitted observations
+  (privacy note: opt-in per capture, disclosed, and location attaches ONLY
+  to submitted observations).
+- **The hinge (bible §4):** the attention the game trains ecologically is
+  the same attention it trains toward the companion — cataloguing for the
+  companion and contributing real data must be the same gesture, not two.
+- **Open items:** partner/API choice, account requirements (v1 has none —
+  may force anonymous contribution or a linked-account option), and how the
+  companion speaks about it in-fiction without breaking the era frame.
+
 ## v1.5
 
 - **LLMBrain** — IN PROGRESS, pulled forward 2026-07-08 (see decisions.md).

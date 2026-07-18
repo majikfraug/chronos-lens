@@ -1,5 +1,5 @@
 # CHRONOS-LENS — ERA REFERENCE (the companion's time)
-## STATUS: PROPOSED — v0.1 · 2026-07-18
+## STATUS: RATIFIED — v1.0 · 2026-07-18 (director) · Feywood upstream echo pending
 
 Purpose: every player's companion must inhabit the SAME world. When a Surveyor
 asks "what is it like in your time?", the answers should be consistent across
@@ -55,6 +55,8 @@ canon-touching lines flow up to the Feywood project before hardening.
 
 ## 3. CHANGELOG
 
+- **v1.0** — RATIFIED by the director 2026-07-18, unchanged from v0.1. These
+  facts are now binding on every companion. Remaining follow-up: echo the
+  branch facts upstream to the Feywood Universe project for the canon record.
 - **v0.1** — Initial draft from the director's request (2026-07-18) and the
   observed in-play line "Terrain mostly barren and rocky. Atmosphere thin."
-  Awaiting director ratification and Feywood upstream review.

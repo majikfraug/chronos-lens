@@ -4,6 +4,18 @@ Deviations from `docs/brief.md`, and why. Newest first.
 
 ---
 
+## 2026-07-18 — Director rulings on the bible-review deltas
+
+1. **Era reference RATIFIED** — design/CHRONOS_LENS_ERA_REFERENCE.md is v1.0
+   and binding on every companion; Feywood upstream echo still owed.
+2. **Maturation drivers: keep invisible XP for now** — the bible's §8.2
+   reciprocity+breadth blend is deferred, to be revisited with real playtest
+   data (the accelerated cohort tests voice/turn; the driver question needs
+   the slow cohort anyway).
+3. **Citizen science (INV-6): committed to the roadmap** — see docs/future.md
+   "COMMITTED" section; target is the post-beta cycle alongside the LLM/
+   sensor dev build, before any wide release.
+
 ## 2026-07-18 — Design Bible v0.3 recovered; relevance review vs. the build
 
 The long-missing CHRONOS_LENS_DESIGN_BIBLE_v0_3 surfaced on Google Drive
