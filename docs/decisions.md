@@ -4,6 +4,42 @@ Deviations from `docs/brief.md`, and why. Newest first.
 
 ---
 
+## 2026-07-18 — Design Bible v0.3 recovered; relevance review vs. the build
+
+The long-missing CHRONOS_LENS_DESIGN_BIBLE_v0_3 surfaced on Google Drive
+(.md.docx) and is filed at design/CHRONOS_LENS_DESIGN_BIBLE_v0_3.md
+(docx-converted; tables flattened). Review against the built game:
+
+HONORED: INV-1 (naming is an unscripted conversation turn), INV-2 (soul
+block holds the open question), INV-7 (no meters/streaks/flattery), INV-8
+(fully invisible maturation), §8.3 monotonic maturation, §3's "accumulated
+small anomalies" (Carved anomaly gate) and "withheld interiority".
+
+DELTAS to resolve (not silently changed):
+1. §8.2 maturation drivers: bible wants a blend dominated by reciprocal
+   engagement + breadth, session-gated, and warns against raw task-XP —
+   the build's stage driver IS XP from scans/discovery (attunement tracks
+   reciprocity but no longer gates voice). PROPOSED-status in the bible;
+   flagged for a driver rework decision.
+2. INV-6 citizen-science layer: unbuilt. The bible makes real ecological
+   value a load-bearing pillar, not a nice-to-have. Candidate: iNaturalist-
+   class integration already sketched in docs/future.md.
+3. §5 canon: bible names the parent org "Cronus Core (canon default)";
+   FEYWOOD_BIBLE (authoritative, newer) makes Hermetic Industries the
+   keystone, and the shipped boot says HII. Feywood wins per the canon
+   rule; reconcile upstream (Cronus Core may be a Hermetic division).
+4. §5 OPEN questions remain open in the build (what the mind is, temporal
+   editing, who the player is in-world) — the era reference deliberately
+   does not answer them.
+5. The playtest accelerated profile conflicts with §8.2's "no single
+   session can leap stages" — accepted knowingly for the accelerated
+   cohort only (already logged 2026-07-12).
+
+Also: design/CHRONOS_LENS_ERA_REFERENCE.md v0.1 created (PROPOSED) — the
+consistent-world reference for the companion's era, injected compactly into
+the system prompt so every player's companion inhabits ONE world. Canon-
+touching; awaits director ratification and Feywood upstream review.
+
 ## 2026-07-12 — iOS playtest brief: Path C already exists; Part 4 implemented
 
 The port brief (design docs) assumed an HTML prototype and sequenced

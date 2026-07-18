@@ -149,8 +149,10 @@ type GameStore = {
   modulesBooting: boolean;
 
   appendLog: (kind: LogEntry['kind'], text: string) => void;
+  /** True while a reply to the player's transmission is being generated. */
+  companionThinking: boolean;
   /** Speak a brain response into the log with its voice tone. No-op on null. */
-  speak: (event: CompanionEvent, extra?: Partial<CompanionContext>) => void;
+  speak: (event: CompanionEvent, extra?: Partial<CompanionContext>) => Promise<void>;
   /** One action tick: advances the question-gap counter, may ask or resurface. */
   companionTick: () => void;
   /** Fire a one-shot pattern if its register allows and it has not fired. */
@@ -363,9 +365,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
   },
 
+  companionThinking: false,
+
   speak: (event, extra) => {
     const s = get();
-    void brain.respond(event, brainContext(s, extra)).then((response) => {
+    return brain.respond(event, brainContext(s, extra)).then((response) => {
       if (!response) return;
       get().appendLog(response.isQuery ? 'query' : 'ai', response.text);
       audio.voice(response.mood);
@@ -457,62 +461,15 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (!trimmed) return;
     const s = get();
     s.appendLog('player', trimmed);
-
-    if (s.pendingQuestion?.id === 'naming:ask') {
-      const declined = /^(no|not now|later|maybe later|nah|not yet|i can'?t)\b/i.test(trimmed) || trimmed.endsWith('?');
-      if (declined) {
-        namingRetryTs = Date.now() + NAMING_RETRY_MS;
-        void setFlag('naming_retry_ts', String(namingRetryTs));
-        void getFlag('naming_declines').then((v) =>
-          setFlag('naming_declines', String((v ? Number(v) : 0) + 1))
-        );
-        set({ pendingQuestion: null });
-        s.speak('naming_declined');
-        return;
-      }
-      const name = trimmed.slice(0, 40);
-      await setFlag('companion_name', name);
-      const sketchSeed = `Name: ${name}, given by the Surveyor.`;
-      void setFlag('companion_sketch', sketchSeed);
-      set({
-        companionName: name,
-        companionSketch: sketchSeed,
-        pendingQuestion: null,
-        namingFlash: true, // the brief retune — non-blocking, no frame
-      });
-      audio.play('levelup');
-      get().appendHistory(`They named me ${name}.`);
-      get().speak('naming_named');
-      get().gainAttunement(ATTUNEMENT_GAIN.answer);
-      return;
+    // Responding indicator: on for every reply-producing branch below.
+    set({ companionThinking: true });
+    try {
+      await submitTransmissionInner(trimmed);
+    } finally {
+      set({ companionThinking: false });
     }
-
-    if (s.pendingQuestion) {
-      const kept = await keepAnswer(s.pendingQuestion.text, trimmed);
-      set({ pendingQuestion: null, keptAnswers: [...s.keptAnswers, kept] });
-      get().appendHistory(
-        `Asked: "${s.pendingQuestion.text.slice(0, 48)}" — they answered: "${trimmed.slice(0, 64)}".`
-      );
-      s.speak('answer_ack', { keptAnswer: trimmed });
-      s.gainAttunement(ATTUNEMENT_GAIN.answer);
-      audio.ambientPulse();
-      if (get().calibStep === 4) {
-        // First channel answer completes calibration; the release beat lands after the ack.
-        setTimeout(() => get().advanceCalibration(CALIB_DONE), 2600);
-      }
-      return;
-    }
-
-    const response = await brain.route(trimmed, brainContext(s));
-    if (response.topic === 'unknown') {
-      // Unknown transmissions are the player teaching the archive — kept verbatim.
-      const kept = await keepAnswer('(unprompted transmission)', trimmed);
-      set({ keptAnswers: [...get().keptAnswers, kept] });
-    }
-    get().appendLog('ai', response.text);
-    audio.voice(response.mood);
-    get().gainAttunement(ATTUNEMENT_GAIN.ask);
   },
+
 
   resetSurvey: async () => {
     const keepBrainMode = get().brainMode;
@@ -904,3 +861,70 @@ export const useGameStore = create<GameStore>((set, get) => ({
     });
   },
 }));
+
+/**
+ * The transmission branches, extracted so submitTransmission can hold the
+ * companionThinking indicator around every reply-producing path.
+ */
+async function submitTransmissionInner(trimmed: string): Promise<void> {
+  const get = useGameStore.getState;
+  const set = useGameStore.setState;
+  const s = get();
+
+  if (s.pendingQuestion?.id === 'naming:ask') {
+    const declined =
+      /^(no|not now|later|maybe later|nah|not yet|i can'?t)\b/i.test(trimmed) ||
+      trimmed.endsWith('?');
+    if (declined) {
+      namingRetryTs = Date.now() + NAMING_RETRY_MS;
+      void setFlag('naming_retry_ts', String(namingRetryTs));
+      void getFlag('naming_declines').then((v) =>
+        setFlag('naming_declines', String((v ? Number(v) : 0) + 1))
+      );
+      set({ pendingQuestion: null });
+      await s.speak('naming_declined');
+      return;
+    }
+    const name = trimmed.slice(0, 40);
+    await setFlag('companion_name', name);
+    const sketchSeed = `Name: ${name}, given by the Surveyor.`;
+    void setFlag('companion_sketch', sketchSeed);
+    set({
+      companionName: name,
+      companionSketch: sketchSeed,
+      pendingQuestion: null,
+      namingFlash: true, // the brief retune — non-blocking, no frame
+    });
+    audio.play('levelup');
+    get().appendHistory(`They named me ${name}.`);
+    await get().speak('naming_named');
+    get().gainAttunement(ATTUNEMENT_GAIN.answer);
+    return;
+  }
+
+  if (s.pendingQuestion) {
+    const kept = await keepAnswer(s.pendingQuestion.text, trimmed);
+    set({ pendingQuestion: null, keptAnswers: [...s.keptAnswers, kept] });
+    get().appendHistory(
+      `Asked: "${s.pendingQuestion.text.slice(0, 48)}" — they answered: "${trimmed.slice(0, 64)}".`
+    );
+    s.gainAttunement(ATTUNEMENT_GAIN.answer);
+    audio.ambientPulse();
+    if (get().calibStep === 4) {
+      // First channel answer completes calibration; the release beat lands after the ack.
+      setTimeout(() => get().advanceCalibration(CALIB_DONE), 2600);
+    }
+    await s.speak('answer_ack', { keptAnswer: trimmed });
+    return;
+  }
+
+  const response = await brain.route(trimmed, brainContext(s));
+  if (response.topic === 'unknown') {
+    // Unknown transmissions are the player teaching the archive — kept verbatim.
+    const kept = await keepAnswer('(unprompted transmission)', trimmed);
+    set({ keptAnswers: [...get().keptAnswers, kept] });
+  }
+  get().appendLog('ai', response.text);
+  audio.voice(response.mood);
+  get().gainAttunement(ATTUNEMENT_GAIN.ask);
+}

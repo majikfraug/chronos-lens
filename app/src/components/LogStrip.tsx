@@ -9,10 +9,26 @@ import { fonts } from '../theme/typography';
  * Questions from the companion render in interest amber; while one is
  * pending, whatever the player transmits is kept verbatim as the answer.
  */
+/** Messaging-style "responding" indicator: cycling dots in the companion's block. */
+function ThinkingDots({ label }: { label: string }): React.JSX.Element {
+  const [n, setN] = useState(1);
+  useEffect(() => {
+    const iv = setInterval(() => setN((v) => (v % 3) + 1), 400);
+    return () => clearInterval(iv);
+  }, []);
+  return (
+    <View style={styles.aiBlock}>
+      <Text style={styles.aiLabel}>{label} · RESPONDING</Text>
+      <Text style={styles.aiText}>{'· '.repeat(n).trim()}</Text>
+    </View>
+  );
+}
+
 export function LogStrip(): React.JSX.Element {
   const log = useGameStore((s) => s.log);
   const pendingQuestion = useGameStore((s) => s.pendingQuestion);
   const companionName = useGameStore((s) => s.companionName);
+  const companionThinking = useGameStore((s) => s.companionThinking);
   const submitTransmission = useGameStore((s) => s.submitTransmission);
   const scrollRef = useRef<ScrollView>(null);
   const [draft, setDraft] = useState('');
@@ -23,7 +39,7 @@ export function LogStrip(): React.JSX.Element {
     // Follow the newest entry, like the prototype's log.scrollTop behavior.
     const t = setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 50);
     return () => clearTimeout(t);
-  }, [log.length]);
+  }, [log.length, companionThinking]);
 
   useEffect(() => {
     // Keep the newest lines in view when the keyboard reshapes the layout.
@@ -54,6 +70,7 @@ export function LogStrip(): React.JSX.Element {
         {log.map((entry) => (
           <LogLine key={entry.id} entry={entry} label={companionName ?? 'LENS'} />
         ))}
+        {companionThinking && <ThinkingDots label={companionName ?? 'LENS'} />}
       </ScrollView>
       {pendingQuestion && (
         <View style={styles.pinnedQuery}>
