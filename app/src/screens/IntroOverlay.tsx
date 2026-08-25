@@ -42,7 +42,7 @@ function withNoise(lines: Seg[]): Seg[] {
 const BOOT_SEQ: Seg[] = [
   { who: 'hii', text: 'PROPERTY OF HERMETIC INDUSTRIES AND INNOVATIONS' },
   { who: 'hii', text: 'STARTUP INITIATED ...' },
-  { who: 'hii', text: 'SYSTEMS CHECK ... OPTICS OK · POSITION OK · ARCHIVE OK' },
+  { who: 'hii', text: 'SYSTEMS CHECK ... OPTICS ONLINE · POSITION SYNCHRONIZED · ARCHIVE ACTIVATED' },
   { who: 'hii', text: 'ESTABLISHING LINK ...' },
   { who: 'hii', text: 'ASSIGNING SURVEYOR ...' },
   {

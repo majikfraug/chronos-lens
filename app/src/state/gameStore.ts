@@ -561,7 +561,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   renameRelic: async (id, name) => {
     await renameScan(id, name);
     if (name) {
-      get().appendLog('ai', `Designation recorded: "${name}". Your names enter the archive beside my types.`);
+      get().appendLog('ai', `Designation recorded: "${name}". Your words have entered the archive and added to the dataset of the great catalogue.`);
       audio.voice('warm');
     }
   },

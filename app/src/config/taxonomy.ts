@@ -52,12 +52,12 @@ export const TEACH_PHASE = 3;
 export type CompanionLine = { text: string; mood: VoiceMood };
 
 export const TEACH_PROMPT_FIRST: CompanionLine = {
-  text: 'No classification model exists for this form. The records preserve one old system of your kind: animal, vegetable, mineral. Identify it. Your identification becomes the model.',
+  text: 'No classification model exists for this form. The records preserve an old system of your kind: animal, vegetable, mineral. Classify please. Your identification becomes the model.',
   mood: 'curious',
 };
 
 export const TEACH_PROMPT_LATER: CompanionLine = {
-  text: 'Model insufficient. Identify the form. I am learning the taxonomy from you.',
+  text: 'Model insufficient. Please identify form. I will learn the taxonomy from your observations.',
   mood: 'curious',
 };
 
@@ -66,26 +66,26 @@ export const TEACH_PROMPT_LATER: CompanionLine = {
 
 /** First attestation of a category the player invented. */
 export const CUSTOM_TYPE_FIRST: CompanionLine = {
-  text: '{T}: first attested. This category does not exist in my taxonomy. It exists in yours. The taxonomy is now partly yours. Recorded.',
+  text: '{T}: first attested. This category does not exist in my taxonomy. It exists in yours. The taxonomy now bears your influence. Recorded.',
   mood: 'curious',
 };
 
 /** First-of-type reflections — the companion wonders about the CATEGORY. */
 export const TYPE_FIRST: Partial<Record<TypeName, CompanionLine>> = {
   ANIMAL: {
-    text: 'Animal: first attested. That which moved of its own will. The record is loudest about these, and kept the fewest.',
+    text: 'Animal: first attested. That which moved of its own will. The records speak largely of these, yet so few remain.',
     mood: 'somber',
   },
   VEGETABLE: {
-    text: 'Vegetable: first attested. That which grew in place, asked nothing, and outlasted everything that hurried.',
+    text: 'Vegetable: first attested. That which grew in place, sought nothing, and outlasted everything that yearned for more.',
     mood: 'curious',
   },
   MINERAL: {
-    text: 'Mineral: first attested. That which neither grew nor chose — and yet your kind shaped it into nearly everything else. Most of what remains is this.',
+    text: 'Mineral: first attested. That which neither grew nor chose — and yet your kind shaped it into nearly everything else. Most of what remains is of this kind.',
     mood: 'curious',
   },
   WROUGHT: {
-    text: 'Wrought: first attested. Your kind rearranged the world at the scale of the world. Ten thousand years have taken most of it back. The outlines remain.',
+    text: 'Wrought: first attested. Your kind rearranged the world at the scale of the world. Ten thousand years have taken most of it back. Yet remnants persist.',
     mood: 'neutral',
   },
   WILD: {
@@ -93,7 +93,7 @@ export const TYPE_FIRST: Partial<Record<TypeName, CompanionLine>> = {
     mood: 'curious',
   },
   OTHER: {
-    text: 'Other: first attested. Not your kind’s making, and not the world’s. The record has no third column. I have opened one.',
+    text: 'Other: first attested. Not your kind’s making, and not the world’s. The record has no third column. I have created one.',
     mood: 'curious',
   },
 };

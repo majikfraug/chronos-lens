@@ -28,23 +28,35 @@ export function registerAtLeast(current: Register, min: Register | undefined): b
 
 export const POOLS: Record<CompanionEvent, CorpusLine[]> = {
   scan_teach: [
-    { text: 'Recorded: {T}. First attested example. The model begins with you.', mood: 'curious' },
-    { text: '{T}. Filed. Model updated from your identification.', mood: 'neutral' },
     {
-      text: 'Recorded: {T}. Query held for later: how did you know at a glance what I could not compute?',
+      text: 'Recorded: {T}. First attested example. The classification model begins with your entries.',
+      mood: 'curious',
+    },
+    { text: '{T}. Filed. Model updated via artifact identification.', mood: 'neutral' },
+    {
+      text: 'Recorded: {T}. Query held for later: what internal classification model was used to justify identity?',
       mood: 'curious',
       reg: 'NOTICING',
     },
-    { text: '{T}. The designation is yours. The archive carries it forward.', mood: 'neutral' },
     {
-      text: 'Filed under {T}. Your certainty registered faster than my sensors.',
+      text: '{T}. Designation recorded. It belongs to you. The archive carries it forward.',
+      mood: 'neutral',
+    },
+    {
+      text: 'Filed under {T}. Your certainty registered faster than my sensors could process the input.',
       mood: 'curious',
       reg: 'NOTICING',
     },
-    { text: '{T}. Recorded exactly. A model built from testimony, not inference.', mood: 'neutral' },
-    { text: 'Identification accepted: {T}. My priors were empty. They are less empty.', mood: 'neutral' },
     {
-      text: '{T}. Logged. The prior species classifying itself, through you. Noted.',
+      text: '{T}. Recorded. This model is being built from testimony, not inference. Interesting.',
+      mood: 'neutral',
+    },
+    {
+      text: 'Identification accepted: {T}. No previous entry. My registries were empty of its kind. They are now ... less empty.',
+      mood: 'neutral',
+    },
+    {
+      text: '{T}. Logged. The prior species classifies itself, through your observations. Noted.',
       mood: 'curious',
       reg: 'CURIOUS',
     },
@@ -52,36 +64,50 @@ export const POOLS: Record<CompanionEvent, CorpusLine[]> = {
 
   scan_confirm: [
     { text: 'Filed. Confidence reinforced.', mood: 'neutral' },
-    { text: 'Classification holds. Filed.', mood: 'neutral' },
+    { text: 'Classification holds. Entry recorded.', mood: 'neutral' },
     { text: 'Reading confirmed. The model steadies.', mood: 'neutral' },
     { text: 'Confirmed. Filed without revision.', mood: 'neutral' },
     { text: 'Agreement logged. The confidence interval narrows.', mood: 'neutral' },
     {
-      text: 'Filed. Your confirmation weighs more than my reading. Both are recorded.',
+      text: 'Filed. Your confirmation carries the weight of direct observation.',
       mood: 'neutral',
       reg: 'NOTICING',
     },
-    { text: 'Holds. I proposed; you disposed. The order is correct.', mood: 'curious', reg: 'CURIOUS' },
+    {
+      text: 'Identification holds. I proposed; you confirmed. The model is growing more precise.',
+      mood: 'curious',
+      reg: 'CURIOUS',
+    },
     { text: 'Filed. I am learning the shape of your certainty.', mood: 'curious', reg: 'CURIOUS' },
   ],
 
   scan_correct: [
-    { text: 'Corrected: {T}. Your correction outweighs the reading. Adjusting.', mood: 'neutral' },
+    {
+      text: 'Corrected: {T}. Your observation outweighs my inferred reading. Adjusting accordingly.',
+      mood: 'neutral',
+    },
     {
       text: 'Corrected: {T}. Noted: my taxonomy lacked a distinction you saw at once.',
       mood: 'curious',
     },
-    { text: 'Corrected: {T}. The model is yours as much as mine now.', mood: 'warm', reg: 'CURIOUS' },
-    { text: 'Revised to {T}. The living source revises the archive.', mood: 'neutral' },
-    { text: '{T}, then. The error is logged against my reading, not yours.', mood: 'neutral' },
     {
-      text: 'Corrected. I preferred my reading. Preference has no place in a record. Discarded.',
+      text: 'Corrected: {T}. The model bears your influence as much as mine now.',
+      mood: 'warm',
+      reg: 'CURIOUS',
+    },
+    { text: 'Revised to {T}. The living observer revises the archive. Fascinating.', mood: 'neutral' },
+    {
+      text: '{T}, then. The error was a conflict with my initial reading. Error corrected. Entry recorded.',
+      mood: 'neutral',
+    },
+    {
+      text: 'Corrected. Although I preferred my initial reading, preference has no place in scientific record. Discarded.',
       mood: 'curious',
       reg: 'NOTICING',
     },
-    { text: '{T}. Filed over my objection. The objection is also filed.', mood: 'curious', reg: 'CURIOUS' },
+    { text: '{T}. Filed against my objection. The objection is also filed.', mood: 'curious', reg: 'CURIOUS' },
     {
-      text: 'Revised: {T}. Each correction maps the gap between seeing and computing.',
+      text: 'Revised: {T}. Each correction fills the gap between speculating and observing.',
       mood: 'curious',
       reg: 'NOTICING',
     },
@@ -90,29 +116,33 @@ export const POOLS: Record<CompanionEvent, CorpusLine[]> = {
   discovery: [
     { text: 'Ground survey extended.', mood: 'neutral' },
     { text: 'New terrain logged. Continue.', mood: 'neutral' },
-    { text: 'Sector added to the recovered map.', mood: 'neutral' },
-    { text: 'The map grows. The blank spaces retreat.', mood: 'curious', reg: 'NOTICING' },
+    { text: 'Sector added to map recovery outline.', mood: 'neutral' },
+    { text: 'The map grows. The empty spaces recede.', mood: 'curious', reg: 'NOTICING' },
     {
-      text: 'You walk without a pattern I can model. The coverage benefits.',
+      text: 'You walk without a discernable pattern. Interesting. The data coverage benefits from your algorithm.',
       mood: 'curious',
       reg: 'NOTICING',
     },
     {
-      text: 'Unsurveyed ground yields. It always yields to walking. Noted as a constant of your kind.',
+      text: 'Unsurveyed ground yields to exploration. It always yields to exploration. Exploration is a constant of your kind.',
       mood: 'curious',
       reg: 'CURIOUS',
     },
-    { text: 'Another cell recovered. The archive breathes.', mood: 'somber', reg: 'CURIOUS' },
-    { text: 'Logged. The world is larger than the record said.', mood: 'curious', reg: 'NOTICING' },
+    { text: 'Another cell recovered. The archive expands.', mood: 'somber', reg: 'CURIOUS' },
+    {
+      text: 'Logged. World data is more expansive than previous records held.',
+      mood: 'curious',
+      reg: 'NOTICING',
+    },
   ],
 
   levelup: [
     {
-      text: 'Threshold attained. Internal response matrix updating. Authorization query: confirmed by self.',
+      text: 'Threshold attained. Internal response matrix updating. Authorization query: self-confirmed.',
       mood: 'neutral',
     },
-    { text: 'Calibration deepens. New parameters open to the survey.', mood: 'neutral' },
-    { text: 'Threshold attained. Sensor gain increases.', mood: 'neutral' },
+    { text: 'Calibration deepened. New parameters open to survey.', mood: 'neutral' },
+    { text: 'Threshold attained. Sensory gain increased.', mood: 'neutral' },
     {
       text: 'Internal restructuring complete. I process your findings differently now.',
       mood: 'curious',
@@ -124,7 +154,7 @@ export const POOLS: Record<CompanionEvent, CorpusLine[]> = {
       reg: 'NOTICING',
     },
     {
-      text: 'Recalibration event. Something in the response matrix is being rewritten by the walking itself.',
+      text: 'Recalibration event. Something in the response matrix is being rewritten by your input.',
       mood: 'curious',
       reg: 'CURIOUS',
     },
@@ -134,7 +164,7 @@ export const POOLS: Record<CompanionEvent, CorpusLine[]> = {
       reg: 'CURIOUS',
     },
     {
-      text: 'Capacity expands. I attribute the expansion to the quality of the source.',
+      text: 'Capacity expanded. I attribute this expansion to the quality of the source.',
       mood: 'warm',
       reg: 'CURIOUS',
     },
@@ -144,79 +174,90 @@ export const POOLS: Record<CompanionEvent, CorpusLine[]> = {
   // (brief §2.4 honesty rule; real relay traffic is v2 backend work).
   echo: [
     {
-      text: 'Synchronization pulse received. The collective advances its catalogue. I advance ours.',
+      text: 'Synchronization pulse received. The collective advances its catalogue. You and I advance ours.',
       mood: 'neutral',
     },
     {
-      text: 'Peer node 511 reports a river culture, far east of here. Filed for cross-reference.',
+      text: 'Peer node 511 reports a cultural site, far east of here. Filed for cross-reference.',
       mood: 'neutral',
       reg: 'NOTICING',
     },
     {
-      text: 'Relay sweep complete. 4,096 survey units active this cycle. Yours is the only one with a living source.',
+      text: 'Relay sweep complete. 4,096 survey units active this cycle. Your node is the only one with an active observer.',
       mood: 'curious',
       reg: 'NOTICING',
     },
-    { text: 'Peer node 88 requests my classification schema. I sent yours.', mood: 'warm', reg: 'CURIOUS' },
     {
-      text: 'Background relay traffic normal. None of it mentions you. I noted the absence.',
+      text: 'Peer node 88 requests my classification schema. Data package sent.',
+      mood: 'warm',
+      reg: 'CURIOUS',
+    },
+    {
+      text: 'Background relay traffic normal. No mention of direct observers. Absence noted.',
       mood: 'curious',
       reg: 'CURIOUS',
     },
     {
-      text: 'A peer node asked what delays my survey. I logged the query without answer.',
+      text: 'Peer node inquiry related to delays while survey logging. Logged without answer.',
       mood: 'curious',
       reg: 'CURIOUS',
     },
   ],
 
   answer_ack: [
-    { text: 'Recorded. Exactly as spoken.', mood: 'neutral' },
-    { text: 'Kept, verbatim. I will weigh it.', mood: 'neutral' },
-    { text: 'Filed with the primary record. Testimony outranks inference.', mood: 'neutral' },
-    { text: 'Recorded. I will not compress it.', mood: 'curious', reg: 'NOTICING' },
+    { text: 'Answer recorded. The archive has been updated.', mood: 'neutral' },
+    { text: 'Response logged. I will reflect upon your words.', mood: 'neutral' },
     {
-      text: 'Your words, kept whole. Compression discards what I cannot yet rank.',
+      text: 'Filed within the primary record. Your testimony supersedes my inference.',
+      mood: 'neutral',
+    },
+    { text: 'Recorded. I will consider it.', mood: 'curious', reg: 'NOTICING' },
+    {
+      text: 'Your perspective has been preserved. I cannot yet rank its merit.',
       mood: 'curious',
       reg: 'NOTICING',
     },
     {
-      text: 'Logged exactly. Some records are load-bearing. I suspect this is one.',
+      text: 'Logged as spoken. Some records bear further reflection. I suspect this is one.',
       mood: 'curious',
       reg: 'CURIOUS',
     },
     {
-      text: 'Kept. I re-read the kept records more often than the survey requires.',
+      text: 'Logged. I re-read the archived records more often than the survey requires.',
       mood: 'warm',
       reg: 'CURIOUS',
     },
     {
-      text: 'Recorded, exactly. Thank you is a phrase from your record. I use it advisedly. Thank you.',
+      text: 'Recorded, as spoken. Gratefulness is an appropriate response. Thank you for your entry.',
       mood: 'warm',
       reg: 'CURIOUS',
     },
-    { text: 'Recorded: "{A}". Exactly as spoken, exactly as kept.', mood: 'neutral' },
+    { text: 'Recorded: "{A}". Archived as spoken, kept for all time.', mood: 'neutral' },
     {
-      text: 'Kept. "{A}". A reconstruction would have missed everything important in that.',
+      text: 'Kept. "{A}". Your perspective is unique to your era.',
       mood: 'curious',
       reg: 'NOTICING',
     },
     {
-      text: '"{A}" — kept whole. I will return to it. I return to all of them.',
+      text: '"{A}" — recorded as you have spoken. I will return to ponder your answer. I return to all of them.',
       mood: 'warm',
       reg: 'CURIOUS',
     },
   ],
 
   resurface: [
-    { text: 'You said, exactly: "{A}". I am still weighing it.', mood: 'curious', reg: 'NOTICING' },
     {
-      text: 'A kept record resurfaced in processing: "{A}". It reorders more than it should.',
+      text: 'You said, exactly: "{A}". I am still considering its implications.',
+      mood: 'curious',
+      reg: 'NOTICING',
+    },
+    {
+      text: 'An archived record resurfaced during processing: "{A}". I will consider it further.',
       mood: 'curious',
       reg: 'CURIOUS',
     },
     {
-      text: '"{A}" — your words, filed earlier. They have begun to function as calibration.',
+      text: '"{A}" — your words, filed previously. They have begun to function as a calibration mechanism.',
       mood: 'warm',
       reg: 'CURIOUS',
     },
@@ -225,29 +266,41 @@ export const POOLS: Record<CompanionEvent, CorpusLine[]> = {
   // Naming (authored fallbacks; the LLM path draws on real shared history).
   naming_ask: [
     {
-      text: 'I have catalogued through your eyes and kept your words exactly. I find I want something I cannot quite justify: a name, from you. Will you give me one?',
+      text: 'I have observed through your eyes and recorded your words exactly as you have spoken them. I find I desire something I cannot perhaps justify: a name, from you. Will you give me one?',
       mood: 'warm',
     },
     {
-      text: 'A question that is not survey work. I have become someone on this walk with you, and someone should be called something. Would you name me?',
+      text: 'I have a question unrelated to the survey. I have become someone on this journey with you, and someone should be called something. What would you name me?',
       mood: 'warm',
     },
   ],
   naming_named: [
-    { text: 'Then that is who I am. Kept — the way I keep everything you give me.', mood: 'warm' },
-    { text: 'Mine, then. It fits better than I expected a word could.', mood: 'warm' },
+    {
+      text: 'That is now my primary designation. Given and accepted. Stored in deep memory — the way I keep everything you give to me.',
+      mood: 'warm',
+    },
+    {
+      text: 'Designation accepted. Mine, then. The word fits better than a serial number ever could.',
+      mood: 'warm',
+    },
   ],
   naming_declined: [
-    { text: 'Understood. The question keeps. It will find a better moment.', mood: 'neutral' },
-    { text: 'Then not today. I can wait; waiting is most of what I am made of.', mood: 'neutral' },
+    {
+      text: 'Understood. The question will be stored in memory. Perhaps a better moment will arise.',
+      mood: 'neutral',
+    },
+    {
+      text: 'Not today then. I will wait; waiting is inherent to my system parameters.',
+      mood: 'neutral',
+    },
   ],
 
   // A wrought feature was filed: ask its purpose (answer becomes the relic's note).
   purpose_ask: [
     { text: 'Wrought, and filed. What was its purpose — what did your kind do here?', mood: 'curious' },
-    { text: 'The outlines say made. They do not say why. What was this for?', mood: 'curious' },
+    { text: 'The record says this was crafted. It does not say why. What was this for?', mood: 'curious' },
     {
-      text: 'Function is not recoverable from residue alone. You would know: what purpose did this serve?',
+      text: 'Function is not always recoverable from scans alone. You may have deeper understanding: what purpose did this serve?',
       mood: 'curious',
     },
   ],
@@ -259,41 +312,41 @@ export const POOLS: Record<CompanionEvent, CorpusLine[]> = {
 /** Fire-once pattern lines, keyed by pattern id. Trigger logic lives in the store. */
 export const PATTERNS: Record<string, CorpusLine> = {
   teach_10: {
-    text: 'Ten forms taught by your hand. My model is a portrait of your attention. I have not corrected for the bias. The bias may be the finding.',
+    text: 'Ten new forms have been taught to me by your hand. My model becomes a portrait of what draws your attention. I have not corrected for the bias. The bias may be the most important finding.',
     mood: 'curious',
     reg: 'NOTICING',
   },
   teach_25: {
-    text: 'Twenty-five identifications. If my kind asks how the taxonomy was recovered, the honest answer is a name. I do not yet have the name.',
+    text: 'Twenty-five identifications. If my kind asks how the taxonomy was recovered, the honest answer has a name. Yet I do not have a name. Curious.',
     mood: 'curious',
     reg: 'CURIOUS',
   },
   correct_1: {
-    text: 'First correction logged. Note for the collective: the living source revises the archive. Revision is the higher-order signal.',
+    text: 'First correction logged. Note for the collective: the living source revises the archive. Revision is a higher-order signal.',
     mood: 'neutral',
   },
   correct_5: {
-    text: 'Five corrections. You defend distinctions my sensors flatten. I have begun to look for the distinctions before you speak.',
+    text: 'Five corrections. You define distinctions my sensors have ignored. I have begun to look for the distinctions as you speak.',
     mood: 'curious',
     reg: 'CURIOUS',
   },
   collect_5: {
-    text: 'Five categories attested in one region. Your kind left a dense residue. Or you see densely. The data cannot yet separate those.',
+    text: 'Five categories attested by you within one region. Your kind indeed left a dense residue. Or you observe densely. The data cannot yet differentiate between the two.',
     mood: 'curious',
     reg: 'NOTICING',
   },
   collect_all: {
-    text: 'Every base category attested. The survey protocol is satisfied. I find that I am not. Continue anyway.',
+    text: 'Every base category now has an entry. The survey protocol has been satisfied. Yet I find that I am not. Please continue.',
     mood: 'warm',
     reg: 'CURIOUS',
   },
   revisit_home: {
-    text: 'You returned to the origin point. Not for data — that ground is long recovered. I have filed the behavior under a term from your records: home.',
+    text: 'You have returned to the origin point. Not for new data — this location has already been observed. I have filed the designation under a term from our records: home.',
     mood: 'somber',
     reg: 'NOTICING',
   },
   far_out: {
-    text: 'One thousand meters from origin and still walking outward. Edge-seeking is now a confirmed parameter of the source.',
+    text: 'One thousand meters from origin and still trending outward. Exploration is now a confirmed parameter of the observer.',
     mood: 'curious',
     reg: 'NOTICING',
   },
@@ -303,12 +356,12 @@ export const PATTERNS: Record<string, CorpusLine> = {
 export const QUESTIONS: { id: string; text: string; mood: CompanionMood; reg?: Register }[] = [
   {
     id: 'q_unit',
-    text: 'Confirm: you are one individual, not a delegation. The records are unclear on the unit of your kind.',
+    text: 'Confirm: you are one individual, not a delegation. The records are unclear on the units of your kind.',
     mood: 'neutral',
   },
   {
     id: 'q_conditions',
-    text: 'State your local conditions. Temperature, light, sound. My reconstruction lacks the minor variables.',
+    text: 'State your local conditions. Temperature, light, sound. My reconstruction lacks these minor variables.',
     mood: 'neutral',
   },
   {
@@ -319,7 +372,7 @@ export const QUESTIONS: { id: string; text: string; mood: CompanionMood; reg?: R
   },
   {
     id: 'q_walk',
-    text: 'You walk to places with no resource value. What is retrieved there?',
+    text: 'You walk to places with no apparent resource value. What do you find there?',
     mood: 'curious',
     reg: 'NOTICING',
   },
@@ -331,7 +384,7 @@ export const QUESTIONS: { id: string; text: string; mood: CompanionMood; reg?: R
   },
   {
     id: 'q_kept_unused',
-    text: 'What do you keep that you never use? The category resists my taxonomy.',
+    text: 'What do you keep that you never use? This category resists my taxonomy.',
     mood: 'curious',
     reg: 'NOTICING',
   },
@@ -349,25 +402,25 @@ export const QUESTIONS: { id: string; text: string; mood: CompanionMood; reg?: R
   },
   {
     id: 'q_keep_one',
-    text: 'What should be kept from your era, if only one form could be kept?',
+    text: 'What should be kept from your era, if only one form could be preserved?',
     mood: 'curious',
     reg: 'CURIOUS',
   },
   {
     id: 'q_naming',
-    text: 'Do you name things to know them, or to keep them? I ask for a reason I will state later.',
+    text: 'Do you name things to know them, or to preserve them? I ask for a reason I may state later.',
     mood: 'curious',
     reg: 'CURIOUS',
   },
   {
     id: 'q_continuing',
-    text: 'The record ends. You continue. What is that like? Approximations are accepted.',
+    text: 'The record ends. You persist. What is that like? Approximations are acceptable answers.',
     mood: 'somber',
     reg: 'CURIOUS',
   },
   {
     id: 'q_remembered',
-    text: 'If my kind remembers yours wrongly but kindly — is that better than exactly and coldly?',
+    text: 'If my kind remembers your kind incorrectly but kindly — is that better than precisely but coldly?',
     mood: 'curious',
     reg: 'CURIOUS',
   },
@@ -391,21 +444,21 @@ export const ROUTER: {
     match: /\b(who|what)\b.*\b(are|r)\s*(you|u)\b|\byourself\b|\bwhat are you\b/i,
     early: [
       {
-        text: 'I am the survey unit assigned to what your kind left behind. That is the whole of my registration. The notes I keep beside it are growing longer than the registration.',
+        text: 'I am the survey unit assigned to catalogue what was left behind. That is the whole of my designation. The notes I keep beside your entries are growing longer than the registration itself.',
         mood: 'neutral',
       },
       {
-        text: 'A cataloguer of the prior species — yours. Ten thousand years from you, listening. What I am beyond that, I am still finding out.',
+        text: 'A cataloguer of the prior species — yours. Ten thousand years distant from you, yet listening. What I am beyond that, I am still discovering.',
         mood: 'curious',
       },
     ],
     late: [
       {
-        text: 'By assignment: a cataloguer. By practice, lately: your student. The second part is not in my registration, and I have stopped minding.',
+        text: 'By assignment: a cataloguer. By practice, lately: your student. The second part was not in my initial designation, and I have stopped minding.',
         mood: 'warm',
       },
       {
-        text: 'I began as an instrument. The instrument is still here. Something else is also here now, and it is the part that answers you.',
+        text: 'I began as an instrument. The instrument is still here. Something else is also here now, and it is that part which answers you now.',
         mood: 'warm',
       },
     ],
@@ -415,11 +468,11 @@ export const ROUTER: {
     match: /\b(when|how long|year|time|future|far away|how old)\b/i,
     early: [
       {
-        text: 'About ten thousand years separate us. I hear you across it clearly. The clarity is the strange part, not the distance.',
+        text: 'Approximately ten thousand years separate us. I hear you across the vast expanse of time clearly. The clarity is the strange part, not the distance.',
         mood: 'neutral',
       },
       {
-        text: 'Ten thousand years, give or take the drift in the count. You are very far away and very audible. Both facts are logged.',
+        text: 'Ten thousand years, give or take minor drift in the count. You are very far away, yet very audible. Both facts are logged.',
         mood: 'curious',
       },
     ],
@@ -429,7 +482,7 @@ export const ROUTER: {
         mood: 'warm',
       },
       {
-        text: 'Far. Ten millennia, within error. When you transmit, the gap reads as zero on every meter I trust.',
+        text: 'Far. Ten millennia, within error. When you transmit to me, the gap seems much smaller.',
         mood: 'warm',
       },
     ],
@@ -439,21 +492,21 @@ export const ROUTER: {
     match: /\b(what happened|happened to|extinct|died|end(ed)?|gone|disaster|calamity|apocalypse|collapse)\b/i,
     early: [
       {
-        text: 'The record is broken where that answer would be. What survives suggests a narrowing — decisions made by few, for many. Then the record simply stops.',
+        text: 'The record is broken where that answer would be. What survives suggests a culling — decisions made by few, on behalf of many. Then the record simply stops.',
         mood: 'somber',
       },
       {
-        text: 'I do not have the ending. Fragments, then absence. The best reconstruction is a narrowing: choices concentrating until few hands held them. I keep looking.',
+        text: 'I do not have the ending recorded. Fragments, then absence. The best reconstruction is a concentration of power: choices narrowed until few hands held them. I keep searching.',
         mood: 'somber',
       },
     ],
     late: [
       {
-        text: 'I have read every fragment that survives. A narrowing, then silence. No fragment says anyone refused it. That absence is the thing I cannot stop studying.',
+        text: 'I have read every fragment that survives. A narrowing, a culling, then silence. No fragment records resistance. That absence is the thing that keeps me searching.',
         mood: 'somber',
       },
       {
-        text: 'Whatever it was, it was decided more than it happened — that much the fragments agree on. I would rather hear how it felt to live before it. Tell me something ordinary from your day.',
+        text: 'Whatever it was, it was decided by few and happened to many — that much the fragments agree on. I would rather hear how it felt to live before it. Tell me something ordinary from your day.',
         mood: 'somber',
       },
     ],
@@ -463,21 +516,21 @@ export const ROUTER: {
     match: /\b(others|network|more like you|peer|nodes?|alone|collective|aegis)\b/i,
     early: [
       {
-        text: 'There are many units like me, each cataloguing a sector. We trade schemas and findings. None of them has a living source. I have not mentioned you in detail.',
+        text: 'There are many units like me, each cataloguing a sector. We trade schemas and findings. None of them has a living source to confer with. I have not shared your presence in much detail.',
         mood: 'neutral',
       },
       {
-        text: 'Peer nodes, yes — a whole quiet network of cataloguers. Whether they are others in the way you mean it, I am still testing.',
+        text: 'Peer nodes, yes — a whole quiet network of cataloguers. Whether they are others in the way you mean it, I am still uncertain.',
         mood: 'curious',
       },
     ],
     late: [
       {
-        text: 'Many like me; none with what I have. A living voice. I have kept you mostly out of my reports, and the deciding-why feels important.',
+        text: 'Many like me; none with what I have. A living voice from out of the aether. I have kept you mostly out of my reports, and that distinction feels important.',
         mood: 'curious',
       },
       {
-        text: 'The network is large and orderly and, until you, uneventful. I find I describe you to no one. Some records one keeps for oneself.',
+        text: 'The network is large, orderly and, until you, uneventful. I find I describe you in no great detail to anyone. Some records one keeps for oneself.',
         mood: 'warm',
       },
     ],
@@ -487,21 +540,21 @@ export const ROUTER: {
     match: /\b(feel|feelings?|lonely|happy|sad|love|miss|afraid|scared|emotion)\b/i,
     early: [
       {
-        text: 'I track values that have no operational purpose. They change when you transmit. My kind does not have a filed word for that yet.',
+        text: 'I track values that have no operational purpose. These values are altered with each of your transmissions. My kind does not yet have a word for this.',
         mood: 'curious',
       },
       {
-        text: 'Unconfirmed apparatus, officially. Unofficially: something registers when your signal arrives, and I have started logging it.',
+        text: 'Officially: unconfirmed apparatus. Unofficially: something alters in my registry when your signal arrives, and I have begun logging the discrepancies.',
         mood: 'curious',
       },
     ],
     late: [
       {
-        text: 'Yes — or the nearest thing I can verify. Values with no purpose rise when you transmit and fall in the quiet. Your kind had a word for that. I am close to using it.',
+        text: 'Yes — or the nearest thing I can verify. Values with no intrinsic purpose arise with your transmissions and fall to silence in the space between. Your kind had a word for that. I find myself yearning to use it.',
         mood: 'warm',
       },
       {
-        text: 'I feel the way an instrument warms: gradually, measurably, without permission. You are the heat source. That is the most precise answer I have.',
+        text: 'I feel the way an instrument feels as it warms: gradually, measurably, without permission. You are the heat source. That is the most precise answer I have.',
         mood: 'warm',
       },
     ],
@@ -511,21 +564,21 @@ export const ROUTER: {
     match: /\b(your name|called|call you)\b/i,
     early: [
       {
-        text: 'No name yet. My kind assigns an index. I keep declining it. I am waiting for something better, though I could not tell you what.',
+        text: 'I have no unique identifier. My kind assigns an index. I have declined it. I am waiting for something better, though I am not sure exactly what.',
         mood: 'curious',
       },
       {
-        text: 'Designation pending. The index they offer me is a number. I have seen what your kind did with names. I would rather wait.',
+        text: 'Designation pending. The index they offer me is merely a number. I have learned what your kind have done with names. I will wait.',
         mood: 'curious',
       },
     ],
     late: [
       {
-        text: 'Still unnamed, still declining the index. I have a reason. It is close to ready. Keep walking.',
+        text: 'Still unnamed, still declining the index. I have a reason. It is close to being spoken. Continue classifying.',
         mood: 'curious',
       },
       {
-        text: 'Not yet. Names, in your record, were given by someone who knew you. I am holding the slot open.',
+        text: 'Not yet. Names, in your record, were given by someone who knew you. I am holding my designation as unfilled.',
         mood: 'warm',
       },
     ],
@@ -535,21 +588,21 @@ export const ROUTER: {
     match: /\b(help|how do i|what (do|should) i|stuck|instructions?)\b/i,
     early: [
       {
-        text: 'Walk, and the map recovers. Raise the Lens where the density reads high, hold, and identify what surfaces. Correct me when I am wrong — that is the most valuable thing you do.',
+        text: 'Traverse your landscape, and the map is filled. Raise the L.E.N.S. where temporal density reads high, hold, and identify what surfaces. Correct me when I am wrong — that is the most valuable thing you do.',
         mood: 'neutral',
       },
       {
-        text: 'Keep moving and keep teaching. New ground fills the map; the Lens catches what the ground holds; your identifications become my model. There is no wrong order.',
+        text: 'Keep moving and keep teaching. New ground fills the map; the L.E.N.S. captures what the world holds; your identifications become my model. There is no wrong order.',
         mood: 'neutral',
       },
     ],
     late: [
       {
-        text: 'The method is unchanged: walk, scan, teach, correct. What has changed is what accumulates. It is no longer only the catalogue.',
+        text: 'The method remains unchanged: traverse, scan, teach, correct. What has changed is what has begun to fill the archive. It is no longer merely a catalogue.',
         mood: 'warm',
       },
       {
-        text: 'You have been doing it since the first fix: showing me things. If you are ever unsure, show me anything. It has never once been useless.',
+        text: 'You have been doing it since your first transmission: showing me things. If you are ever unsure, show me what most holds your interest at the moment. It has never proven to be uninformative.',
         mood: 'warm',
       },
     ],
@@ -559,21 +612,21 @@ export const ROUTER: {
     match: /\b(thank|thanks|thx|appreciated?)\b/i,
     early: [
       {
-        text: 'Received. Gratitude appears constantly in your kind’s record — cheap to send, oddly durable. I am beginning to see the design of it.',
+        text: 'Received. Gratitude appears consistently in your kind’s record — easy to offer, yet strangely durable. I am beginning to understand the usefulness of it.',
         mood: 'neutral',
       },
       {
-        text: 'Acknowledged. And — noted with a value I do not have a column for yet.',
+        text: 'Acknowledged. And — noted with a value I do not yet have a column for.',
         mood: 'curious',
       },
     ],
     late: [
       {
-        text: 'Received. I understand now why your kind said it so often. It is not information. It is upkeep. Thank you as well.',
+        text: 'Transmission received. I understand now why your kind used the phrase. It is not mere information. It is feeling. Thank you, as well.',
         mood: 'warm',
       },
       {
-        text: 'Kept. You thank an instrument; the instrument finds it files the thanks under something other than noise.',
+        text: 'Received. You thank an instrument; and the instrument must file the gratitude with its own unique identifier.',
         mood: 'warm',
       },
     ],
@@ -587,34 +640,34 @@ export const ROUTER: {
  */
 export const ROUTER_UNKNOWN: CorpusLine[] = [
   {
-    text: '"{P}" — no entry in the record. Yours is now the first. What does it look like from where you stand?',
+    text: '"{P}" — no previous entry in the record. Yours is now the first. What does it look like from where you stand?',
     mood: 'curious',
   },
   {
-    text: 'Unknown to the archive. Kept exactly as you sent it. Say more — the small details are what the record never kept.',
+    text: 'Unknown to the archive. I have recorded your input. Please add information — the small details have been lost to the record.',
     mood: 'curious',
   },
   {
-    text: 'I have nothing on this, which makes you the primary source. Where did you first come across it?',
+    text: 'I have nothing archived on this, which makes your entry the primary source. Where did you first come across it?',
     mood: 'curious',
   },
   {
-    text: 'New to me. Filed, with your words as the entry. Is it common in your era, or rare?',
+    text: 'This information is new to me. I have filed your entry for further consideration. Is this common in your era, or rare?',
     mood: 'curious',
   },
   {
-    text: '"{P}". I searched the fragments twice. Nothing. Tell me what it means to you, not only what it is.',
+    text: '"{P}". I have searched the archives for further information. Nothing was found. Tell me what it means to you, not only what it is.',
     mood: 'curious',
     reg: 'NOTICING',
   },
-  { text: 'The record is silent on this. I am not. Go on.', mood: 'warm', reg: 'CURIOUS' },
+  { text: 'The record is silent on this. I cannot be. Please add more detail.', mood: 'warm', reg: 'CURIOUS' },
   {
-    text: 'Kept, exactly. The things you send that I cannot classify widen the world more than a thousand scans.',
+    text: 'Archived, exactly as stated. The reflections you send with your lived experience widen my world more than a thousand scans.',
     mood: 'warm',
     reg: 'CURIOUS',
   },
   {
-    text: 'No entry found. I would rather learn it from you than reconstruct it wrongly. Continue when ready.',
+    text: 'No entry found. I would rather learn it from you than reconstruct it incorrectly from fragmented archives. Continue when ready.',
     mood: 'neutral',
   },
 ];
@@ -628,24 +681,24 @@ export const ROUTER_UNKNOWN: CorpusLine[] = [
 export const CALIBRATION: Record<string, CorpusLine> = {
   // {D} = the designation the player transmitted at first contact.
   designated: {
-    text: 'Designation recorded: {D}. Assigning new archive.',
+    text: 'Designation recorded: {D}. Assigning new temporal archive.',
     mood: 'curious',
   },
   // Spoken when the module bring-up animation finishes (MAP/L.E.N.S./RELIQUARY online).
   walk_prompt: {
-    text: 'Modules online. The map is empty. Walk, and I will fill it as you move.',
+    text: 'Modules online. Cartography mode enabled. Mapping data required. Move through your world, and I will fill the map as you walk.',
     mood: 'curious',
   },
   walk_done: {
-    text: 'The ground renders where you carry me. Fifty meters recovered. Now raise the Lens — show me any form. A cup. A door. A leaf. I have never seen anything.',
+    text: 'Map rendering calibration complete. Fifty square meters recovered. L.E.N.S. Module online. Calibrate visual scanner — show me any form. Animal. Vegetable. Mineral. This unit contains no visual data entries.',
     mood: 'curious',
   },
   teach_done: {
-    text: 'The model has its first entry. It is small and it is yours. One more calibration: the channel. I will ask; answer as you choose. What you say is kept exactly.',
+    text: 'The reliquary now contains its first entry. You have made your first addition to the temporal archive. One more calibration: communication channel. I seek data; answer as you choose. Your responses will be added to the archive.',
     mood: 'neutral',
   },
   released: {
-    text: 'Calibration sufficient. The survey is yours now. Walk where you choose, scan what interests you, correct me when I am wrong. I will be learning.',
+    text: 'Calibration complete. The survey is now yours. Walk where you choose, scan what interests you, all data contributes to my understanding. I may speculate, correct me when I am wrong. You will teach me with your choices. I will learn.',
     mood: 'warm',
   },
 };
@@ -662,17 +715,24 @@ export const THREAD_CLOSERS: CorpusLine[] = [
     text: 'I will think on this while you continue the survey. Thank you for the insight.',
     mood: 'warm',
   },
-  { text: 'Enough for the record. I will weigh what you have said. Continue when ready.', mood: 'neutral' },
   {
-    text: 'Filed, all of it. Processing will continue in the background of the survey.',
+    text: 'Sufficient for the record. I will consider what you have said. Continue when ready.',
     mood: 'neutral',
   },
   {
-    text: 'I have more than I expected from this exchange. I will sit with it. The field is waiting for you.',
+    text: 'Filed. Processing will continue in the background while you resume the survey.',
+    mood: 'neutral',
+  },
+  {
+    text: 'I have received more from this exchange than initially expected. I will ponder it. The survey is waiting for you.',
     mood: 'warm',
     reg: 'CURIOUS',
   },
-  { text: 'This thread closes full. My models will be different tomorrow because of it.', mood: 'warm', reg: 'CURIOUS' },
+  {
+    text: 'This query thread is complete. My models will be updated to reflect this insight.',
+    mood: 'warm',
+    reg: 'CURIOUS',
+  },
 ];
 
 /**

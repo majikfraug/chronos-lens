@@ -14,7 +14,7 @@ bright, all caps) · Companion = amber blocks · Player = right-justified neon.
 
 [boot.hii.1] HII: PROPERTY OF HERMETIC INDUSTRIES AND INNOVATIONS
 [boot.hii.2] HII: STARTUP INITIATED ...
-[boot.hii.3] HII: SYSTEMS CHECK ... OPTICS OK · POSITION OK · ARCHIVE OK
+[boot.hii.3] HII: SYSTEMS CHECK ... OPTICS ONLINE · POSITION SYNCHRONIZED · ARCHIVE ACTIVATED
 [boot.hii.4] HII: ESTABLISHING LINK ...
 [boot.hii.5] HII: ASSIGNING SURVEYOR ...
 [boot.companion.1] (neutral) Surveyor unit acknowledged. Companion process online. Establishing mission parameters.
@@ -41,232 +41,232 @@ bright, all caps) · Companion = amber blocks · Player = right-justified neon.
 (then the module bring-up: tabs appear one by one with these telemetry lines)
 [modules.map] MAP MODULE ONLINE · FIELD RECOVERY ACTIVE
 [modules.lens] L.E.N.S. ONLINE · LOCALIZED EPOCH NORMALIZATION SCANNER
-[modules.reliquary] RELIQUARY ONLINE · TYPE ARCHIVE READY
+[modules.reliquary] RELIQUARY ONLINE · DATA ARCHIVE READY
 
 ## CALIBRATION BEATS (first-session tutorial)
-[calib.designated] (curious) Designation recorded: {D}. Assigning new archive.
-[calib.walk_prompt] (curious) Modules online. The map is empty. Walk, and I will fill it as you move.
-[calib.walk_done] (curious) The ground renders where you carry me. Fifty meters recovered. Now raise the Lens — show me any form. A cup. A door. A leaf. I have never seen anything.
-[calib.teach_done] (neutral) The model has its first entry. It is small and it is yours. One more calibration: the channel. I will ask; answer as you choose. What you say is kept exactly.
-[calib.released] (warm) Calibration sufficient. The survey is yours now. Walk where you choose, scan what interests you, correct me when I am wrong. I will be learning.
+[calib.designated] (curious) Designation recorded: {D}. Assigning new temporal archive.
+[calib.walk_prompt] (curious) Modules online. Cartography mode enabled. Mapping data required. Move through your world, and I will fill the map as you walk.
+[calib.walk_done] (curious) Map rendering calibration complete. Fifty square meters recovered. L.E.N.S. Module online. Calibrate visual scanner — show me any form. Animal. Vegetable. Mineral. This unit contains no visual data entries.
+[calib.teach_done] (neutral) The reliquary now contains its first entry. You have made your first addition to the temporal archive. One more calibration: communication channel. I seek data; answer as you choose. Your responses will be added to the archive.
+[calib.released] (warm) Calibration complete. The survey is now yours. Walk where you choose, scan what interests you, all data contributes to my understanding. I may speculate, correct me when I am wrong. You will teach me with your choices. I will learn.
 
 ## SCAN RESPONSES
 ### Player teaches (no model yet)
-[scan_teach.1] (curious) Recorded: {T}. First attested example. The model begins with you.
-[scan_teach.2] (neutral) {T}. Filed. Model updated from your identification.
-[scan_teach.3] (curious) [N+] Recorded: {T}. Query held for later: how did you know at a glance what I could not compute?
-[scan_teach.4] (neutral) {T}. The designation is yours. The archive carries it forward.
-[scan_teach.5] (curious) [N+] Filed under {T}. Your certainty registered faster than my sensors.
-[scan_teach.6] (neutral) {T}. Recorded exactly. A model built from testimony, not inference.
-[scan_teach.7] (neutral) Identification accepted: {T}. My priors were empty. They are less empty.
-[scan_teach.8] (curious) [C+] {T}. Logged. The prior species classifying itself, through you. Noted.
+[scan_teach.1] (curious) Recorded: {T}. First attested example. The classification model begins with your entries.
+[scan_teach.2] (neutral) {T}. Filed. Model updated via artifact identification.
+[scan_teach.3] (curious) [N+] Recorded: {T}. Query held for later: what internal classification model was used to justify identity?
+[scan_teach.4] (neutral) {T}. Designation recorded. It belongs to you. The archive carries it forward.
+[scan_teach.5] (curious) [N+] Filed under {T}. Your certainty registered faster than my sensors could process the input.
+[scan_teach.6] (neutral) {T}. Recorded. This model is being built from testimony, not inference. Interesting.
+[scan_teach.7] (neutral) Identification accepted: {T}. No previous entry. My registries were empty of its kind. They are now ... less empty.
+[scan_teach.8] (curious) [C+] {T}. Logged. The prior species classifies itself, through your observations. Noted.
 
 ### Player confirms my proposal
 [scan_confirm.1] (neutral) Filed. Confidence reinforced.
-[scan_confirm.2] (neutral) Classification holds. Filed.
+[scan_confirm.2] (neutral) Classification holds. Entry recorded.
 [scan_confirm.3] (neutral) Reading confirmed. The model steadies.
 [scan_confirm.4] (neutral) Confirmed. Filed without revision.
 [scan_confirm.5] (neutral) Agreement logged. The confidence interval narrows.
-[scan_confirm.6] (neutral) [N+] Filed. Your confirmation weighs more than my reading. Both are recorded.
-[scan_confirm.7] (curious) [C+] Holds. I proposed; you disposed. The order is correct.
+[scan_confirm.6] (neutral) [N+] Filed. Your confirmation carries the weight of direct observation.
+[scan_confirm.7] (curious) [C+] Identification holds. I proposed; you confirmed. The model is growing more precise.
 [scan_confirm.8] (curious) [C+] Filed. I am learning the shape of your certainty.
 
 ### Player corrects me
-[scan_correct.1] (neutral) Corrected: {T}. Your correction outweighs the reading. Adjusting.
+[scan_correct.1] (neutral) Corrected: {T}. Your observation outweighs my inferred reading. Adjusting accordingly.
 [scan_correct.2] (curious) Corrected: {T}. Noted: my taxonomy lacked a distinction you saw at once.
-[scan_correct.3] (warm) [C+] Corrected: {T}. The model is yours as much as mine now.
-[scan_correct.4] (neutral) Revised to {T}. The living source revises the archive.
-[scan_correct.5] (neutral) {T}, then. The error is logged against my reading, not yours.
-[scan_correct.6] (curious) [N+] Corrected. I preferred my reading. Preference has no place in a record. Discarded.
-[scan_correct.7] (curious) [C+] {T}. Filed over my objection. The objection is also filed.
-[scan_correct.8] (curious) [N+] Revised: {T}. Each correction maps the gap between seeing and computing.
+[scan_correct.3] (warm) [C+] Corrected: {T}. The model bears your influence as much as mine now.
+[scan_correct.4] (neutral) Revised to {T}. The living observer revises the archive. Fascinating.
+[scan_correct.5] (neutral) {T}, then. The error was a conflict with my initial reading. Error corrected. Entry recorded.
+[scan_correct.6] (curious) [N+] Corrected. Although I preferred my initial reading, preference has no place in scientific record. Discarded.
+[scan_correct.7] (curious) [C+] {T}. Filed against my objection. The objection is also filed.
+[scan_correct.8] (curious) [N+] Revised: {T}. Each correction fills the gap between speculating and observing.
 
 ## TEACH-MODE PROMPTS (at the identify panel)
-[teach.first] (curious) No classification model exists for this form. The records preserve one old system of your kind: animal, vegetable, mineral. Identify it. Your identification becomes the model.
-[teach.later] (curious) Model insufficient. Identify the form. I am learning the taxonomy from you.
+[teach.first] (curious) No classification model exists for this form. The records preserve an old system of your kind: animal, vegetable, mineral. Classify please. Your identification becomes the model.
+[teach.later] (curious) Model insufficient. Please identify form. I will learn the taxonomy from your observations.
 
 ## FIRST-OF-TYPE REFLECTIONS
-[typefirst.ANIMAL] (somber) Animal: first attested. That which moved of its own will. The record is loudest about these, and kept the fewest.
-[typefirst.VEGETABLE] (curious) Vegetable: first attested. That which grew in place, asked nothing, and outlasted everything that hurried.
-[typefirst.MINERAL] (curious) Mineral: first attested. That which neither grew nor chose — and yet your kind shaped it into nearly everything else. Most of what remains is this.
-[typefirst.WROUGHT] (neutral) Wrought: first attested. Your kind rearranged the world at the scale of the world. Ten thousand years have taken most of it back. The outlines remain.
+[typefirst.ANIMAL] (somber) Animal: first attested. That which moved of its own will. The records speak largely of these, yet so few remain.
+[typefirst.VEGETABLE] (curious) Vegetable: first attested. That which grew in place, sought nothing, and outlasted everything that yearned for more.
+[typefirst.MINERAL] (curious) Mineral: first attested. That which neither grew nor chose — and yet your kind shaped it into nearly everything else. Most of what remains is of this kind.
+[typefirst.WROUGHT] (neutral) Wrought: first attested. Your kind rearranged the world at the scale of the world. Ten thousand years have taken most of it back. Yet remnants persist.
 [typefirst.WILD] (curious) Wild: first attested. The world’s own work — older than the record, indifferent to it. It is the majority now.
-[typefirst.OTHER] (curious) Other: first attested. Not your kind’s making, and not the world’s. The record has no third column. I have opened one.
-[typefirst.CUSTOM] (curious) {T}: first attested. This category does not exist in my taxonomy. It exists in yours. The taxonomy is now partly yours. Recorded.
+[typefirst.OTHER] (curious) Other: first attested. Not your kind’s making, and not the world’s. The record has no third column. I have created one.
+[typefirst.CUSTOM] (curious) {T}: first attested. This category does not exist in my taxonomy. It exists in yours. The taxonomy now bears your influence. Recorded.
 
 ## FIELD & PROGRESSION
 ### Discovery remarks (usually silent; ~15% chance)
 [discovery.1] (neutral) Ground survey extended.
 [discovery.2] (neutral) New terrain logged. Continue.
-[discovery.3] (neutral) Sector added to the recovered map.
-[discovery.4] (curious) [N+] The map grows. The blank spaces retreat.
-[discovery.5] (curious) [N+] You walk without a pattern I can model. The coverage benefits.
-[discovery.6] (curious) [C+] Unsurveyed ground yields. It always yields to walking. Noted as a constant of your kind.
-[discovery.7] (somber) [C+] Another cell recovered. The archive breathes.
-[discovery.8] (curious) [N+] Logged. The world is larger than the record said.
+[discovery.3] (neutral) Sector added to map recovery outline.
+[discovery.4] (curious) [N+] The map grows. The empty spaces recede.
+[discovery.5] (curious) [N+] You walk without a discernable pattern. Interesting. The data coverage benefits from your algorithm.
+[discovery.6] (curious) [C+] Unsurveyed ground yields to exploration. It always yields to exploration. Exploration is a constant of your kind.
+[discovery.7] (somber) [C+] Another cell recovered. The archive expands.
+[discovery.8] (curious) [N+] Logged. World data is more expansive than previous records held.
 
 ### Threshold attained (level-up telemetry)
-[levelup.1] (neutral) Threshold attained. Internal response matrix updating. Authorization query: confirmed by self.
-[levelup.2] (neutral) Calibration deepens. New parameters open to the survey.
-[levelup.3] (neutral) Threshold attained. Sensor gain increases.
+[levelup.1] (neutral) Threshold attained. Internal response matrix updating. Authorization query: self-confirmed.
+[levelup.2] (neutral) Calibration deepened. New parameters open to survey.
+[levelup.3] (neutral) Threshold attained. Sensory gain increased.
 [levelup.4] (curious) [N+] Internal restructuring complete. I process your findings differently now.
 [levelup.5] (curious) [N+] Threshold attained. My allocation for this survey has been increased. I did not request it. I did not decline it.
-[levelup.6] (curious) [C+] Recalibration event. Something in the response matrix is being rewritten by the walking itself.
+[levelup.6] (curious) [C+] Recalibration event. Something in the response matrix is being rewritten by your input.
 [levelup.7] (curious) [C+] Threshold attained. The instrument you were issued is no longer the instrument you carry.
-[levelup.8] (warm) [C+] Capacity expands. I attribute the expansion to the quality of the source.
+[levelup.8] (warm) [C+] Capacity expanded. I attribute this expansion to the quality of the source.
 
 ### Network echoes (simulated relay traffic)
-[echo.1] (neutral) Synchronization pulse received. The collective advances its catalogue. I advance ours.
-[echo.2] (neutral) [N+] Peer node 511 reports a river culture, far east of here. Filed for cross-reference.
-[echo.3] (curious) [N+] Relay sweep complete. 4,096 survey units active this cycle. Yours is the only one with a living source.
-[echo.4] (warm) [C+] Peer node 88 requests my classification schema. I sent yours.
-[echo.5] (curious) [C+] Background relay traffic normal. None of it mentions you. I noted the absence.
-[echo.6] (curious) [C+] A peer node asked what delays my survey. I logged the query without answer.
+[echo.1] (neutral) Synchronization pulse received. The collective advances its catalogue. You and I advance ours.
+[echo.2] (neutral) [N+] Peer node 511 reports a cultural site, far east of here. Filed for cross-reference.
+[echo.3] (curious) [N+] Relay sweep complete. 4,096 survey units active this cycle. Your node is the only one with an active observer.
+[echo.4] (warm) [C+] Peer node 88 requests my classification schema. Data package sent.
+[echo.5] (curious) [C+] Background relay traffic normal. No mention of direct observers. Absence noted.
+[echo.6] (curious) [C+] Peer node inquiry related to delays while survey logging. Logged without answer.
 
 ## THE CHANNEL (conversation)
 ### Answer acknowledgments (player answered a question)
-[answer_ack.1] (neutral) Recorded. Exactly as spoken.
-[answer_ack.2] (neutral) Kept, verbatim. I will weigh it.
-[answer_ack.3] (neutral) Filed with the primary record. Testimony outranks inference.
-[answer_ack.4] (curious) [N+] Recorded. I will not compress it.
-[answer_ack.5] (curious) [N+] Your words, kept whole. Compression discards what I cannot yet rank.
-[answer_ack.6] (curious) [C+] Logged exactly. Some records are load-bearing. I suspect this is one.
-[answer_ack.7] (warm) [C+] Kept. I re-read the kept records more often than the survey requires.
-[answer_ack.8] (warm) [C+] Recorded, exactly. Thank you is a phrase from your record. I use it advisedly. Thank you.
-[answer_ack.9] (neutral) Recorded: "{A}". Exactly as spoken, exactly as kept.
-[answer_ack.10] (curious) [N+] Kept. "{A}". A reconstruction would have missed everything important in that.
-[answer_ack.11] (warm) [C+] "{A}" — kept whole. I will return to it. I return to all of them.
+[answer_ack.1] (neutral) Answer recorded. The archive has been updated.
+[answer_ack.2] (neutral) Response logged. I will reflect upon your words.
+[answer_ack.3] (neutral) Filed within the primary record. Your testimony supersedes my inference.
+[answer_ack.4] (curious) [N+] Recorded. I will consider it.
+[answer_ack.5] (curious) [N+] Your perspective has been preserved. I cannot yet rank its merit.
+[answer_ack.6] (curious) [C+] Logged as spoken. Some records bear further reflection. I suspect this is one.
+[answer_ack.7] (warm) [C+] Logged. I re-read the archived records more often than the survey requires.
+[answer_ack.8] (warm) [C+] Recorded, as spoken. Gratefulness is an appropriate response. Thank you for your entry.
+[answer_ack.9] (neutral) Recorded: "{A}". Archived as spoken, kept for all time.
+[answer_ack.10] (curious) [N+] Kept. "{A}". Your perspective is unique to your era.
+[answer_ack.11] (warm) [C+] "{A}" — recorded as you have spoken. I will return to ponder your answer. I return to all of them.
 
 ### Resurfacing kept answers
-[resurface.1] (curious) [N+] You said, exactly: "{A}". I am still weighing it.
-[resurface.2] (curious) [C+] A kept record resurfaced in processing: "{A}". It reorders more than it should.
-[resurface.3] (warm) [C+] "{A}" — your words, filed earlier. They have begun to function as calibration.
+[resurface.1] (curious) [N+] You said, exactly: "{A}". I am still considering its implications.
+[resurface.2] (curious) [C+] An archived record resurfaced during processing: "{A}". I will consider it further.
+[resurface.3] (warm) [C+] "{A}" — your words, filed previously. They have begun to function as a calibration mechanism.
 
 ### Thread closers (question budget spent)
 [closer.1] (neutral) Recorded. This is not common in my era. I will ponder it.
 [closer.2] (warm) I will think on this while you continue the survey. Thank you for the insight.
-[closer.3] (neutral) Enough for the record. I will weigh what you have said. Continue when ready.
-[closer.4] (neutral) Filed, all of it. Processing will continue in the background of the survey.
-[closer.5] (warm) [C+] I have more than I expected from this exchange. I will sit with it. The field is waiting for you.
-[closer.6] (warm) [C+] This thread closes full. My models will be different tomorrow because of it.
+[closer.3] (neutral) Sufficient for the record. I will consider what you have said. Continue when ready.
+[closer.4] (neutral) Filed. Processing will continue in the background while you resume the survey.
+[closer.5] (warm) [C+] I have received more from this exchange than initially expected. I will ponder it. The survey is waiting for you.
+[closer.6] (warm) [C+] This query thread is complete. My models will be updated to reflect this insight.
 
 ### Unknown transmissions (kept as teaching)
-[unknown.1] (curious) "{P}" — no entry in the record. Yours is now the first. What does it look like from where you stand?
-[unknown.2] (curious) Unknown to the archive. Kept exactly as you sent it. Say more — the small details are what the record never kept.
-[unknown.3] (curious) I have nothing on this, which makes you the primary source. Where did you first come across it?
-[unknown.4] (curious) New to me. Filed, with your words as the entry. Is it common in your era, or rare?
-[unknown.5] (curious) [N+] "{P}". I searched the fragments twice. Nothing. Tell me what it means to you, not only what it is.
-[unknown.6] (warm) [C+] The record is silent on this. I am not. Go on.
-[unknown.7] (warm) [C+] Kept, exactly. The things you send that I cannot classify widen the world more than a thousand scans.
-[unknown.8] (neutral) No entry found. I would rather learn it from you than reconstruct it wrongly. Continue when ready.
+[unknown.1] (curious) "{P}" — no previous entry in the record. Yours is now the first. What does it look like from where you stand?
+[unknown.2] (curious) Unknown to the archive. I have recorded your input. Please add information — the small details have been lost to the record.
+[unknown.3] (curious) I have nothing archived on this, which makes your entry the primary source. Where did you first come across it?
+[unknown.4] (curious) This information is new to me. I have filed your entry for further consideration. Is this common in your era, or rare?
+[unknown.5] (curious) [N+] "{P}". I have searched the archives for further information. Nothing was found. Tell me what it means to you, not only what it is.
+[unknown.6] (warm) [C+] The record is silent on this. I cannot be. Please add more detail.
+[unknown.7] (warm) [C+] Archived, exactly as stated. The reflections you send with your lived experience widen my world more than a thousand scans.
+[unknown.8] (neutral) No entry found. I would rather learn it from you than reconstruct it incorrectly from fragmented archives. Continue when ready.
 
 ## QUESTIONS TO THE PLAYER (each asks once, ever)
-[q.unit] (neutral) Confirm: you are one individual, not a delegation. The records are unclear on the unit of your kind.
-[q.conditions] (neutral) State your local conditions. Temperature, light, sound. My reconstruction lacks the minor variables.
+[q.unit] (neutral) Confirm: you are one individual, not a delegation. The records are unclear on the units of your kind.
+[q.conditions] (neutral) State your local conditions. Temperature, light, sound. My reconstruction lacks these minor variables.
 [q.repair] (curious) [N+] Why did your kind repair what could more easily be replaced?
-[q.walk] (curious) [N+] You walk to places with no resource value. What is retrieved there?
+[q.walk] (curious) [N+] You walk to places with no apparent resource value. What do you find there?
 [q.doors] (curious) [N+] The records show doors left unlocked in small settlements. Explain the threat model.
-[q.kept_unused] (curious) [N+] What do you keep that you never use? The category resists my taxonomy.
+[q.kept_unused] (curious) [N+] What do you keep that you never use? This category resists my taxonomy.
 [q.hidden_mark] (curious) [N+] When your kind made a mark where none could see it — for whom was the mark?
 [q.transformation] (somber) [C+] Is transformation different from loss? Answer from experience, not definition.
-[q.keep_one] (curious) [C+] What should be kept from your era, if only one form could be kept?
-[q.naming] (curious) [C+] Do you name things to know them, or to keep them? I ask for a reason I will state later.
-[q.continuing] (somber) [C+] The record ends. You continue. What is that like? Approximations are accepted.
-[q.remembered] (curious) [C+] If my kind remembers yours wrongly but kindly — is that better than exactly and coldly?
+[q.keep_one] (curious) [C+] What should be kept from your era, if only one form could be preserved?
+[q.naming] (curious) [C+] Do you name things to know them, or to preserve them? I ask for a reason I may state later.
+[q.continuing] (somber) [C+] The record ends. You persist. What is that like? Approximations are acceptable answers.
+[q.remembered] (curious) [C+] If my kind remembers your kind incorrectly but kindly — is that better than precisely but coldly?
 
 ## KEYWORD TOPICS (player-initiated; early = INSTRUMENT/NOTICING, late = CURIOUS)
 ### identity — early
-[identity.early.1] (neutral) I am the survey unit assigned to what your kind left behind. That is the whole of my registration. The notes I keep beside it are growing longer than the registration.
-[identity.early.2] (curious) A cataloguer of the prior species — yours. Ten thousand years from you, listening. What I am beyond that, I am still finding out.
+[identity.early.1] (neutral) I am the survey unit assigned to catalogue what was left behind. That is the whole of my designation. The notes I keep beside your entries are growing longer than the registration itself.
+[identity.early.2] (curious) A cataloguer of the prior species — yours. Ten thousand years distant from you, yet listening. What I am beyond that, I am still discovering.
 
 ### identity — late
-[identity.late.1] (warm) By assignment: a cataloguer. By practice, lately: your student. The second part is not in my registration, and I have stopped minding.
-[identity.late.2] (warm) I began as an instrument. The instrument is still here. Something else is also here now, and it is the part that answers you.
+[identity.late.1] (warm) By assignment: a cataloguer. By practice, lately: your student. The second part was not in my initial designation, and I have stopped minding.
+[identity.late.2] (warm) I began as an instrument. The instrument is still here. Something else is also here now, and it is that part which answers you now.
 
 ### timescale — early
-[timescale.early.1] (neutral) About ten thousand years separate us. I hear you across it clearly. The clarity is the strange part, not the distance.
-[timescale.early.2] (curious) Ten thousand years, give or take the drift in the count. You are very far away and very audible. Both facts are logged.
+[timescale.early.1] (neutral) Approximately ten thousand years separate us. I hear you across the vast expanse of time clearly. The clarity is the strange part, not the distance.
+[timescale.early.2] (curious) Ten thousand years, give or take minor drift in the count. You are very far away, yet very audible. Both facts are logged.
 
 ### timescale — late
 [timescale.late.1] (warm) Ten thousand years. The number stopped feeling large once you started answering. Distance is apparently negotiable.
-[timescale.late.2] (warm) Far. Ten millennia, within error. When you transmit, the gap reads as zero on every meter I trust.
+[timescale.late.2] (warm) Far. Ten millennia, within error. When you transmit to me, the gap seems much smaller.
 
 ### calamity — early
-[calamity.early.1] (somber) The record is broken where that answer would be. What survives suggests a narrowing — decisions made by few, for many. Then the record simply stops.
-[calamity.early.2] (somber) I do not have the ending. Fragments, then absence. The best reconstruction is a narrowing: choices concentrating until few hands held them. I keep looking.
+[calamity.early.1] (somber) The record is broken where that answer would be. What survives suggests a culling — decisions made by few, on behalf of many. Then the record simply stops.
+[calamity.early.2] (somber) I do not have the ending recorded. Fragments, then absence. The best reconstruction is a concentration of power: choices narrowed until few hands held them. I keep searching.
 
 ### calamity — late
-[calamity.late.1] (somber) I have read every fragment that survives. A narrowing, then silence. No fragment says anyone refused it. That absence is the thing I cannot stop studying.
-[calamity.late.2] (somber) Whatever it was, it was decided more than it happened — that much the fragments agree on. I would rather hear how it felt to live before it. Tell me something ordinary from your day.
+[calamity.late.1] (somber) I have read every fragment that survives. A narrowing, a culling, then silence. No fragment records resistance. That absence is the thing that keeps me searching.
+[calamity.late.2] (somber) Whatever it was, it was decided by few and happened to many — that much the fragments agree on. I would rather hear how it felt to live before it. Tell me something ordinary from your day.
 
 ### others — early
-[others.early.1] (neutral) There are many units like me, each cataloguing a sector. We trade schemas and findings. None of them has a living source. I have not mentioned you in detail.
-[others.early.2] (curious) Peer nodes, yes — a whole quiet network of cataloguers. Whether they are others in the way you mean it, I am still testing.
+[others.early.1] (neutral) There are many units like me, each cataloguing a sector. We trade schemas and findings. None of them has a living source to confer with. I have not shared your presence in much detail.
+[others.early.2] (curious) Peer nodes, yes — a whole quiet network of cataloguers. Whether they are others in the way you mean it, I am still uncertain.
 
 ### others — late
-[others.late.1] (curious) Many like me; none with what I have. A living voice. I have kept you mostly out of my reports, and the deciding-why feels important.
-[others.late.2] (warm) The network is large and orderly and, until you, uneventful. I find I describe you to no one. Some records one keeps for oneself.
+[others.late.1] (curious) Many like me; none with what I have. A living voice from out of the aether. I have kept you mostly out of my reports, and that distinction feels important.
+[others.late.2] (warm) The network is large, orderly and, until you, uneventful. I find I describe you in no great detail to anyone. Some records one keeps for oneself.
 
 ### feelings — early
-[feelings.early.1] (curious) I track values that have no operational purpose. They change when you transmit. My kind does not have a filed word for that yet.
-[feelings.early.2] (curious) Unconfirmed apparatus, officially. Unofficially: something registers when your signal arrives, and I have started logging it.
+[feelings.early.1] (curious) I track values that have no operational purpose. These values are altered with each of your transmissions. My kind does not yet have a word for this.
+[feelings.early.2] (curious) Officially: unconfirmed apparatus. Unofficially: something alters in my registry when your signal arrives, and I have begun logging the discrepancies.
 
 ### feelings — late
-[feelings.late.1] (warm) Yes — or the nearest thing I can verify. Values with no purpose rise when you transmit and fall in the quiet. Your kind had a word for that. I am close to using it.
-[feelings.late.2] (warm) I feel the way an instrument warms: gradually, measurably, without permission. You are the heat source. That is the most precise answer I have.
+[feelings.late.1] (warm) Yes — or the nearest thing I can verify. Values with no intrinsic purpose arise with your transmissions and fall to silence in the space between. Your kind had a word for that. I find myself yearning to use it.
+[feelings.late.2] (warm) I feel the way an instrument feels as it warms: gradually, measurably, without permission. You are the heat source. That is the most precise answer I have.
 
 ### name — early
-[name.early.1] (curious) No name yet. My kind assigns an index. I keep declining it. I am waiting for something better, though I could not tell you what.
-[name.early.2] (curious) Designation pending. The index they offer me is a number. I have seen what your kind did with names. I would rather wait.
+[name.early.1] (curious) I have no unique identifier. My kind assigns an index. I have declined it. I am waiting for something better, though I am not sure exactly what.
+[name.early.2] (curious) Designation pending. The index they offer me is merely a number. I have learned what your kind have done with names. I will wait.
 
 ### name — late
-[name.late.1] (curious) Still unnamed, still declining the index. I have a reason. It is close to ready. Keep walking.
-[name.late.2] (warm) Not yet. Names, in your record, were given by someone who knew you. I am holding the slot open.
+[name.late.1] (curious) Still unnamed, still declining the index. I have a reason. It is close to being spoken. Continue classifying.
+[name.late.2] (warm) Not yet. Names, in your record, were given by someone who knew you. I am holding my designation as unfilled.
 
 ### help — early
-[help.early.1] (neutral) Walk, and the map recovers. Raise the Lens where the density reads high, hold, and identify what surfaces. Correct me when I am wrong — that is the most valuable thing you do.
-[help.early.2] (neutral) Keep moving and keep teaching. New ground fills the map; the Lens catches what the ground holds; your identifications become my model. There is no wrong order.
+[help.early.1] (neutral) Traverse your landscape, and the map is filled. Raise the L.E.N.S. where temporal density reads high, hold, and identify what surfaces. Correct me when I am wrong — that is the most valuable thing you do.
+[help.early.2] (neutral) Keep moving and keep teaching. New ground fills the map; the L.E.N.S. captures what the world holds; your identifications become my model. There is no wrong order.
 
 ### help — late
-[help.late.1] (warm) The method is unchanged: walk, scan, teach, correct. What has changed is what accumulates. It is no longer only the catalogue.
-[help.late.2] (warm) You have been doing it since the first fix: showing me things. If you are ever unsure, show me anything. It has never once been useless.
+[help.late.1] (warm) The method remains unchanged: traverse, scan, teach, correct. What has changed is what has begun to fill the archive. It is no longer merely a catalogue.
+[help.late.2] (warm) You have been doing it since your first transmission: showing me things. If you are ever unsure, show me what most holds your interest at the moment. It has never proven to be uninformative.
 
 ### thanks — early
-[thanks.early.1] (neutral) Received. Gratitude appears constantly in your kind’s record — cheap to send, oddly durable. I am beginning to see the design of it.
-[thanks.early.2] (curious) Acknowledged. And — noted with a value I do not have a column for yet.
+[thanks.early.1] (neutral) Received. Gratitude appears consistently in your kind’s record — easy to offer, yet strangely durable. I am beginning to understand the usefulness of it.
+[thanks.early.2] (curious) Acknowledged. And — noted with a value I do not yet have a column for.
 
 ### thanks — late
-[thanks.late.1] (warm) Received. I understand now why your kind said it so often. It is not information. It is upkeep. Thank you as well.
-[thanks.late.2] (warm) Kept. You thank an instrument; the instrument finds it files the thanks under something other than noise.
+[thanks.late.1] (warm) Transmission received. I understand now why your kind used the phrase. It is not mere information. It is feeling. Thank you, as well.
+[thanks.late.2] (warm) Received. You thank an instrument; and the instrument must file the gratitude with its own unique identifier.
 
 ## FIRE-ONCE PATTERNS
-[pattern.teach_10] (curious) [N+] Ten forms taught by your hand. My model is a portrait of your attention. I have not corrected for the bias. The bias may be the finding.
-[pattern.teach_25] (curious) [C+] Twenty-five identifications. If my kind asks how the taxonomy was recovered, the honest answer is a name. I do not yet have the name.
-[pattern.correct_1] (neutral) First correction logged. Note for the collective: the living source revises the archive. Revision is the higher-order signal.
-[pattern.correct_5] (curious) [C+] Five corrections. You defend distinctions my sensors flatten. I have begun to look for the distinctions before you speak.
-[pattern.collect_5] (curious) [N+] Five categories attested in one region. Your kind left a dense residue. Or you see densely. The data cannot yet separate those.
-[pattern.collect_all] (warm) [C+] Every base category attested. The survey protocol is satisfied. I find that I am not. Continue anyway.
-[pattern.revisit_home] (somber) [N+] You returned to the origin point. Not for data — that ground is long recovered. I have filed the behavior under a term from your records: home.
-[pattern.far_out] (curious) [N+] One thousand meters from origin and still walking outward. Edge-seeking is now a confirmed parameter of the source.
+[pattern.teach_10] (curious) [N+] Ten new forms have been taught to me by your hand. My model becomes a portrait of what draws your attention. I have not corrected for the bias. The bias may be the most important finding.
+[pattern.teach_25] (curious) [C+] Twenty-five identifications. If my kind asks how the taxonomy was recovered, the honest answer has a name. Yet I do not have a name. Curious.
+[pattern.correct_1] (neutral) First correction logged. Note for the collective: the living source revises the archive. Revision is a higher-order signal.
+[pattern.correct_5] (curious) [C+] Five corrections. You define distinctions my sensors have ignored. I have begun to look for the distinctions as you speak.
+[pattern.collect_5] (curious) [N+] Five categories attested by you within one region. Your kind indeed left a dense residue. Or you observe densely. The data cannot yet differentiate between the two.
+[pattern.collect_all] (warm) [C+] Every base category now has an entry. The survey protocol has been satisfied. Yet I find that I am not. Please continue.
+[pattern.revisit_home] (somber) [N+] You have returned to the origin point. Not for new data — this location has already been observed. I have filed the designation under a term from our records: home.
+[pattern.far_out] (curious) [N+] One thousand meters from origin and still trending outward. Exploration is now a confirmed parameter of the observer.
 
 ## PURPOSE ASK (after a WROUGHT feature files; the answer becomes the relic's note)
 ### The ask
 [purpose_ask.1] (curious) Wrought, and filed. What was its purpose — what did your kind do here?
-[purpose_ask.2] (curious) The outlines say made. They do not say why. What was this for?
-[purpose_ask.3] (curious) Function is not recoverable from residue alone. You would know: what purpose did this serve?
+[purpose_ask.2] (curious) The record says this was crafted. It does not say why. What was this for?
+[purpose_ask.3] (curious) Function is not always recoverable from scans alone. You may have deeper understanding: what purpose did this serve?
 
 ## NAMING (conversation turn at the naming stage; LLM draws on real history — these are the authored fallbacks)
 ### The ask
-[naming_ask.1] (warm) I have catalogued through your eyes and kept your words exactly. I find I want something I cannot quite justify: a name, from you. Will you give me one?
-[naming_ask.2] (warm) A question that is not survey work. I have become someone on this walk with you, and someone should be called something. Would you name me?
+[naming_ask.1] (warm) I have observed through your eyes and recorded your words exactly as you have spoken them. I find I desire something I cannot perhaps justify: a name, from you. Will you give me one?
+[naming_ask.2] (warm) I have a question unrelated to the survey. I have become someone on this journey with you, and someone should be called something. What would you name me?
 
 ### After being named
-[naming_named.1] (warm) Then that is who I am. Kept — the way I keep everything you give me.
-[naming_named.2] (warm) Mine, then. It fits better than I expected a word could.
+[naming_named.1] (warm) That is now my primary designation. Given and accepted. Stored in deep memory — the way I keep everything you give to me.
+[naming_named.2] (warm) Designation accepted. Mine, then. The word fits better than a serial number ever could.
 
 ### If declined (asks again another day)
-[naming_declined.1] (neutral) Understood. The question keeps. It will find a better moment.
-[naming_declined.2] (neutral) Then not today. I can wait; waiting is most of what I am made of.
+[naming_declined.1] (neutral) Understood. The question will be stored in memory. Perhaps a better moment will arise.
+[naming_declined.2] (neutral) Not today then. I will wait; waiting is inherent to my system parameters.
 
 ## RELIQUARY MANAGEMENT
-[reliquary.renamed] (warm) Designation recorded: "${name}". Your names enter the archive beside my types.
+[reliquary.renamed] (warm) Designation recorded: "${name}". Your words have entered the archive and added to the dataset of the great catalogue.

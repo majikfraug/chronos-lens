@@ -53,7 +53,7 @@ bright, all caps) · Companion = amber blocks · Player = right-justified neon.
 
 [boot.hii.1] HII: PROPERTY OF HERMETIC INDUSTRIES AND INNOVATIONS
 [boot.hii.2] HII: STARTUP INITIATED ...
-[boot.hii.3] HII: SYSTEMS CHECK ... OPTICS OK · POSITION OK · ARCHIVE OK
+[boot.hii.3] HII: SYSTEMS CHECK ... OPTICS ONLINE · POSITION SYNCHRONIZED · ARCHIVE ACTIVATED
 [boot.hii.4] HII: ESTABLISHING LINK ...
 [boot.hii.5] HII: ASSIGNING SURVEYOR ...
 [boot.companion.1] (neutral) Surveyor unit acknowledged. Companion process online. Establishing mission parameters.
@@ -80,7 +80,7 @@ bright, all caps) · Companion = amber blocks · Player = right-justified neon.
 (then the module bring-up: tabs appear one by one with these telemetry lines)
 [modules.map] MAP MODULE ONLINE · FIELD RECOVERY ACTIVE
 [modules.lens] L.E.N.S. ONLINE · LOCALIZED EPOCH NORMALIZATION SCANNER
-[modules.reliquary] RELIQUARY ONLINE · TYPE ARCHIVE READY
+[modules.reliquary] RELIQUARY ONLINE · DATA ARCHIVE READY
 `);
 
 sections.push('## CALIBRATION BEATS (first-session tutorial)');
@@ -148,7 +148,7 @@ sections.push(pool('After being named', 'naming_named', POOLS.naming_named));
 sections.push(pool('If declined (asks again another day)', 'naming_declined', POOLS.naming_declined));
 
 sections.push(`## RELIQUARY MANAGEMENT
-[reliquary.renamed] (warm) Designation recorded: "\${name}". Your names enter the archive beside my types.
+[reliquary.renamed] (warm) Designation recorded: "\${name}". Your words have entered the archive and added to the dataset of the great catalogue.
 `);
 
 writeFileSync(OUT, sections.join('\n'));
