@@ -21,6 +21,9 @@
       "extends": "production",
       "env": {
         "EXPO_PUBLIC_ACCELERATED_MATURATION": "1"
+      },
+      "ios": {
+        "image": "latest"
       }
     }
   },
