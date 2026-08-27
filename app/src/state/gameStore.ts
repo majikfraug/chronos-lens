@@ -1,3 +1,4 @@
+import * as Network from 'expo-network';
 import { create } from 'zustand';
 import { audio } from '../audio/engine';
 import { brain, getLLMStatus, setBrainMode, type BrainMode } from '../companion/brainProvider';
@@ -79,6 +80,48 @@ function downloadProgressLogger(): (fraction: number) => void {
   };
 }
 
+/**
+ * Brings the language core up (director 2026-08-27: LLM is the default brain).
+ * The first-ever bring-up downloads ~2.3GB, so it waits for Wi-Fi; once the
+ * model is on disk, later launches load it on any connection. The authored
+ * archive answers instantly the whole time — no behavior cliff.
+ */
+async function startLanguageCore(): Promise<void> {
+  const fetched = await getFlag('llm_model_fetched');
+  if (!fetched) {
+    try {
+      const net = await Network.getNetworkStateAsync();
+      if (net.type !== Network.NetworkStateType.WIFI) {
+        useGameStore
+          .getState()
+          .appendLog('sys', 'LANGUAGE CORE STANDBY · LARGE TRANSFER AWAITS AN UNMETERED LINK');
+        const sub = Network.addNetworkStateListener((s) => {
+          if (s.type === Network.NetworkStateType.WIFI) {
+            sub.remove();
+            void initLanguageCore();
+          }
+        });
+        return;
+      }
+    } catch {
+      // Network state unreadable — proceed; a failed fetch degrades to authored.
+    }
+  }
+  await initLanguageCore();
+}
+
+async function initLanguageCore(): Promise<void> {
+  const appendLog = useGameStore.getState().appendLog;
+  appendLog('sys', 'RESPONSE CORE · LANGUAGE MODEL · INITIALIZING');
+  const status = await setBrainMode('llm', downloadProgressLogger());
+  if (status === 'ready') {
+    void setFlag('llm_model_fetched', '1');
+    appendLog('sys', 'LANGUAGE CORE ONLINE · ALL PROCESSING ON-DEVICE');
+  } else if (getLLMStatus() === 'unavailable') {
+    appendLog('sys', 'LANGUAGE CORE UNAVAILABLE IN THIS CLIENT · AUTHORED ARCHIVE ANSWERS');
+  }
+}
+
 // Naming retry cooldown (persisted via flags; loaded at hydrate).
 let namingRetryTs = 0;
 const NAMING_RETRY_MS = 4 * 60 * 60 * 1000;
@@ -92,6 +135,13 @@ let sessionEchoDone = false;
 let askInFlight = false;
 const patternsInFlight = new Set<string>();
 let inVehicle = false;
+
+// Recent gameplay-event tags: triggered questions wait for these, so every ask
+// lands as a reaction to what the player just did (playtest fix 2026-08-27).
+let recentQuestionEvents: string[] = [];
+function noteQuestionEvent(tag: string): void {
+  recentQuestionEvents = [...recentQuestionEvents.filter((t) => t !== tag), tag].slice(-8);
+}
 
 // Calibration (first-session tutorial) — walk-distance accumulator for step 1.
 let calibWalkM = 0;
@@ -238,6 +288,7 @@ function brainContext(
     recentTranscript,
     historySummary: s.historySummary || undefined,
     companionSketch: s.companionSketch ?? undefined,
+    recentEvents: [...recentQuestionEvents],
     ...extra,
   };
 }
@@ -270,7 +321,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   setUiChatFocus: (focused) => set({ uiChatFocus: focused }),
   historySummary: '',
   companionSketch: null,
-  brainMode: 'authored',
+  brainMode: 'llm', // the language core is the default companion brain (2026-08-27)
 
   appendHistory: (line) => {
     // Compact rolling record, oldest dropped first (cap per voice brief 1.4).
@@ -354,16 +405,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       get().appendLog('sys', 'RESPONSE CORE · AUTHORED ARCHIVE');
       return;
     }
-    get().appendLog('sys', 'RESPONSE CORE · LANGUAGE MODEL · INITIALIZING');
-    const status = await setBrainMode('llm', downloadProgressLogger());
-    if (status === 'ready') {
-      get().appendLog('sys', 'LANGUAGE CORE ONLINE · ALL PROCESSING ON-DEVICE');
-    } else {
-      get().appendLog(
-        'sys',
-        'LANGUAGE CORE UNAVAILABLE IN THIS CLIENT · REQUIRES DEV BUILD · AUTHORED ARCHIVE ANSWERS FOR NOW'
-      );
-    }
+    // A deliberate tap skips the Wi-Fi gate — the player chose the transfer.
+    await initLanguageCore();
   },
 
   companionThinking: false,
@@ -433,6 +476,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
         void markQuestionAsked(next.id);
         get().appendLog('query', next.response.text);
         audio.voice(next.response.mood);
+        // One-time affordance hint: testers didn't know a query invites a
+        // reply — or that ignoring it is allowed (playtest 2026-08-27).
+        void getFlag('query_hint_shown').then((seen) => {
+          if (seen) return;
+          void setFlag('query_hint_shown', '1');
+          get().appendLog('sys', 'RESPOND IF YOU CHOOSE · OR CONTINUE THE SURVEY · BOTH ARE DATA');
+        });
       })
       .finally(() => {
         askInFlight = false;
@@ -474,10 +524,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   resetSurvey: async () => {
     const keepBrainMode = get().brainMode;
+    // The downloaded model survives a survey wipe — never re-download 2.3GB.
+    const modelFetched = await getFlag('llm_model_fetched');
     await wipeAllData();
-    if (keepBrainMode !== 'authored') void setFlag('brain_mode', keepBrainMode);
+    if (keepBrainMode === 'authored') void setFlag('brain_mode', keepBrainMode);
+    if (modelFetched) void setFlag('llm_model_fetched', modelFetched);
 
     // Session pacing resets with the world.
+    recentQuestionEvents = [];
     actionsSinceAsk = 0;
     resurfacedThisSession = false;
     wasAwayFromHome = false;
@@ -561,6 +615,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   renameRelic: async (id, name) => {
     await renameScan(id, name);
     if (name) {
+      noteQuestionEvent('relic_named');
       get().appendLog('ai', `Designation recorded: "${name}". Your words have entered the archive and added to the dataset of the great catalogue.`);
       audio.voice('warm');
     }
@@ -569,12 +624,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
   reclassifyRelic: async (id, newType) => {
     await reclassifyScan(id, newType);
     await get().refreshClassifier();
+    noteQuestionEvent('reliquary_change');
     get().speak('scan_correct', { type: newType });
   },
 
   expungeRelic: async (id) => {
     await deleteScan(id);
     await get().refreshClassifier();
+    noteQuestionEvent('reliquary_change');
     get().appendLog('sys', 'RECORD EXPUNGED AT YOUR INSTRUCTION');
     audio.play('discard');
   },
@@ -620,6 +677,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
     get().appendHistory(
       `Filed ${type.toLowerCase()}${relicName ? ` "${relicName}"` : ''}${corrected ? ' (they corrected me)' : ''}.`
     );
+
+    // Question triggers from this filing (see corpus QUESTIONS `trigger`).
+    if (corrected) noteQuestionEvent('correct');
+    if (type === 'MINERAL') noteQuestionEvent('scan_mineral');
+    if (scale === 'FEATURE' && type === 'WROUGHT') noteQuestionEvent('scan_wrought');
+    if (relicName) noteQuestionEvent('relic_named');
+    if (get().taughtTotal >= 8) noteQuestionEvent('collection');
 
     get().speak(taught ? 'scan_teach' : corrected ? 'scan_correct' : 'scan_confirm', {
       type,
@@ -716,15 +780,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
     // session count only. Never transmitted without the tester sending it.
     const sessionsFlag = await getFlag('sessions_count');
     void setFlag('sessions_count', String((sessionsFlag ? Number(sessionsFlag) : 0) + 1));
-    if (brainFlag === 'llm') {
+    // LLM is the default brain; only an explicit authored choice opts out.
+    if (brainFlag === 'authored') {
+      set({ brainMode: 'authored' });
+      void setBrainMode('authored');
+    } else {
       set({ brainMode: 'llm' });
-      void setBrainMode('llm', downloadProgressLogger()).then((status) => {
-        if (status === 'ready') {
-          get().appendLog('sys', 'LANGUAGE CORE ONLINE · ALL PROCESSING ON-DEVICE');
-        } else if (getLLMStatus() === 'unavailable') {
-          get().appendLog('sys', 'LANGUAGE CORE UNAVAILABLE IN THIS CLIENT · AUTHORED ARCHIVE ANSWERS');
-        }
-      });
+      void startLanguageCore();
     }
     set({
       companionName: nameFlag,
@@ -851,9 +913,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
     // Movement-driven fire-once patterns (brief §4).
     const fromHome = Math.hypot(meters.x, meters.y);
     if (fromHome > COMPANION.farOutMeters) get().firePattern('far_out');
-    if (fromHome > COMPANION.homeAwayMeters) wasAwayFromHome = true;
+    if (fromHome > COMPANION.homeAwayMeters) {
+      wasAwayFromHome = true;
+      noteQuestionEvent('walk_far');
+    }
     if (wasAwayFromHome && cellKeyFor(meters, FIELD.cellSizeM) === resolvedHomeCellKey) {
       get().firePattern('revisit_home');
+      noteQuestionEvent('revisit_home');
     }
   },
 

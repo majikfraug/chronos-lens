@@ -51,12 +51,13 @@ export class LLMBrain implements CompanionBrain {
       // 0.9 API: the runtime needs a resource-fetcher adapter registered before
       // any model load ("ResourceFetcher adapter is not initialized" otherwise).
       executorch.initExecutorch({ resourceFetcher: ExpoResourceFetcher });
-      // Llama 3.2 3B (SpinQuant): desktop-harness evaluation 2026-07-08 showed
-      // 1B cannot hold the character (third-person slips, invented quotes)
-      // while 3B holds register AND engages — see docs/decisions.md. The
-      // 15 Pro-class devices run 3B SpinQuant; revisit if older devices join.
+      // Qwen 3 4B (8da4w quantized): upgraded from Llama 3.2 3B SpinQuant after
+      // playtest feedback (2026-08-27) — stronger instruction-following holds
+      // the character voice and stays relevant to context. Thinking mode is
+      // disabled per-call via the /no_think soft switch (see generate());
+      // postProcess strips any <think> blocks that slip through anyway.
       this.llm = await executorch.LLMModule.fromModelName(
-        executorch.LLAMA3_2_3B_SPINQUANT,
+        executorch.QWEN3_4B_QUANTIZED,
         onDownloadProgress
       );
       this.status = 'ready';
@@ -110,7 +111,11 @@ export class LLMBrain implements CompanionBrain {
     // askedIds carries authored ids AND previously generated question texts
     // (prefixed llmq:) so the model is told what not to re-ask.
     const priorTexts = askedIds.filter((a) => a.startsWith('llmq:')).map((a) => a.slice(5));
-    const generated = await this.generate(context, buildQuestionInstruction(priorTexts), false);
+    const generated = await this.generate(
+      context,
+      buildQuestionInstruction(priorTexts, context.recentEvents),
+      false
+    );
     if (generated) {
       return {
         id: `llmq:${generated.text.slice(0, 80)}`,
@@ -147,7 +152,10 @@ export class LLMBrain implements CompanionBrain {
       // conversational turn must close the thread, not extend the interrogation.
       const mustClose =
         includeTranscript && questionStreak(context.recentTranscript) >= CLOSE_AFTER_QUESTIONS;
-      const finalInstruction = mustClose ? `${instruction}\n\n${CLOSE_DIRECTIVE}` : instruction;
+      // Qwen3 soft switch: /no_think in the final user turn skips the thinking
+      // phase (latency); harmless noise to any model that ignores it.
+      const finalInstruction =
+        (mustClose ? `${instruction}\n\n${CLOSE_DIRECTIVE}` : instruction) + ' /no_think';
       const messages = buildChatMessages(context, finalInstruction, includeTranscript);
       const stage = stageFor(context.level ?? 1, context.named != null);
 

@@ -154,8 +154,20 @@ export function buildEventInstruction(event: CompanionEvent, ctx: CompanionConte
   }
 }
 
+/** Human phrasing for recent-event tags, injected so questions stay grounded. */
+const EVENT_PHRASES: Record<string, string> = {
+  correct: 'they corrected one of your classifications',
+  scan_wrought: 'they filed a wrought feature — something their kind built',
+  scan_mineral: 'they filed a mineral form',
+  collection: 'their reliquary has grown into a real collection',
+  relic_named: 'they gave a relic a name of its own',
+  reliquary_change: 'they revised or removed an entry in their reliquary',
+  walk_far: 'they walked far from their origin point',
+  revisit_home: 'they returned to their origin point',
+};
+
 /** Instruction for generating a new question to the player (LLM path). */
-export function buildQuestionInstruction(askedBefore: string[]): string {
+export function buildQuestionInstruction(askedBefore: string[], recentEvents?: string[]): string {
   const avoid =
     askedBefore.length > 0
       ? ` You have already asked (do not repeat or closely rephrase): ${askedBefore
@@ -163,5 +175,13 @@ export function buildQuestionInstruction(askedBefore: string[]): string {
           .map((q) => `"${q}"`)
           .join('; ')}.`
       : '';
-  return `Ask the Surveyor ONE direct question you actually want answered — about their era, their practices, their reasons, or their ordinary day. Concrete and answerable, the kind of thing only a living witness could tell you. One or two sentences, ending with the question.${avoid}`;
+  const grounding = (recentEvents ?? [])
+    .map((e) => EVENT_PHRASES[e])
+    .filter(Boolean)
+    .slice(-3);
+  const ground =
+    grounding.length > 0
+      ? ` Ground the question in what they just did: ${grounding.join('; ')}. Ask about THAT, not about something unrelated.`
+      : '';
+  return `Ask the Surveyor ONE direct question you actually want answered — about their era, their practices, their reasons, or their ordinary day. Concrete and answerable, the kind of thing only a living witness could tell you. One or two sentences, ending with the question.${ground}${avoid}`;
 }

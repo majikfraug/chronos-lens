@@ -1,14 +1,15 @@
 import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from 'expo-audio';
 import { AppState } from 'react-native';
+import { ambientSynth } from './synth';
 
 /**
  * The audio engine facade — game code only ever talks to this interface.
  *
- * Current implementation plays stems rendered offline by
- * tools/render-audio-stems.mjs (the §7 synth spec in executable form);
- * Expo Go cannot run react-native-audio-api, see docs/decisions.md
- * (2026-07-07). When a dev-client build lands, live synthesis swaps in
- * behind this same interface without touching call sites.
+ * SFX and voice tones play pre-rendered stems (tools/render-audio-stems.mjs).
+ * The ambient bed is LIVE synthesis (src/audio/synth.ts): a motion-reactive
+ * hum via react-native-audio-api + expo-sensors (director 2026-08-27). Where
+ * the native audio module is absent, the looping ambient stem plays instead —
+ * same facade, no call-site changes.
  */
 
 export type SoundName =
@@ -45,6 +46,8 @@ const AMBIENT_VOLUME = 0.8;
 let started = false;
 let muted = false;
 let players: Record<string, AudioPlayer> | null = null;
+/** True when the live ambient synth owns the bed (stem loop stays silent). */
+let synthActive = false;
 
 /**
  * Reactive ambient (director 2026-07-18): the bed subtly responds to what the
@@ -130,6 +133,12 @@ export const audio = {
     AppState.addEventListener('change', (state) => {
       if (state === 'active') audio.reassert();
     });
+    // The live motion-reactive hum owns the bed when the native module exists.
+    synthActive = ambientSynth.start();
+    if (synthActive) {
+      ambientSynth.setMuted(muted);
+      return;
+    }
     const p = getPlayers();
     if (!p) return;
     if (!muted) {
@@ -140,10 +149,14 @@ export const audio = {
     startAmbientGlide();
   },
 
-  /** Movement input for the reactive bed: walking speed bends the rate slightly. */
+  /** Movement input for the reactive bed: walking speed stirs the hum. */
   ambientInput(input: { speedMs?: number }): void {
     if (input.speedMs == null) return;
-    // 0 m/s → 0.985 (settled), 2 m/s brisk walk → 1.015 (brighter); vehicles neutral.
+    if (synthActive) {
+      ambientSynth.setWalkSpeed(input.speedMs);
+      return;
+    }
+    // Stem fallback: 0 m/s → 0.985 (settled), 2 m/s brisk walk → 1.015; vehicles neutral.
     const s = input.speedMs > 6 ? 0 : Math.min(2, Math.max(0, input.speedMs));
     ambientRateTarget = 0.985 + (s / 2) * 0.03;
   },
@@ -151,12 +164,17 @@ export const audio = {
   /** Survey activity (scan filed, ground discovered, answer kept): brief swell. */
   ambientPulse(): void {
     lastActivityTs = Date.now();
+    if (synthActive) ambientSynth.pulse();
   },
 
   /** Re-activate the audio session and resume the bed after an interruption. */
   reassert(): void {
     if (!started) return;
     applyAudioMode();
+    if (synthActive) {
+      ambientSynth.reassert();
+      return;
+    }
     const p = getPlayers();
     if (p && !muted && !p.ambient.playing) {
       p.ambient.volume = AMBIENT_VOLUME;
@@ -188,12 +206,13 @@ export const audio = {
   /** Returns the new muted state. */
   toggleMute(): boolean {
     muted = !muted;
+    if (synthActive) ambientSynth.setMuted(muted);
     const p = getPlayers();
     if (p) {
       if (muted) {
-        p.ambient.pause();
+        if (!synthActive) p.ambient.pause();
         p.scan.pause();
-      } else if (started) {
+      } else if (started && !synthActive) {
         p.ambient.volume = AMBIENT_VOLUME;
         p.ambient.play();
       }

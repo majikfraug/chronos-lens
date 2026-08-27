@@ -4,6 +4,38 @@ Deviations from `docs/brief.md`, and why. Newest first.
 
 ---
 
+## 2026-08-27 — First-playtest fixes: live dither, Qwen3, triggered questions, live synth
+
+Tester feedback (first TestFlight wave) drove four changes:
+
+1. **Live temporal feed** — the raw camera is never shown again. The Lens runs
+   a capture→dither loop (a few frames/sec through the same 128×96 Bayer
+   pipeline as saved stills). Testers reported the raw feed "throws you out of
+   the game world" and "feels like being spied on". The low refresh is framed
+   as slow-scan reconstruction — deliberate aesthetic, not a limitation. A
+   true 30fps GPU frame-processor path (react-native-vision-camera + Skia)
+   remains a future upgrade if the slow scan reads as lag rather than mood.
+2. **Language core: Qwen 3 4B quantized, ON BY DEFAULT** — replaces Llama 3.2
+   3B SpinQuant (better instruction-following holds character + context).
+   `brain_mode` now defaults to `llm`; the first-ever model download (~2.3GB)
+   waits for Wi-Fi (expo-network gate, `llm_model_fetched` flag), with the
+   authored corpus answering until ready. Thinking mode disabled per-call via
+   Qwen's `/no_think` soft switch. CORE·A/CORE·L toggle unchanged.
+3. **Questions are event-triggered** — QUESTIONS entries carry a `trigger`
+   tag (corrected scan, wrought filing, relic named, far walk, home return…)
+   and fire only after that event lands, with texts revised to reference the
+   act. Testers experienced the untriggered philosophy asks as "random things
+   with zero context". LLM-generated questions get the same recent-event
+   grounding in their instruction. One-time affordance hint added after the
+   first free-play query ("RESPOND IF YOU CHOOSE · OR CONTINUE THE SURVEY").
+4. **Live ambient synthesis** — react-native-audio-api (0.12.0 — 0.13 needs
+   worklets ≥0.6, conflicting with SDK 54's reanimated pin) + expo-sensors
+   DeviceMotion. The bed is now a wandering two-oscillator hum over a noise
+   floor: device motion opens the filter and lifts the gain, pitch random-walks
+   (never a loop, never a melody — "hums while wandering", per the director).
+   The pre-rendered ambient stem remains the fallback where the native module
+   is absent.
+
 ## 2026-07-18 — Director rulings on the bible-review deltas
 
 1. **Era reference RATIFIED** — design/CHRONOS_LENS_ERA_REFERENCE.md is v1.0

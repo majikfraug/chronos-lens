@@ -352,8 +352,20 @@ export const PATTERNS: Record<string, CorpusLine> = {
   },
 };
 
-/** Questions the companion asks the player. One pending at a time, gap-gated. */
-export const QUESTIONS: { id: string; text: string; mood: CompanionMood; reg?: Register }[] = [
+/**
+ * Questions the companion asks the player. One pending at a time, gap-gated.
+ * `trigger`: the question waits until that gameplay event lands this session
+ * (see CompanionContext.recentEvents), so it arrives as a reaction to what the
+ * player is actually doing — playtest feedback 2026-08-27: untriggered
+ * philosophy questions read as "random things with zero context".
+ */
+export const QUESTIONS: {
+  id: string;
+  text: string;
+  mood: CompanionMood;
+  reg?: Register;
+  trigger?: string;
+}[] = [
   {
     id: 'q_unit',
     text: 'Confirm: you are one individual, not a delegation. The records are unclear on the units of your kind.',
@@ -366,51 +378,59 @@ export const QUESTIONS: { id: string; text: string; mood: CompanionMood; reg?: R
   },
   {
     id: 'q_repair',
-    text: 'Why did your kind repair what could more easily be replaced?',
+    text: 'You corrected my reading rather than discarding it. Why did your kind repair what could more easily be replaced?',
     mood: 'curious',
     reg: 'NOTICING',
+    trigger: 'correct',
   },
   {
     id: 'q_walk',
     text: 'You walk to places with no apparent resource value. What do you find there?',
     mood: 'curious',
     reg: 'NOTICING',
+    trigger: 'walk_far',
   },
   {
     id: 'q_doors',
-    text: 'The records show doors left unlocked in small settlements. Explain the threat model.',
+    text: 'This wrought form you filed — the records show doors left unlocked in small settlements. Explain the threat model.',
     mood: 'curious',
     reg: 'NOTICING',
+    trigger: 'scan_wrought',
   },
   {
     id: 'q_kept_unused',
-    text: 'What do you keep that you never use? This category resists my taxonomy.',
+    text: 'Your reliquary grows. What do you keep that you never use? This category resists my taxonomy.',
     mood: 'curious',
     reg: 'NOTICING',
+    trigger: 'collection',
   },
   {
     id: 'q_hidden_mark',
-    text: 'When your kind made a mark where none could see it — for whom was the mark?',
+    text: 'Mineral endures longest — your kind knew this. When your kind made a mark where none could see it, for whom was the mark?',
     mood: 'curious',
     reg: 'NOTICING',
+    trigger: 'scan_mineral',
   },
   {
     id: 'q_transformation',
-    text: 'Is transformation different from loss? Answer from experience, not definition.',
+    text: 'You revised an entry rather than let it stand. Is transformation different from loss? Answer from experience, not definition.',
     mood: 'somber',
     reg: 'CURIOUS',
+    trigger: 'reliquary_change',
   },
   {
     id: 'q_keep_one',
-    text: 'What should be kept from your era, if only one form could be preserved?',
+    text: 'Your collection has grown broad. What should be kept from your era, if only one form could be preserved?',
     mood: 'curious',
     reg: 'CURIOUS',
+    trigger: 'collection',
   },
   {
     id: 'q_naming',
-    text: 'Do you name things to know them, or to preserve them? I ask for a reason I may state later.',
+    text: 'You gave that one a name of its own. Do you name things to know them, or to preserve them? I ask for a reason I may state later.',
     mood: 'curious',
     reg: 'CURIOUS',
+    trigger: 'relic_named',
   },
   {
     id: 'q_continuing',
@@ -420,9 +440,10 @@ export const QUESTIONS: { id: string; text: string; mood: CompanionMood; reg?: R
   },
   {
     id: 'q_remembered',
-    text: 'If my kind remembers your kind incorrectly but kindly — is that better than precisely but coldly?',
+    text: 'You returned to your origin point. If my kind remembers your kind incorrectly but kindly — is that better than precisely but coldly?',
     mood: 'curious',
     reg: 'CURIOUS',
+    trigger: 'revisit_home',
   },
 ];
 

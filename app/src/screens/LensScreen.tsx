@@ -76,8 +76,8 @@ function ScaleGlyph({ kind }: { kind: Scale }): React.JSX.Element {
 }
 
 /**
- * M2/M3 Lens: live camera behind phosphor tint, temporal-density meter,
- * hold-to-stabilize scan into the training-first classification flow
+ * M2/M3 Lens: live dithered temporal feed (the raw camera is never shown),
+ * temporal-density meter, hold-to-stabilize scan into the training-first flow
  * (brief §2.3): first TEACH_PHASE scans the player identifies; thereafter the
  * companion proposes from taught counts and the player confirms or corrects.
  */
@@ -109,8 +109,17 @@ export function LensScreen(): React.JSX.Element {
   const [defineOpen, setDefineOpen] = useState(false);
   const [defineName, setDefineName] = useState('');
   const [relicName, setRelicName] = useState('');
+  const [liveFrame, setLiveFrame] = useState<SkImage | null>(null);
   const holdStart = useRef(0);
   const holdTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  // All captures (live feed + resolve) run through one mutex: the camera takes
+  // exactly one picture at a time, so the resolve shot never races a feed tick.
+  const captureMutex = useRef<Promise<unknown>>(Promise.resolve());
+  const exclusiveCapture = <T,>(fn: () => Promise<T>): Promise<T> => {
+    const run = captureMutex.current.then(fn, fn);
+    captureMutex.current = run.catch(() => {});
+    return run;
+  };
 
   const windowW = stage.width * WINDOW_FRAC;
   const windowH = windowW * 0.75; // 4:3, matching the 128×96 dither feed
@@ -118,6 +127,44 @@ export function LensScreen(): React.JSX.Element {
   useEffect(() => {
     if (!permission?.granted && permission?.canAskAgain) void requestPermission();
   }, [permission, requestPermission]);
+
+  // THE LIVE TEMPORAL FEED (playtest fix 2026-08-27): the raw camera is never
+  // shown — testers reported it broke the world instantly ("a weirdly framed
+  // phone cam", "felt like being spied on"). Instead a capture→dither loop
+  // repaints the viewport a few times a second with the same 128×96 phosphor
+  // reconstruction the saved stills use. The low refresh IS the aesthetic:
+  // a slow-scan link across ten thousand years, not a phone camera.
+  useEffect(() => {
+    if (!permission?.granted || stage.width === 0 || still || scanning) return;
+    let alive = true;
+    let timer: ReturnType<typeof setTimeout>;
+    const tick = async () => {
+      if (!alive) return;
+      const started = Date.now();
+      try {
+        const photo = await exclusiveCapture(() =>
+          cameraRef.current?.takePictureAsync({
+            base64: true,
+            quality: 0.15,
+            shutterSound: false,
+          }) ?? Promise.resolve(undefined)
+        );
+        if (alive && photo?.base64) {
+          setLiveFrame(ditherCapturedStill(photo.base64, undefined, { fullFrame: true }));
+        }
+      } catch {
+        // camera warming up or backgrounded — the next tick retries
+      }
+      if (!alive) return;
+      const elapsed = Date.now() - started;
+      timer = setTimeout(tick, Math.max(80, 240 - elapsed));
+    };
+    timer = setTimeout(tick, 300);
+    return () => {
+      alive = false;
+      clearTimeout(timer);
+    };
+  }, [permission?.granted, stage.width, still, scanning]);
 
   // Temporal density drifts toward a base set by whether this ground is already
   // surveyed — ported from the prototype's density simulation; the full heat
@@ -184,11 +231,13 @@ export function LensScreen(): React.JSX.Element {
     setMessage('RESOLVING');
     const capturedScale: Scale = scaleRead ?? 'ARTIFACT';
     try {
-      const photo = await cameraRef.current?.takePictureAsync({
-        base64: true,
-        quality: 0.3,
-        shutterSound: false,
-      });
+      const photo = await exclusiveCapture(() =>
+        cameraRef.current?.takePictureAsync({
+          base64: true,
+          quality: 0.3,
+          shutterSound: false,
+        }) ?? Promise.resolve(undefined)
+      );
       if (!photo?.base64) throw new Error('no capture data');
       const dithered = ditherCapturedStill(
         photo.base64,
@@ -302,13 +351,30 @@ export function LensScreen(): React.JSX.Element {
 
   return (
     <View style={styles.stage} onLayout={onStageLayout}>
+      {/* The camera stays mounted (its session feeds the capture loop) but is
+          never visible — the player only ever sees the reconstruction. */}
       <CameraView
         ref={cameraRef}
-        style={StyleSheet.absoluteFill}
+        style={[StyleSheet.absoluteFill, styles.cameraHidden]}
         facing="back"
         animateShutter={false}
       />
-      {/* Phosphor cast over the raw feed; true per-frame dither arrives with a dev build. */}
+      {liveFrame && stage.width > 0 ? (
+        <Canvas style={StyleSheet.absoluteFill} pointerEvents="none">
+          <SkiaImage
+            image={liveFrame}
+            x={0}
+            y={0}
+            width={stage.width}
+            height={stage.height}
+            fit="cover"
+          />
+        </Canvas>
+      ) : (
+        <View style={styles.feedWarming} pointerEvents="none">
+          <Text style={styles.telemetry}>ALIGNING TEMPORAL FEED …</Text>
+        </View>
+      )}
       <View style={styles.tint} pointerEvents="none" />
 
       <View style={styles.hudTL} pointerEvents="none">
@@ -532,8 +598,16 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   tint: {
+    // Light phosphor cast over the dithered feed for CRT cohesion.
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(11,20,11,0.32)',
+    backgroundColor: 'rgba(11,20,11,0.14)',
+  },
+  cameraHidden: { opacity: 0.02 },
+  feedWarming: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#060806',
   },
   hudTL: { position: 'absolute', top: 8, left: 10 },
   hudTR: { position: 'absolute', top: 8, right: 10 },

@@ -37,13 +37,20 @@ export class AuthoredBrain implements CompanionBrain {
   async nextQuestion(
     register: Register,
     askedIds: string[],
-    _context: CompanionContext
+    context: CompanionContext
   ): Promise<{ id: string; response: CompanionResponse } | null> {
     const candidates = QUESTIONS.filter(
       (q) => !askedIds.includes(q.id) && registerAtLeast(register, q.reg)
     );
-    if (candidates.length === 0) return null;
-    const q = candidates[Math.floor(Math.random() * candidates.length)];
+    // Triggered questions fire only after their gameplay event landed this
+    // session — the ask reads as a reaction, never as a non sequitur. A
+    // triggered match always outranks the generic pool.
+    const events = context.recentEvents ?? [];
+    const triggered = candidates.filter((q) => q.trigger && events.includes(q.trigger));
+    const generic = candidates.filter((q) => !q.trigger);
+    const pool = triggered.length > 0 ? triggered : generic;
+    if (pool.length === 0) return null;
+    const q = pool[Math.floor(Math.random() * pool.length)];
     return { id: q.id, response: { text: q.text, mood: q.mood, isQuery: true } };
   }
 

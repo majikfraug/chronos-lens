@@ -62,6 +62,12 @@
       "expo-audio",
       "expo-asset",
       [
+        "expo-sensors",
+        {
+          "motionPermission": "The instrument's ambient hum responds to the motion of the device in your hand. Motion data never leaves this device."
+        }
+      ],
+      [
         "expo-build-properties",
         {
           "ios": {

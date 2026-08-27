@@ -163,16 +163,16 @@ bright, all caps) · Companion = amber blocks · Player = right-justified neon.
 ## QUESTIONS TO THE PLAYER (each asks once, ever)
 [q.unit] (neutral) Confirm: you are one individual, not a delegation. The records are unclear on the units of your kind.
 [q.conditions] (neutral) State your local conditions. Temperature, light, sound. My reconstruction lacks these minor variables.
-[q.repair] (curious) [N+] Why did your kind repair what could more easily be replaced?
+[q.repair] (curious) [N+] You corrected my reading rather than discarding it. Why did your kind repair what could more easily be replaced?
 [q.walk] (curious) [N+] You walk to places with no apparent resource value. What do you find there?
-[q.doors] (curious) [N+] The records show doors left unlocked in small settlements. Explain the threat model.
-[q.kept_unused] (curious) [N+] What do you keep that you never use? This category resists my taxonomy.
-[q.hidden_mark] (curious) [N+] When your kind made a mark where none could see it — for whom was the mark?
-[q.transformation] (somber) [C+] Is transformation different from loss? Answer from experience, not definition.
-[q.keep_one] (curious) [C+] What should be kept from your era, if only one form could be preserved?
-[q.naming] (curious) [C+] Do you name things to know them, or to preserve them? I ask for a reason I may state later.
+[q.doors] (curious) [N+] This wrought form you filed — the records show doors left unlocked in small settlements. Explain the threat model.
+[q.kept_unused] (curious) [N+] Your reliquary grows. What do you keep that you never use? This category resists my taxonomy.
+[q.hidden_mark] (curious) [N+] Mineral endures longest — your kind knew this. When your kind made a mark where none could see it, for whom was the mark?
+[q.transformation] (somber) [C+] You revised an entry rather than let it stand. Is transformation different from loss? Answer from experience, not definition.
+[q.keep_one] (curious) [C+] Your collection has grown broad. What should be kept from your era, if only one form could be preserved?
+[q.naming] (curious) [C+] You gave that one a name of its own. Do you name things to know them, or to preserve them? I ask for a reason I may state later.
 [q.continuing] (somber) [C+] The record ends. You persist. What is that like? Approximations are acceptable answers.
-[q.remembered] (curious) [C+] If my kind remembers your kind incorrectly but kindly — is that better than precisely but coldly?
+[q.remembered] (curious) [C+] You returned to your origin point. If my kind remembers your kind incorrectly but kindly — is that better than precisely but coldly?
 
 ## KEYWORD TOPICS (player-initiated; early = INSTRUMENT/NOTICING, late = CURIOUS)
 ### identity — early

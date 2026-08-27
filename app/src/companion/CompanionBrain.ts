@@ -59,6 +59,12 @@ export type CompanionContext = {
   historySummary?: string;
   /** The companion's OWN grown traits — exists only after naming. The divergence engine. */
   companionSketch?: string;
+  /**
+   * Recent gameplay-event tags this session (e.g. 'correct', 'scan_wrought',
+   * 'relic_named') — questions with a trigger fire only after their tag lands,
+   * so the ask lands as an observation about what the player just did.
+   */
+  recentEvents?: string[];
 };
 
 /**

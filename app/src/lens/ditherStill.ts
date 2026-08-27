@@ -5,8 +5,9 @@ import { AlphaType, ColorType, Skia, type SkImage } from '@shopify/react-native-
  * luminance, Bayer 4×4, 4-tone phosphor palette. Ported from the prototype's
  * renderFeed() (brief §3 camera pipeline, §6 camera dither rules).
  *
- * Runs at capture time, not per-frame: Expo Go has no camera frame processors,
- * so live 30fps dithering waits for a dev-client build — see docs/decisions.md.
+ * Used both at capture time (the saved still) and by the live temporal feed
+ * (LensScreen's capture→dither loop, a few frames per second — playtest fix
+ * 2026-08-27: the raw camera is never shown to the player).
  */
 export const FEED_W = 128;
 export const FEED_H = 96;
@@ -33,18 +34,33 @@ export type CaptureWindow = {
   windowH: number;
 };
 
-export function ditherCapturedStill(base64Jpeg: string, window?: CaptureWindow): SkImage {
+export function ditherCapturedStill(
+  base64Jpeg: string,
+  window?: CaptureWindow,
+  opts?: {
+    /**
+     * Live-feed mode: keep the photo's own orientation (portrait phones dither
+     * to 96×128) so the on-screen reconstruction frames the world the same way
+     * the raw preview would have — the saved-still path stays 128×96 landscape.
+     */
+    fullFrame?: boolean;
+  }
+): SkImage {
   const data = Skia.Data.fromBase64(base64Jpeg);
   const source = Skia.Image.MakeImageFromEncoded(data);
   if (!source) throw new Error('Failed to decode captured still');
 
-  // Downsample through an offscreen surface (cover-crop to 4:3).
-  const surface = Skia.Surface.Make(FEED_W, FEED_H);
-  if (!surface) throw new Error('Failed to allocate dither surface');
-  const canvas = surface.getCanvas();
   const srcW = source.width();
   const srcH = source.height();
-  const targetAspect = FEED_W / FEED_H;
+  const portrait = opts?.fullFrame === true && srcH > srcW;
+  const feedW = portrait ? FEED_H : FEED_W;
+  const feedH = portrait ? FEED_W : FEED_H;
+
+  // Downsample through an offscreen surface (cover-crop to the feed aspect).
+  const surface = Skia.Surface.Make(feedW, feedH);
+  if (!surface) throw new Error('Failed to allocate dither surface');
+  const canvas = surface.getCanvas();
+  const targetAspect = feedW / feedH;
   let cropW = srcW;
   let cropH = srcW / targetAspect;
   if (cropH > srcH) {
@@ -64,25 +80,25 @@ export function ditherCapturedStill(base64Jpeg: string, window?: CaptureWindow):
   canvas.drawImageRect(
     source,
     Skia.XYWHRect(cropX, cropY, cropW, cropH),
-    Skia.XYWHRect(0, 0, FEED_W, FEED_H),
+    Skia.XYWHRect(0, 0, feedW, feedH),
     Skia.Paint()
   );
   const small = surface.makeImageSnapshot();
   const pixels = small.readPixels(0, 0, {
-    width: FEED_W,
-    height: FEED_H,
+    width: feedW,
+    height: feedH,
     colorType: ColorType.RGBA_8888,
     alphaType: AlphaType.Unpremul,
   }) as Uint8Array | null;
   if (!pixels) throw new Error('Failed to read downsampled pixels');
 
   // Bayer-dither to the 4-tone phosphor palette, upscaled by integer factor.
-  const outW = FEED_W * UPSCALE;
-  const outH = FEED_H * UPSCALE;
+  const outW = feedW * UPSCALE;
+  const outH = feedH * UPSCALE;
   const out = new Uint8Array(outW * outH * 4);
-  for (let y = 0; y < FEED_H; y++) {
-    for (let x = 0; x < FEED_W; x++) {
-      const i = (y * FEED_W + x) * 4;
+  for (let y = 0; y < feedH; y++) {
+    for (let x = 0; x < feedW; x++) {
+      const i = (y * feedW + x) * 4;
       const lum = (pixels[i] * 0.299 + pixels[i + 1] * 0.587 + pixels[i + 2] * 0.114) / 255;
       const bv = BAYER[(y % 4) * 4 + (x % 4)] / 16 - 0.5;
       let idx = Math.round(lum * (PAL.length - 1) + bv * 0.9);
