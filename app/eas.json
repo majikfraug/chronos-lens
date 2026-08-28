@@ -28,6 +28,13 @@
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "ios": {
+        "ascAppId": "6805517862"
+      }
+    },
+    "playtest": {
+      "extends": "production"
+    }
   }
 }
